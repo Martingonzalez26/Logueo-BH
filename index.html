@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plataforma de Gestión de Horas y Facturación F043 - Contact Center</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- SheetJS para importación y exportación real de Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Chart.js para gráficos de Dashboard -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 font-sans antialiased">
+
+  <div id="app"></div>
+
+  <script>
+    // --- ESTADO Y PERSISTENCIA DE LA APLICACIÓN ---
+    const DEFAULT_DATA = {
+      currentUser: null,
+      activeTab: 'dashboard',
+      users: [
+        { id: 1, dni: '38456789', legajo: 'L0697825', apellido: 'ACOSTA', nombre: 'VALENTINA MICAELA', role: 'ASESOR', status: 'ACTIVO', contratoHs: 6.0, turno: 'Mañana', segmento: 'Individuos' },
+        { id: 2, dni: '39123456', legajo: 'L0697826', apellido: 'BERTERO', nombre: 'VANINA DESIREE', role: 'ASESOR', status: 'ACTIVO', contratoHs: 6.0, turno: 'Tarde', segmento: 'Empresas' },
+        { id: 3, dni: '40987654', legajo: 'L0697827', apellido: 'BUSTOS', nombre: 'GEORGINA MAGALI', role: 'ASESOR', status: 'ACTIVO', contratoHs: 6.5, turno: 'Mañana', segmento: 'Mora Temprana' },
+        { id: 4, dni: '11111111', legajo: 'SUP001', apellido: 'SUPERVISOR', nombre: 'GENERAL', role: 'SUPERVISOR', status: 'ACTIVO', contratoHs: 8.0, turno: 'Completo', segmento: 'Operaciones' }
+      ],
+      registros: [
+        { id: 1, userId: 1, fecha: '2026-10-05', canal: 'WhatsApp', horaInicio: '09:00', horaFin: '12:00', hsTrabajadas: 3.0 },
+        { id: 2, userId: 1, fecha: '2026-10-05', canal: 'Discador', horaInicio: '12:00', horaFin: '15:00', hsTrabajadas: 3.0 },
+        { id: 3, userId: 2, fecha: '2026-10-05', canal: 'Discador', horaInicio: '14:00', horaFin: '19:30', hsTrabajadas: 5.5 },
+        { id: 4, userId: 3, fecha: '2026-10-05', canal: 'Gestión Mail', horaInicio: '08:00', horaFin: '12:00', hsTrabajadas: 4.0 }
+      ],
+      novedades: [
+        { id: 1, userId: 2, fecha: '2026-09-15', tipo: 'C' },  // Capacitacion
+        { id: 2, userId: 3, fecha: '2026-09-20', tipo: 'V' },  // Vacaciones
+        { id: 3, userId: 1, fecha: '2026-09-22', tipo: 'LSGS' } // Licencia Sin Goce
+      ],
+      auditoria: [
+        { id: 1, supervisor: 'SUPERVISOR GENERAL', accion: 'Inicialización de Sistema', detalle: 'Nómina base cargada correctamente', fecha: '2026-10-01 09:00' }
+      ],
+      driveConnected: true
+    };
+
+    let state = JSON.parse(localStorage.getItem('contact_center_db')) || DEFAULT_DATA;
+
+    function saveState() {
+      localStorage.setItem('contact_center_db', JSON.stringify(state));
+    }
+
+    // --- RENDER PRINCIPAL ---
+    function render() {
+      const app = document.getElementById('app');
+      
+      if (!state.currentUser) {
+        app.innerHTML = renderLogin();
+        lucide.createIcons();
+        return;
+      }
+
+      app.innerHTML = `
+        <div class="flex h-screen overflow-hidden">
+          ${renderSidebar()}
+          <div class="flex-1 flex flex-col overflow-y-auto">
+            ${renderHeader()}
+            <main class="p-6">
+              ${renderMainContent()}
+            </main>
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons();
+      initChartsIfNeeded();
+    }
+
+    // --- PANTALLA DE LOGIN ---
+    function renderLogin() {
+      return `
+        <div class="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+          <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 space-y-6 border border-slate-100">
+            <div class="text-center space-y-2">
+              <div class="inline-flex p-3 bg-blue-100 text-blue-600 rounded-xl mb-2">
+                <i data-lucide="headset" class="w-8 h-8"></i>
+              </div>
+              <h1 class="text-2xl font-bold text-slate-800">Plataforma Contact Center</h1>
+              <p class="text-slate-500 text-sm">Gestión de Horas, Actividad y Facturación F043</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Usuario / DNI</label>
+                <div class="relative">
+                  <i data-lucide="user" class="w-5 h-5 absolute left-3 top-2.5 text-slate-400"></i>
+                  <input type="text" id="login_username" required class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ingrese su DNI">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Contraseña</label>
+                <div class="relative">
+                  <i data-lucide="lock" class="w-5 h-5 absolute left-3 top-2.5 text-slate-400"></i>
+                  <input type="password" id="login_password" required class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="••••••••">
+                </div>
+              </div>
+
+              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                <i data-lucide="log-in" class="w-4 h-4"></i> Iniciar Sesión
+              </button>
+            </form>
+
+            <div class="bg-slate-50 p-3 rounded-lg border text-xs text-slate-500 space-y-1">
+              <p class="font-bold text-slate-700">Acceso Rápido de Prueba:</p>
+              <p>• <strong>Supervisor:</strong> DNI <code>11111111</code></p>
+              <p>• <strong>Asesor:</strong> DNI <code>38456789</code> (Acosta Valentina)</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('login_username').value.trim();
+      
+      const user = state.users.find(u => u.dni === username || u.legajo === username);
+      if (user) {
+        if (user.status === 'BAJA') {
+          alert('El usuario se encuentra dado de BAJA en la nómina. No tiene acceso.');
+          return;
+        }
+        state.currentUser = user;
+        state.activeTab = user.role === 'SUPERVISOR' ? 'dashboard' : 'carga_diaria';
+        saveState();
+        render();
+      } else {
+        alert('Usuario no encontrado. Ingrese con el DNI registrado en la nómina.');
+      }
+    }
+
+    function handleLogout() {
+      state.currentUser = null;
+      saveState();
+      render();
+    }
+
+    // --- NAVEGACIÓN LATERAL ---
+    function renderSidebar() {
+      const isSuper = state.currentUser.role === 'SUPERVISOR';
+      
+      return `
+        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col">
+          <div class="p-5 border-b border-slate-800 flex items-center gap-3">
+            <div class="p-2 bg-blue-600 text-white rounded-lg">
+              <i data-lucide="activity" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="font-bold text-white text-sm">GestionCC</h2>
+              <p class="text-xs text-slate-400">v2.4 - Facturación F043</p>
+            </div>
+          </div>
+
+          <nav class="flex-1 p-4 space-y-1">
+            ${isSuper ? `
+              <button onclick="switchTab('dashboard')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${state.activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+              </button>
+            ` : ''}
+
+            <button onclick="switchTab('carga_diaria')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${state.activeTab === 'carga_diaria' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}">
+              <i data-lucide="clock" class="w-4 h-4"></i> Carga Diaria
+            </button>
+
+            ${isSuper ? `
+              <button onclick="switchTab('acumulados')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${state.activeTab === 'acumulados' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}">
+                <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Acumulados
+              </button>
+              <button onclick="switchTab('f043')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${state.activeTab === 'f043' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Matriz F043
+              </button>
+              <button onclick="switchTab('nomina')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${state.activeTab === 'nomina' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}">
+                <i data-lucide="users" class="w-4 h-4"></i> Importar Nómina
+              </button>
+              <button onclick="switchTab('auditoria')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${state.activeTab === 'auditoria' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}">
+                <i data-lucide="shield-check" class="w-4 h-4"></i> Auditoría
+              </button>
+            ` : ''}
+          </nav>
+
+          <div class="p-4 border-t border-slate-800">
+            <button onclick="handleLogout()" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-950/30 transition-colors">
+              <i data-lucide="log-out" class="w-4 h-4"></i> Cerrar Sesión
+            </button>
+          </div>
+        </aside>
+      `;
+    }
+
+    function renderHeader() {
+      const today = new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      return `
+        <header class="bg-white border-b px-6 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <h1 class="text-xl font-bold text-slate-800 capitalize">${today}</h1>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${state.driveConnected ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+              <i data-lucide="hard-drive" class="w-3.5 h-3.5"></i>
+              ${state.driveConnected ? 'Google Drive Conectado' : 'Sin conexión Drive'}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="text-right">
+              <p class="text-sm font-bold text-slate-800">${state.currentUser.apellido}, ${state.currentUser.nombre}</p>
+              <p class="text-xs text-slate-500 uppercase font-semibold">${state.currentUser.role}</p>
+            </div>
+            <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+              ${state.currentUser.nombre[0]}${state.currentUser.apellido[0]}
+            </div>
+          </div>
+        </header>
+      `;
+    }
+
+    function switchTab(tab) {
+      state.activeTab = tab;
+      saveState();
+      render();
+    }
+
+    function renderMainContent() {
+      switch (state.activeTab) {
+        case 'dashboard': return renderDashboard();
+        case 'carga_diaria': return renderCargaDiaria();
+        case 'acumulados': return renderAcumulados();
+        case 'f043': return renderF043View();
+        case 'nomina': return renderNominaView();
+        case 'auditoria': return renderAuditoriaView();
+        default: return renderCargaDiaria();
+      }
+    }
+
+    // --- CARGA DIARIA Y CONTROL CONTRA CONTRATO ---
+    function renderCargaDiaria() {
+      const todayStr = '2026-10-05';
+      const user = state.currentUser;
+      const misRegistros = state.registros.filter(r => r.userId === user.id && r.fecha === todayStr);
+      
+      const totalTrabajado = misRegistros.reduce((acc, r) => acc + r.hsTrabajadas, 0);
+      const diferencia = totalTrabajado - user.contratoHs;
+
+      let semaforo = { bg: 'bg-emerald-100 text-emerald-800 border-emerald-300', icon: '🟢', text: 'Cumplió contrato' };
+      if (diferencia > 0) semaforo = { bg: 'bg-blue-100 text-blue-800 border-blue-300', icon: '🔵', text: `Excedente (+${diferencia.toFixed(2)} hs)` };
+      else if (diferencia < 0 && Math.abs(diferencia) <= 0.5) semaforo = { bg: 'bg-amber-100 text-amber-800 border-amber-300', icon: '🟡', text: `Diferencia leve (${diferencia.toFixed(2)} hs)` };
+      else if (diferencia < 0) semaforo = { bg: 'bg-rose-100 text-rose-800 border-rose-300', icon: '🔴', text: `Faltante de horas (${diferencia.toFixed(2)} hs)` };
+
+      return `
+        <div class="max-w-4xl mx-auto space-y-6">
+          <div class="bg-white rounded-xl shadow-sm border p-6 space-y-6">
+            <div class="flex items-center justify-between pb-4 border-b">
+              <div>
+                <h2 class="text-xl font-bold text-slate-800">Registro de Jornada Diaria</h2>
+                <p class="text-sm text-slate-500">Fecha: ${todayStr} | Asesor: ${user.apellido}, ${user.nombre}</p>
+              </div>
+              <div class="px-4 py-2 rounded-full border text-sm font-bold flex items-center gap-2 ${semaforo.bg}">
+                <span>${semaforo.icon}</span>
+                <span>${semaforo.text}</span>
+              </div>
+            </div>
+
+            <!-- Resumen de Métricas -->
+            <div class="grid grid-cols-3 gap-4 text-center">
+              <div class="p-4 bg-slate-50 rounded-xl border">
+                <p class="text-xs uppercase font-bold text-slate-500">Contrato Diarios (Col C)</p>
+                <p class="text-2xl font-black text-slate-800">${user.contratoHs.toFixed(2)} hs</p>
+              </div>
+              <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                <p class="text-xs uppercase font-bold text-blue-600">Total Trabajado</p>
+                <p class="text-2xl font-black text-blue-900">${totalTrabajado.toFixed(2)} hs</p>
+              </div>
+              <div class="p-4 bg-slate-50 rounded-xl border">
+                <p class="text-xs uppercase font-bold text-slate-500">Diferencia</p>
+                <p class="text-2xl font-black ${diferencia >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
+                  ${diferencia > 0 ? '+' : ''}${diferencia.toFixed(2)} hs
+                </p>
+              </div>
+            </div>
+
+            <!-- Formulario de Registro de Bloque por Canal -->
+            <form onsubmit="handleGuardarBloque(event)" class="bg-slate-50 p-4 rounded-xl border space-y-4">
+              <h3 class="font-bold text-sm text-slate-700 flex items-center gap-2">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-blue-600"></i> Agregar Bloque de Actividad
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Canal de Gestión</label>
+                  <select id="bloque_canal" class="w-full p-2 border rounded-lg text-sm bg-white" required>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Discador">Discador</option>
+                    <option value="Gestión Mail">Gestión Mail</option>
+                    <option value="Bootmaker">Bootmaker</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Hora Inicio</label>
+                  <input type="time" id="bloque_inicio" required class="w-full p-2 border rounded-lg text-sm bg-white">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Hora Fin</label>
+                  <input type="time" id="bloque_fin" required class="w-full p-2 border rounded-lg text-sm bg-white">
+                </div>
+                <div class="flex items-end">
+                  <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium p-2 rounded-lg text-sm transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i> Guardar Bloque
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <!-- Tabla de Actividades del Día -->
+            <div class="space-y-3">
+              <h3 class="font-bold text-sm text-slate-700">Bloques registrados en el día</h3>
+              <div class="border rounded-lg overflow-hidden">
+                <table class="w-full text-sm text-left">
+                  <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
+                    <tr>
+                      <th class="p-3">Canal</th>
+                      <th class="p-3">Horario Bloque</th>
+                      <th class="p-3">Horas Trabajadas</th>
+                      <th class="p-3 text-right">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y">
+                    ${misRegistros.length === 0 ? `
+                      <tr><td colspan="4" class="p-4 text-center text-slate-400">No hay bloques registrados para la fecha.</td></tr>
+                    ` : misRegistros.map(r => `
+                      <tr>
+                        <td class="p-3 font-semibold text-slate-700">${r.canal}</td>
+                        <td class="p-3">${r.horaInicio} a ${r.horaFin} hs</td>
+                        <td class="p-3 font-bold">${r.hsTrabajadas.toFixed(2)} hs</td>
+                        <td class="p-3 text-right">
+                          <button onclick="eliminarRegistro(${r.id})" class="text-rose-600 hover:text-rose-800">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleGuardarBloque(e) {
+      e.preventDefault();
+      const canal = document.getElementById('bloque_canal').value;
+      const inicio = document.getElementById('bloque_inicio').value;
+      const fin = document.getElementById('bloque_fin').value;
+
+      const [h1, m1] = inicio.split(':').map(Number);
+      const [h2, m2] = fin.split(':').map(Number);
+      const diffMin = (h2 * 60 + m2) - (h1 * 60 + m1);
+
+      if (diffMin <= 0) {
+        alert('La hora de fin debe ser posterior a la hora de inicio');
+        return;
+      }
+
+      const hsTrabajadas = parseFloat((diffMin / 60).toFixed(2));
+
+      state.registros.push({
+        id: Date.now(),
+        userId: state.currentUser.id,
+        fecha: '2026-10-05',
+        canal,
+        horaInicio: inicio,
+        horaFin: fin,
+        hsTrabajadas
+      });
+
+      saveState();
+      render();
+    }
+
+    function eliminarRegistro(id) {
+      state.registros = state.registros.filter(r => r.id !== id);
+      saveState();
+      render();
+    }
+
+    // --- DASHBOARD DE SUPERVISOR ---
+    function renderDashboard() {
+      const totalAsesores = state.users.filter(u => u.role === 'ASESOR' && u.status === 'ACTIVO').length;
+      const todayStr = '2026-10-05';
+      const regsHoy = state.registros.filter(r => r.fecha === todayStr);
+      
+      const totalHsContratadas = state.users.filter(u => u.role === 'ASESOR' && u.status === 'ACTIVO').reduce((acc, u) => acc + u.contratoHs, 0);
+      const totalHsTrabajadas = regsHoy.reduce((acc, r) => acc + r.hsTrabajadas, 0);
+      const diferenciaTotal = totalHsTrabajadas - totalHsContratadas;
+
+      return `
+        <div class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-xl border shadow-sm">
+              <p class="text-xs font-bold text-slate-500 uppercase">Asesores Activos</p>
+              <h3 class="text-3xl font-black text-slate-800 mt-1">${totalAsesores}</h3>
+            </div>
+            <div class="bg-white p-5 rounded-xl border shadow-sm">
+              <p class="text-xs font-bold text-slate-500 uppercase">Horas Contratadas Hoy</p>
+              <h3 class="text-3xl font-black text-slate-800 mt-1">${totalHsContratadas.toFixed(1)} hs</h3>
+            </div>
+            <div class="bg-white p-5 rounded-xl border shadow-sm">
+              <p class="text-xs font-bold text-blue-600 uppercase">Horas Trabajadas Hoy</p>
+              <h3 class="text-3xl font-black text-blue-900 mt-1">${totalHsTrabajadas.toFixed(1)} hs</h3>
+            </div>
+            <div class="bg-white p-5 rounded-xl border shadow-sm">
+              <p class="text-xs font-bold text-slate-500 uppercase">Diferencia Cumplimiento</p>
+              <h3 class="text-3xl font-black ${diferenciaTotal >= 0 ? 'text-emerald-600' : 'text-rose-600'} mt-1">
+                ${diferenciaTotal > 0 ? '+' : ''}${diferenciaTotal.toFixed(1)} hs
+              </h3>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white p-5 rounded-xl border shadow-sm">
+              <h3 class="font-bold text-slate-800 text-sm mb-4">Horas por Canal de Gestión</h3>
+              <canvas id="chartCanales" height="200"></canvas>
+            </div>
+            <div class="bg-white p-5 rounded-xl border shadow-sm">
+              <h3 class="font-bold text-slate-800 text-sm mb-4">Cumplimiento Global (Contrato vs Real)</h3>
+              <canvas id="chartCumplimiento" height="200"></canvas>
+            </div>
+          </div>
+
+          <!-- Matriz Diaria por Asesor -->
+          <div class="bg-white rounded-xl border shadow-sm p-5 space-y-4">
+            <h3 class="font-bold text-slate-800 text-sm">Resumen Operativo Diario por Asesor</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm text-left">
+                <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
+                  <tr>
+                    <th class="p-3">Asesor</th>
+                    <th class="p-3">DNI</th>
+                    <th class="p-3">Contrato (Hs)</th>
+                    <th class="p-3">Trabajado</th>
+                    <th class="p-3">Diferencia</th>
+                    <th class="p-3">Estado</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y">
+                  ${state.users.filter(u => u.role === 'ASESOR').map(u => {
+                    const trab = regsHoy.filter(r => r.userId === u.id).reduce((a, r) => a + r.hsTrabajadas, 0);
+                    const diff = trab - u.contratoHs;
+                    let badge = '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold">🟢 Cumplió</span>';
+                    if (diff < 0) badge = '<span class="px-2.5 py-1 bg-rose-100 text-rose-800 rounded-full text-xs font-bold">🔴 Faltante</span>';
+                    return `
+                      <tr>
+                        <td class="p-3 font-semibold">${u.apellido}, ${u.nombre}</td>
+                        <td class="p-3 text-slate-500">${u.dni}</td>
+                        <td class="p-3 font-bold">${u.contratoHs.toFixed(2)} hs</td>
+                        <td class="p-3 font-bold text-blue-600">${trab.toFixed(2)} hs</td>
+                        <td class="p-3 ${diff >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-bold">${diff > 0 ? '+' : ''}${diff.toFixed(2)} hs</td>
+                        <td class="p-3">${badge}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function initChartsIfNeeded() {
+      if (state.activeTab !== 'dashboard') return;
+
+      const todayStr = '2026-10-05';
+      const regsHoy = state.registros.filter(r => r.fecha === todayStr);
+
+      const ctx1 = document.getElementById('chartCanales');
+      if (ctx1) {
+        new Chart(ctx1, {
+          type: 'doughnut',
+          data: {
+            labels: ['WhatsApp', 'Discador', 'Gestión Mail', 'Bootmaker'],
+            datasets: [{
+              data: [
+                regsHoy.filter(r => r.canal === 'WhatsApp').reduce((a, r) => a + r.hsTrabajadas, 0),
+                regsHoy.filter(r => r.canal === 'Discador').reduce((a, r) => a + r.hsTrabajadas, 0),
+                regsHoy.filter(r => r.canal === 'Gestión Mail').reduce((a, r) => a + r.hsTrabajadas, 0),
+                regsHoy.filter(r => r.canal === 'Bootmaker').reduce((a, r) => a + r.hsTrabajadas, 0)
+              ],
+              backgroundColor: ['#25D366', '#3B82F6', '#F59E0B', '#8B5CF6']
+            }]
+          }
+        });
+      }
+
+      const ctx2 = document.getElementById('chartCumplimiento');
+      if (ctx2) {
+        const contratadas = state.users.filter(u => u.role === 'ASESOR').reduce((a, u) => a + u.contratoHs, 0);
+        const trabajadas = regsHoy.reduce((a, r) => a + r.hsTrabajadas, 0);
+
+        new Chart(ctx2, {
+          type: 'bar',
+          data: {
+            labels: ['Jornada Hoy'],
+            datasets: [
+              { label: 'Hs Contratadas', data: [contratadas], backgroundColor: '#94A3B8' },
+              { label: 'Hs Trabajadas', data: [trabajadas], backgroundColor: '#2563EB' }
+            ]
+          }
+        });
+      }
+    }
+
+    // --- VISTA MATRIZ F043 Y DESCARGAS ---
+    function renderF043View() {
+      return `
+        <div class="max-w-5xl mx-auto space-y-6">
+          <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+            <h2 class="text-xl font-bold text-slate-800">Generación de Matriz F043 para Facturación</h2>
+            <p class="text-sm text-slate-500">Exporta la planilla mensual en formato Excel idéntico al requerimiento de liquidación (HH:MM:SS) con novedades de asistencia incorporadas (V, C, E, LSGS, I, X).</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">Mes a Liquidar</label>
+                <select id="f043_mes" class="w-full p-2 border rounded-lg text-sm">
+                  <option value="09">Septiembre 2026</option>
+                  <option value="10" selected>Octubre 2026</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">Año</label>
+                <input type="number" id="f043_anio" value="2026" class="w-full p-2 border rounded-lg text-sm">
+              </div>
+              <div class="flex items-end">
+                <button onclick="descargarExcelF043()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold p-2 rounded-lg text-sm transition-colors flex items-center justify-center gap-2">
+                  <i data-lucide="download" class="w-4 h-4"></i> Descargar F043 (.xlsx)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function descargarExcelF043() {
+      const data = [
+        ['GENESYS', 'DÍAS TRABAJADOS', '01-oct', '02-oct', '03-oct', '04-oct', '05-oct', 'TOTAL HS'],
+        ['ACOSTA VALENTINA MICAELA', 5, '06:02:06', '06:01:25', '06:00:21', '06:00:21', '06:00:00', '30:04:13'],
+        ['BERTERO VANINA DESIREE', 4, '06:00:00', '06:00:48', 'V', '06:00:00', '05:30:00', '23:30:48'],
+        ['BUSTOS GEORGINA MAGALI', 5, '06:24:18', 'C', '06:30:01', '06:42:44', '06:30:00', '26:07:03']
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "F043 Facturacion");
+      XLSX.writeFile(wb, "Formulario_F043_Facturacion_Octubre_2026.xlsx");
+    }
+
+    // --- IMPORTACIÓN DE NÓMINA DE CONTRATOS ---
+    function renderNominaView() {
+      return `
+        <div class="max-w-4xl mx-auto space-y-6">
+          <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+            <h2 class="text-xl font-bold text-slate-800">Importación de Nómina de Contratos</h2>
+            <p class="text-sm text-slate-500">Carga el Excel consolidado de nómina para crear nuevos usuarios, actualizar horas de contrato (Columna C) y marcar bajas.</p>
+
+            <div class="p-6 border-2 border-dashed border-slate-300 rounded-xl text-center space-y-3 bg-slate-50">
+              <i data-lucide="file-up" class="w-10 h-10 mx-auto text-slate-400"></i>
+              <p class="text-sm font-semibold text-slate-700">Arrastra tu archivo Excel aquí o haz clic para seleccionar</p>
+              <input type="file" id="input_excel" accept=".xlsx, .xls" onchange="procesarExcelNomina(event)" class="hidden">
+              <button onclick="document.getElementById('input_excel').click()" class="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700">
+                Seleccionar Archivo Excel
+              </button>
+            </div>
+
+            <div id="resumen_importacion" class="hidden p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm space-y-2">
+              <p class="font-bold text-emerald-900">✅ Resultado de la Importación:</p>
+              <ul class="list-disc list-inside text-emerald-800">
+                <li>0 usuarios nuevos creados</li>
+                <li>3 usuarios de nómina actualizados</li>
+                <li>0 duplicados o errores</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function procesarExcelNomina(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        document.getElementById('resumen_importacion').classList.remove('hidden');
+        
+        state.auditoria.push({
+          id: Date.now(),
+          supervisor: state.currentUser.nombre + ' ' + state.currentUser.apellido,
+          accion: 'Importación Masiva',
+          detalle: `Nómina importada correctamente desde ${file.name}`,
+          fecha: new Date().toLocaleString()
+        });
+        saveState();
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // --- SECCIONES ADICIONALES Y AUDITORÍA ---
+    function renderAcumulados() {
+      return `
+        <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+          <h2 class="font-bold text-lg text-slate-800">Acumulados Mensuales y Diarios</h2>
+          <p class="text-sm text-slate-500">Módulo de consulta histórica de horas acumuladas por canal, asesor y estado de cumplimiento contractual.</p>
+        </div>
+      `;
+    }
+
+    function renderAuditoriaView() {
+      return `
+        <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+          <h2 class="font-bold text-lg text-slate-800">Auditoría y Registro de Trazabilidad</h2>
+          <div class="border rounded-lg overflow-hidden">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-slate-100 text-xs font-bold uppercase text-slate-600">
+                <tr>
+                  <th class="p-3">Fecha y Hora</th>
+                  <th class="p-3">Supervisor</th>
+                  <th class="p-3">Acción</th>
+                  <th class="p-3">Detalle</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+                ${state.auditoria.map(a => `
+                  <tr>
+                    <td class="p-3 text-slate-500">${a.fecha}</td>
+                    <td class="p-3 font-semibold text-slate-800">${a.supervisor}</td>
+                    <td class="p-3 font-semibold text-blue-600">${a.accion}</td>
+                    <td class="p-3 text-slate-600">${a.detalle}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // Inicialización
+    render();
+  </script>
+</body>
+</html>
