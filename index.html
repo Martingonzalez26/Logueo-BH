@@ -28,12 +28,12 @@
 
       <form id="login-form" onsubmit="event.preventDefault(); iniciarSesion();" class="space-y-5">
         <div>
-          <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-2">Usuario / DNI</label>
+          <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-2">Usuario / Nombre / DNI</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
               <i class="fa-solid fa-user"></i>
             </span>
-            <input type="text" id="login-user" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition text-sm" placeholder="Ingrese Administrador o DNI" required>
+            <input type="text" id="login-user" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition text-sm" placeholder="Ingrese su Usuario o Administrador" required>
           </div>
         </div>
 
@@ -70,7 +70,6 @@
           </div>
           <span class="font-bold text-lg text-gray-900 dark:text-white tracking-tight">TimeTracker <span class="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-semibold px-2 py-0.5 rounded-full uppercase">Gestión</span></span>
         </div>
-        <!-- FECHA DEL DÍA -->
         <div class="hidden md:flex items-center gap-2 text-xs bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 font-medium px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600">
           <i class="fa-regular fa-calendar-check text-blue-600 dark:text-blue-400"></i>
           <span id="current-date-display">Cargando fecha...</span>
@@ -78,19 +77,16 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <!-- BOTÓN MODO CLARO / OSCURO -->
         <button onclick="toggleDarkMode()" class="p-2 px-3 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-amber-400 hover:bg-gray-100 dark:hover:bg-slate-600 transition text-xs font-semibold flex items-center gap-2">
           <i id="theme-toggle-icon" class="fa-solid fa-moon"></i>
           <span id="theme-toggle-text" class="hidden sm:inline">Modo Oscuro</span>
         </button>
 
-        <!-- Indicador de Sincronización Google Drive -->
         <div id="drive-status" class="hidden sm:flex items-center gap-2 text-xs bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 px-3 py-1.5 rounded-lg border border-green-200 dark:border-green-800 font-medium">
           <i class="fa-solid fa-cloud-arrow-up text-green-600 dark:text-green-400"></i>
           <span>Drive Sincronizado</span>
         </div>
 
-        <!-- Usuario Conectado -->
         <div class="flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-slate-700">
           <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center" id="user-avatar">
             AD
@@ -281,8 +277,8 @@
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm space-y-6">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b dark:border-slate-700 pb-4">
             <div>
-              <h2 class="text-lg font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-users text-emerald-600 dark:text-emerald-400"></i> Nómina Completa de Usuarios Adheridos</h2>
-              <p class="text-xs text-gray-500 dark:text-gray-400">Gestión de accesos, altas y bajas de asesores</p>
+              <h2 class="text-lg font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-users text-emerald-600 dark:text-emerald-400"></i> Nómina Completa de Operadores (41 Activos)</h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Detalle de turnos, horas de contrato y estado en la plataforma</p>
             </div>
             <button onclick="abrirModalCrearUsuario()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-2">
               <i class="fa-solid fa-user-plus"></i>
@@ -294,16 +290,17 @@
             <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
               <thead class="bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-gray-300 uppercase text-[10px] font-bold tracking-wider border-b border-gray-100 dark:border-slate-700">
                 <tr>
-                  <th class="px-4 py-3">DNI / Usuario</th>
-                  <th class="px-4 py-3">Nombre y Apellido</th>
-                  <th class="px-4 py-3">Legajo</th>
+                  <th class="px-4 py-3">Operador / Asesor</th>
+                  <th class="px-4 py-3">Turno</th>
+                  <th class="px-4 py-3">Contrato (Hs/Día)</th>
+                  <th class="px-4 py-3">Horario</th>
                   <th class="px-4 py-3">Rol</th>
                   <th class="px-4 py-3">Estado</th>
                   <th class="px-4 py-3">Acciones</th>
                 </tr>
               </thead>
               <tbody id="users-table-body" class="divide-y divide-gray-100 dark:divide-slate-700">
-                <!-- Carga Dinámica -->
+                <!-- Carga Dinámica de los 41 operadores -->
               </tbody>
             </table>
           </div>
@@ -337,8 +334,8 @@
                 </select>
               </div>
               <div>
-                <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">DNI / Asesor</label>
-                <input type="text" id="manual-user-id" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white dark:border-slate-600" placeholder="Ej: 38411266">
+                <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Nombre Operador</label>
+                <input type="text" id="manual-user-id" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white dark:border-slate-600" placeholder="Ej: Palacio Karin Natali">
               </div>
               <div>
                 <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Fecha</label>
@@ -377,22 +374,29 @@
   <div id="create-user-modal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
       <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
-        <h3 class="font-bold text-gray-800 dark:text-white text-sm">Alta de Nuevo Usuario</h3>
+        <h3 class="font-bold text-gray-800 dark:text-white text-sm">Alta de Nuevo Operador</h3>
         <button onclick="cerrarModalCrearUsuario()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="space-y-3">
         <div>
-          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">DNI / Usuario</label>
-          <input type="text" id="new-user-dni" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Ej: 41223344">
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Nombre y Apellido del Operador</label>
+          <input type="text" id="new-user-name" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Ej: Gomez Juan Perez">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Nombre y Apellido</label>
-          <input type="text" id="new-user-name" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Ej: Perez Juan">
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Turno</label>
+          <select id="new-user-turno" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+            <option value="Mañana">Mañana</option>
+            <option value="Tarde">Tarde</option>
+          </select>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Legajo</label>
-          <input type="text" id="new-user-legajo" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Ej: L098234">
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Contrato (Hs/Día)</label>
+          <input type="number" step="0.5" id="new-user-contrato" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Ej: 6">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Horario</label>
+          <input type="text" id="new-user-horario" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Ej: 08:00 - 14:00">
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Rol</label>
@@ -405,7 +409,7 @@
 
       <div class="pt-4 flex justify-end gap-2">
         <button onclick="cerrarModalCrearUsuario()" class="px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-semibold">Cancelar</button>
-        <button onclick="guardarNuevoUsuario()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold">Crear Usuario</button>
+        <button onclick="guardarNuevoUsuario()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold">Crear Operador</button>
       </div>
     </div>
   </div>
@@ -414,10 +418,10 @@
   <div id="admin-modal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
       <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
-        <h3 class="font-bold text-gray-800 dark:text-white text-sm">Cargar/Actualizar Nómina de Contratos (Excel)</h3>
+        <h3 class="font-bold text-gray-800 dark:text-white text-sm">Cargar/Actualizar Nómina (Excel)</h3>
         <button onclick="cerrarModalAdmin()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <p class="text-xs text-gray-500 dark:text-gray-400">Suba el archivo Excel de la nómina para actualizar los contratos y usuarios del sistema.</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400">Suba el archivo Excel de la nómina para actualizar los operadores y turnos.</p>
       <input type="file" id="excel-file-input" accept=".xlsx, .xls" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
       <div class="pt-4 flex justify-end gap-2">
         <button onclick="cerrarModalAdmin()" class="px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-semibold">Cancelar</button>
@@ -435,10 +439,50 @@
     let isRunning = false;
     let registrosFiltradosCache = [];
 
-    const usuariosDefault = [
-      { id: 'Administrador', name: 'Administrador', legajo: 'L000001', role: 'ADMINISTRADOR', state: 'ACTIVO' },
-      { id: '38411266', name: 'TORRES YOHANNA', legajo: 'L0697825', role: 'ASESOR', state: 'ACTIVO' },
-      { id: '41521404', name: 'LEDESMA XIMENA', legajo: 'L0508258', role: 'ASESOR', state: 'ACTIVO' }
+    // NÓMINA COMPLETA DE LOS 41 OPERADORES
+    const nominaCompleta = [
+      { id: 'Palacio Karin Natali', name: 'Palacio Karin Natali', turno: 'Tarde', contrato: 7, horario: '14:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Balestri Fernandez Silvina Veronica', name: 'Balestri Fernandez Silvina Veronica', turno: 'Tarde', contrato: 7, horario: '14:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Yañez Mon Natalia Alejandra', name: 'Yañez Mon Natalia Alejandra', turno: 'Tarde', contrato: 7, horario: '14:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Rios Liliana Beatriz', name: 'Rios Liliana Beatriz', turno: 'Mañana', contrato: 7, horario: '08:00 - 15:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Reyna Rocío Agustina', name: 'Reyna Rocío Agustina', turno: 'Mañana', contrato: 7, horario: '08:00 - 15:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Lucero Miranda Pablo David', name: 'Lucero Miranda Pablo David', turno: 'Tarde', contrato: 7, horario: '14:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Pasteris Lucas', name: 'Pasteris Lucas', turno: 'Mañana', contrato: 7, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Gorosito Magni Maria Antonela', name: 'Gorosito Magni Maria Antonela', turno: 'Mañana', contrato: 7, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Charras Tania Pamela', name: 'Charras Tania Pamela', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Lopez Giuliana Evelyn', name: 'Lopez Giuliana Evelyn', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Rojas Carla', name: 'Rojas Carla', turno: 'Tarde', contrato: 6.5, horario: '14:30 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Coronet Karen Mailen', name: 'Coronet Karen Mailen', turno: 'Tarde', contrato: 6.5, horario: '14:30 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Luna Leticia Micaela', name: 'Luna Leticia Micaela', turno: 'Tarde', contrato: 6.5, horario: '14:30 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Bustos Georgina Magalí', name: 'Bustos Georgina Magalí', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Cardona Maria Eugenia', name: 'Cardona Maria Eugenia', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Jimenez Carla', name: 'Jimenez Carla', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Olivera Agostina Del Milagro', name: 'Olivera Agostina Del Milagro', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Villarreal Tania Micaela', name: 'Villarreal Tania Micaela', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Salvo Alexa', name: 'Salvo Alexa', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Suarez Candela Natali', name: 'Suarez Candela Natali', turno: 'Tarde', contrato: 6.5, horario: '08:00 - 15:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Caminos Ochoa Abril Denise', name: 'Caminos Ochoa Abril Denise', turno: 'Tarde', contrato: 6.5, horario: '15:00 a 21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Sabas Yamir Jesus', name: 'Sabas Yamir Jesus', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Gonzalez Natasha Andrea', name: 'Gonzalez Natasha Andrea', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Altamirano Johana Soledad', name: 'Altamirano Johana Soledad', turno: 'Tarde', contrato: 6, horario: '15:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Prado Maria Trinidad', name: 'Prado Maria Trinidad', turno: 'Mañana', contrato: 6, horario: '08:00 - 14:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Quinteros Dario Sebastian', name: 'Quinteros Dario Sebastian', turno: 'Mañana', contrato: 6, horario: '09:00 - 15:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Vega Sofia Valentina', name: 'Vega Sofia Valentina', turno: 'Tarde', contrato: 6, horario: '15:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Acosta Valentina Micaela', name: 'Acosta Valentina Micaela', turno: 'Mañana', contrato: 6, horario: '08:00 - 14:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Gallardo Lourdes', name: 'Gallardo Lourdes', turno: 'Mañana', contrato: 6, horario: '08:00 - 14:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Ramirez Agustina', name: 'Ramirez Agustina', turno: 'Tarde', contrato: 6, horario: '15:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Valenzuela Josefina del Milagro', name: 'Valenzuela Josefina del Milagro', turno: 'Tarde', contrato: 6, horario: '15:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Diaz Micaela Kiara Sofia', name: 'Diaz Micaela Kiara Sofia', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Gomez Arce Axel Javier', name: 'Gomez Arce Axel Javier', turno: 'Mañana', contrato: 6, horario: '08:00-14:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Villarruel Sol Ailin', name: 'Villarruel Sol Ailin', turno: 'Mañana', contrato: 6, horario: '08:00-14:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Yurca Kiara', name: 'Yurca Kiara', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'LISBOA ZOE LISETH', name: 'LISBOA ZOE LISETH', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'MONTIVERO FLORENCIA ABIGAIL', name: 'MONTIVERO FLORENCIA ABIGAIL', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'VELÁZQUEZ ANA SABRINA', name: 'VELÁZQUEZ ANA SABRINA', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'VALENZUELA VEGA MILENA CELESTE', name: 'VALENZUELA VEGA MILENA CELESTE', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'PAEZ LUNA ROCIO ARIANA', name: 'PAEZ LUNA ROCIO ARIANA', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'PALACIOS GALAZ ABIGAIL LUCILA', name: 'PALACIOS GALAZ ABIGAIL LUCILA', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
+      { id: 'Administrador', name: 'Administrador General', turno: '-', contrato: '-', horario: '-', role: 'ADMINISTRADOR', state: 'ACTIVO' }
     ];
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -447,9 +491,8 @@
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('current-date-display').innerText = today.toLocaleDateString('es-AR', options);
 
-        if (!localStorage.getItem('timetracker_users')) {
-          localStorage.setItem('timetracker_users', JSON.stringify(usuariosDefault));
-        }
+        // Actualizar automáticamente la nómina en localStorage
+        localStorage.setItem('timetracker_users', JSON.stringify(nominaCompleta));
 
         window.addEventListener('beforeunload', () => {
           if (isRunning) {
@@ -457,7 +500,7 @@
           }
         });
       } catch (e) {
-        console.error("Error al inicializar DOM:", e);
+        console.error("Error al inicializar:", e);
       }
     });
 
@@ -477,18 +520,13 @@
         if ((normalizedUser === 'administrador' || normalizedUser === 'admin') && passVal === 'admin123') {
           currentUser = { name: 'Administrador', role: 'ADMINISTRADOR', id: 'Administrador' };
         } else {
-          let users = [];
-          try {
-            users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
-          } catch(err) {
-            users = usuariosDefault;
-          }
-          const found = users.find(u => u.id.toLowerCase() === normalizedUser && u.state === 'ACTIVO');
+          let users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
+          const found = users.find(u => u.name.toLowerCase().includes(normalizedUser) || u.id.toLowerCase() === normalizedUser);
           
-          if (found) {
+          if (found && found.state === 'ACTIVO') {
             currentUser = found;
           } else {
-            currentUser = { name: `Asesor ${userVal}`, role: 'ASESOR', id: userVal };
+            currentUser = { name: userVal, role: 'ASESOR', id: userVal };
           }
         }
 
@@ -496,7 +534,6 @@
         document.getElementById('user-display-role').innerText = currentUser.role;
         document.getElementById('user-avatar').innerText = currentUser.name.substring(0, 2).toUpperCase();
 
-        // Ocultar pantalla de login y mostrar app principal
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app-content').classList.remove('hidden');
 
@@ -508,15 +545,9 @@
           document.getElementById('admin-users-tab').classList.add('hidden');
         }
 
-        try {
-          cargarHistorial();
-        } catch (e) {
-          console.error("Error al cargar historial:", e);
-        }
-
+        cargarHistorial();
       } catch (err) {
         alert("Ocurrió un error al ingresar. Intente nuevamente.");
-        console.error("Error en iniciarSesion:", err);
       }
     }
 
@@ -716,7 +747,7 @@
       XLSX.writeFile(wb, `Reporte_TimeTracker_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
-    // GESTIÓN DE USUARIOS
+    // CARGAR LOS 41 USUARIOS DE LA NÓMINA EN LA TABLA
     function cargarUsuarios() {
       const users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
       const tbody = document.getElementById('users-table-body');
@@ -726,9 +757,10 @@
         const tr = document.createElement('tr');
         tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700";
         tr.innerHTML = `
-          <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">${u.id}</td>
-          <td class="px-4 py-3">${u.name}</td>
-          <td class="px-4 py-3">${u.legajo || '-'}</td>
+          <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">${u.name}</td>
+          <td class="px-4 py-3"><span class="bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 px-2 py-0.5 rounded text-[10px] font-bold">${u.turno || '-'}</span></td>
+          <td class="px-4 py-3 font-medium">${u.contrato ? u.contrato + ' hs' : '-'}</td>
+          <td class="px-4 py-3 text-gray-500">${u.horario || '-'}</td>
           <td class="px-4 py-3"><span class="bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded text-[10px] font-bold">${u.role}</span></td>
           <td class="px-4 py-3"><span class="${u.state === 'ACTIVO' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'} px-2 py-0.5 rounded text-[10px] font-bold">${u.state}</span></td>
           <td class="px-4 py-3">
@@ -750,15 +782,16 @@
     function cerrarModalCrearUsuario() { document.getElementById('create-user-modal').classList.add('hidden'); }
 
     function guardarNuevoUsuario() {
-      const dni = document.getElementById('new-user-dni').value.trim();
       const name = document.getElementById('new-user-name').value.trim();
-      const legajo = document.getElementById('new-user-legajo').value.trim();
+      const turno = document.getElementById('new-user-turno').value;
+      const contrato = document.getElementById('new-user-contrato').value;
+      const horario = document.getElementById('new-user-horario').value.trim();
       const role = document.getElementById('new-user-role').value;
 
-      if (!dni || !name) { alert('Ingrese DNI y Nombre'); return; }
+      if (!name) { alert('Ingrese Nombre y Apellido'); return; }
 
       let users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
-      users.push({ id: dni, name: name, legajo: legajo, role: role, state: 'ACTIVO' });
+      users.push({ id: name, name: name, turno: turno, contrato: contrato, horario: horario, role: role, state: 'ACTIVO' });
       localStorage.setItem('timetracker_users', JSON.stringify(users));
 
       cerrarModalCrearUsuario();
@@ -785,7 +818,7 @@
         dateIso: dateVal,
         date: dateStr,
         user: userId,
-        userName: `Asesor ${userId}`,
+        userName: userId,
         description: `${actionType === 'SUBTRACT' ? '[DESCUENTO] ' : ''}${desc}`,
         channel: channel,
         startTime: '09:00:00',
@@ -830,4 +863,4 @@
     function procesarExcelNomina() { alert('Nómina procesada correctamente.'); cerrarModalAdmin(); }
   </script>
 </body>
-</html>
+</html>v
