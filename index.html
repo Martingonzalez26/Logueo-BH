@@ -77,10 +77,10 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <!-- BOTÓN EXCLUSIVO DE GOOGLE DRIVE PARA ADMINISTRADOR -->
-        <button id="admin-drive-btn" onclick="abrirGoogleDrive()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow transition flex items-center gap-2">
+        <!-- BOTÓN EXCLUSIVO DE GOOGLE DRIVE EN NAVBAR -->
+        <button id="admin-drive-btn" onclick="abrirGoogleDrive()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow transition flex items-center gap-2" title="Abrir Google Drive en una nueva pestaña">
           <i class="fa-brands fa-google-drive text-sm"></i>
-          <span class="hidden sm:inline">Abrir Google Drive</span>
+          <span>Abrir Drive</span>
         </button>
 
         <button onclick="toggleDarkMode()" class="p-2 px-3 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-amber-400 hover:bg-gray-100 dark:hover:bg-slate-600 transition text-xs font-semibold flex items-center gap-2">
@@ -88,10 +88,11 @@
           <span id="theme-toggle-text" class="hidden sm:inline">Modo Oscuro</span>
         </button>
 
-        <div id="drive-status" class="hidden sm:flex items-center gap-2 text-xs bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 px-3 py-1.5 rounded-lg border border-green-200 dark:border-green-800 font-medium">
+        <!-- INDICADOR CLIQUEABLE DE GOOGLE DRIVE -->
+        <button onclick="abrirGoogleDrive()" id="drive-status" class="flex items-center gap-2 text-xs bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 px-3 py-2 rounded-xl border border-green-200 dark:border-green-800 font-medium hover:bg-green-100 dark:hover:bg-green-900/60 transition cursor-pointer" title="Haga clic para abrir la carpeta de Drive">
           <i class="fa-solid fa-cloud-arrow-up text-green-600 dark:text-green-400"></i>
           <span>Drive Sincronizado</span>
-        </div>
+        </button>
 
         <div class="flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-slate-700">
           <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center" id="user-avatar">
@@ -132,8 +133,8 @@
           Gestión de Tiempos
         </button>
 
-        <!-- ACCESO DIRECCIÓN DRIVE SIDEBAR (SOLO ADMIN) -->
-        <button id="admin-sidebar-drive-btn" onclick="abrirGoogleDrive()" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-bold text-xs text-left transition mt-4 border border-emerald-200 dark:border-emerald-800">
+        <!-- ACCESO EN SIDEBAR A GOOGLE DRIVE (EXCLUSIVO ADMIN) -->
+        <button id="admin-sidebar-drive-btn" onclick="abrirGoogleDrive()" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-xs text-left transition mt-4 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100">
           <i class="fa-brands fa-google-drive w-4 text-emerald-600"></i>
           Base de Datos Drive
         </button>
@@ -484,7 +485,7 @@
     let isRunning = false;
     let registrosFiltradosCache = [];
 
-    // ENLACE A GOOGLE DRIVE DE ALMACENAMIENTO (Puedes cambiar la URL si lo deseas)
+    // ENLACE A GOOGLE DRIVE DE ALMACENAMIENTO
     const driveFolderUrl = "https://drive.google.com";
 
     // NÓMINA PRECARGADA CON LOS 41 OPERADORES
@@ -556,7 +557,7 @@
       document.getElementById('theme-toggle-text').innerText = isDark ? 'Modo Claro' : 'Modo Oscuro';
     }
 
-    // FUNCIÓN PARA ABRIR GOOGLE DRIVE EN OTRA PESTAÑA (SOLO ADMIN)
+    // FUNCIÓN PARA ABRIR GOOGLE DRIVE
     function abrirGoogleDrive() {
       window.open(driveFolderUrl, '_blank');
     }
@@ -587,16 +588,20 @@
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app-content').classList.remove('hidden');
 
-        // VISIBILIDAD DE PESTAÑAS Y BOTÓN DE DRIVE SOLO PARA ADMINISTRADOR
-        if (currentUser.role === 'ADMINISTRADOR') {
+        // ACTIVAR OPCIONES EXCLUSIVAS PARA ADMINISTRADOR
+        const isAdmin = (currentUser.role === 'ADMINISTRADOR' || currentUser.name.toLowerCase().includes('admin'));
+
+        if (isAdmin) {
           document.getElementById('admin-tab').classList.remove('hidden');
           document.getElementById('admin-users-tab').classList.remove('hidden');
           document.getElementById('admin-drive-btn').classList.remove('hidden');
+          document.getElementById('admin-drive-btn').classList.add('flex');
           document.getElementById('admin-sidebar-drive-btn').classList.remove('hidden');
         } else {
           document.getElementById('admin-tab').classList.add('hidden');
           document.getElementById('admin-users-tab').classList.add('hidden');
           document.getElementById('admin-drive-btn').classList.add('hidden');
+          document.getElementById('admin-drive-btn').classList.remove('flex');
           document.getElementById('admin-sidebar-drive-btn').classList.add('hidden');
         }
 
@@ -1020,11 +1025,11 @@
 
     function sincronizarConDrive(record) {
       const statusElement = document.getElementById('drive-status');
-      statusElement.className = "hidden sm:flex items-center gap-2 text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 font-medium";
+      statusElement.className = "flex items-center gap-2 text-xs bg-blue-50 text-blue-700 px-3 py-2 rounded-xl border border-blue-200 font-medium cursor-pointer";
       statusElement.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600"></i><span>Sincronizando...</span>`;
 
       setTimeout(() => {
-        statusElement.className = "hidden sm:flex items-center gap-2 text-xs bg-green-50 text-green-700 px-3 py-1.5 rounded-lg border border-green-200 font-medium";
+        statusElement.className = "flex items-center gap-2 text-xs bg-green-50 text-green-700 px-3 py-2 rounded-xl border border-green-200 font-medium cursor-pointer hover:bg-green-100";
         statusElement.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-green-600"></i><span>Drive Sincronizado</span>`;
       }, 1000);
     }
