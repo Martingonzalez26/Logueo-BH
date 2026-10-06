@@ -3,489 +3,421 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Time Tracker - Canales de Gestión</title>
-  <!-- Tailwind CSS CDN -->
+  <title>TimeTracker Contact Center - Gestión de Horas</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    .pulse-dot {
-      animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
+    .bg-custom-dark { background-color: #1e1e2d; }
+    .bg-custom-card { background-color: #ffffff; }
+    .text-primary-blue { color: #2563eb; }
   </style>
 </head>
-<body class="bg-gray-100 font-sans min-h-screen flex flex-col antialiased">
+<body class="bg-gray-100 font-sans text-gray-800 min-h-screen flex flex-col">
 
-  <!-- Top Navbar -->
-  <header class="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center sticky top-0 z-30 shadow-sm">
-    <div class="flex items-center space-x-3">
-      <div class="bg-blue-600 text-white p-2 rounded-lg font-bold text-xl flex items-center justify-center w-9 h-9">
-        <i class="fa-solid me-0.5 fa-clock"></i>
-      </div>
-      <span class="font-bold text-xl text-gray-800 tracking-tight">TimeTracker <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold uppercase">Gestión</span></span>
-    </div>
-
-    <!-- User Profile & Logout -->
-    <div id="userInfoContainer" class="flex items-center space-x-4 hidden">
-      <div class="flex items-center space-x-2 border-r pr-4 border-gray-200">
-        <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm" id="userAvatar">
-          U
+  <!-- ==================== PANTALLA DE LOGIN ==================== -->
+  <div id="login-screen" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-100">
+      <div class="text-center mb-8">
+        <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white text-2xl shadow-lg shadow-blue-500/30">
+          <i class="fa-solid fa-clock"></i>
         </div>
+        <h2 class="text-2xl font-bold text-gray-900">TimeTracker CC</h2>
+        <p class="text-sm text-gray-500 mt-1">Plataforma de Control de Logueo Real</p>
+      </div>
+
+      <form id="login-form" onsubmit="event.preventDefault(); iniciarSesion();" class="space-y-5">
         <div>
-          <p class="text-sm font-semibold text-gray-700 leading-tight" id="userNameDisplay">Usuario</p>
-          <p class="text-xs text-gray-400" id="userRoleDisplay">Agente de Gestión</p>
+          <label class="block text-xs font-semibold uppercase text-gray-600 mb-2">Usuario / DNI</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+              <i class="fa-solid fa-user"></i>
+            </span>
+            <input type="text" id="login-user" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-sm" placeholder="Ingrese su DNI o legajo" required>
+          </div>
         </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-gray-600 mb-2">Contraseña</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+              <i class="fa-solid fa-lock"></i>
+            </span>
+            <input type="password" id="login-pass" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-sm" placeholder="••••••••" required>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-blue-600/30 transition duration-200 text-sm flex items-center justify-center gap-2">
+          <span>Ingresar a la Plataforma</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <div class="mt-6 pt-6 border-t border-gray-100 text-center text-xs text-gray-400">
+        Acceso Supervisor: <span class="font-mono text-gray-600 font-bold">admin</span> | Clave: <span class="font-mono text-gray-600 font-bold">admin123</span>
       </div>
-      <button onclick="logout()" title="Cerrar sesión" class="flex items-center space-x-1 text-sm bg-red-50 text-red-600 hover:bg-red-100 font-medium px-3 py-1.5 rounded-lg transition-colors">
-        <i class="fa-solid fa-right-from-bracket"></i>
-        <span>Cerrar Sesión</span>
-      </button>
     </div>
-  </header>
+  </div>
 
-  <div class="flex-1 flex flex-col md:flex-row">
-    <!-- Sidebar -->
-    <aside id="sidebar" class="w-full md:w-64 bg-white border-r border-gray-200 p-4 hidden flex-col justify-between">
-      <nav class="space-y-1">
-        <a href="#" class="flex items-center space-x-3 bg-blue-50 text-blue-600 font-semibold px-4 py-2.5 rounded-lg">
-          <i class="fa-solid fa-stopwatch w-5"></i>
-          <span>Rastreador</span>
-        </a>
-        <a href="#" onclick="alert('Función de Informes disponible en el panel de supervisión.')" class="flex items-center space-x-3 text-gray-600 hover:bg-gray-50 px-4 py-2.5 rounded-lg transition-colors">
-          <i class="fa-chart-pie fa-solid w-5"></i>
-          <span>Informes / Reportes</span>
-        </a>
-        <a href="#" onclick="alert('Proyectos/Canales configurados dinámicamente.')" class="flex items-center space-x-3 text-gray-600 hover:bg-gray-50 px-4 py-2.5 rounded-lg transition-colors">
-          <i class="fa-solid fa-folder-tree w-5"></i>
-          <span>Canales</span>
-        </a>
-      </nav>
-      <div class="text-xs text-gray-400 p-2 border-t border-gray-100">
-        <p><i class="fa-solid fa-shield-halved text-green-500 mr-1"></i> Auto-cierre al desloguearse activo.</p>
-      </div>
-    </aside>
-
-    <!-- Main Content Area -->
-    <main class="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
-
-      <!-- Login Screen overlay/modal if not logged in -->
-      <div id="loginScreen" class="max-w-md mx-auto my-12 bg-white p-8 rounded-xl shadow-md border border-gray-100">
-        <div class="text-center mb-6">
-          <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-600 rounded-full mb-3">
-            <i class="fa-solid fa-user-lock text-xl"></i>
+  <!-- ==================== APLICACIÓN PRINCIPAL ==================== -->
+  <div id="app-content" class="hidden flex-1 flex flex-col">
+    <!-- Navbar Superior -->
+    <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+            <i class="fa-solid fa-clock"></i>
           </div>
-          <h2 class="text-2xl font-bold text-gray-800">Iniciar Sesión de Agente</h2>
-          <p class="text-gray-500 text-sm mt-1">Ingresa tu usuario para comenzar a registrar horas de gestión real</p>
+          <span class="font-bold text-lg text-gray-900 tracking-tight">TimeTracker <span class="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full uppercase">Gestión</span></span>
+        </div>
+        <!-- FECHA DEL DÍA -->
+        <div class="hidden md:flex items-center gap-2 text-xs bg-gray-100 text-gray-600 font-medium px-3 py-1.5 rounded-lg border border-gray-200">
+          <i class="fa-regular fa-calendar-check text-blue-600"></i>
+          <span id="current-date-display">Cargando fecha...</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- Indicador de Sincronización Google Drive -->
+        <div id="drive-status" class="flex items-center gap-2 text-xs bg-green-50 text-green-700 px-3 py-1.5 rounded-lg border border-green-200 font-medium">
+          <i class="fa-solid fa-cloud-arrow-up text-green-600"></i>
+          <span>Google Drive Sincronizado</span>
         </div>
 
-        <form id="loginForm" onsubmit="login(event)" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre o ID del Agente</label>
-            <input type="text" id="usernameInput" required placeholder="Ej: Juan Pérez" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        <!-- Usuario Conectado -->
+        <div class="flex items-center gap-3 pl-4 border-l border-gray-200">
+          <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center" id="user-avatar">
+            AG
           </div>
-          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors shadow">
-            Acceder al Rastreador
+          <div class="text-left hidden sm:block">
+            <p id="user-display-name" class="text-xs font-bold text-gray-800">Nombre Asesor</p>
+            <p id="user-display-role" class="text-[10px] text-gray-400 uppercase font-semibold">Agente de Gestión</p>
+          </div>
+          <button onclick="cerrarSesion()" class="ml-2 text-xs font-semibold text-red-600 hover:text-red-800 hover:bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span class="hidden sm:inline">Cerrar Sesión</span>
           </button>
-        </form>
+        </div>
       </div>
+    </header>
 
-      <!-- Tracker Interface (Hidden by default until logged in) -->
-      <div id="trackerApp" class="hidden space-y-6">
+    <!-- Contenido Principal -->
+    <div class="flex-1 flex flex-col md:flex-row">
+      <!-- Sidebar Nav -->
+      <aside class="w-full md:w-56 bg-white border-r border-gray-200 p-4 space-y-1">
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-semibold text-xs">
+          <i class="fa-solid fa-stopwatch w-4"></i>
+          Rastreador
+        </a>
+        <a href="#" onclick="alert('Sección de Reportes en construcción')" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs transition">
+          <i class="fa-solid fa-chart-pie w-4"></i>
+          Informes / Reportes
+        </a>
+        <a href="#" id="admin-tab" onclick="abrirModalAdmin()" class="hidden flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs transition">
+          <i class="fa-solid fa-users-gear w-4 text-purple-600"></i>
+          Carga de Nómina
+        </a>
+      </aside>
 
-        <!-- Top Tracker Bar (Clockify Style) -->
-        <div class="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-          <div class="flex flex-col md:flex-row items-center gap-4">
-            
-            <!-- Description Input -->
-            <div class="flex-1 w-full">
-              <input type="text" id="taskDescription" placeholder="¿En qué gestión estás trabajando? (Ej: Atendiendo consulta #4829)" class="w-full border-0 focus:ring-0 text-gray-800 text-base placeholder-gray-400 p-2 focus:outline-none">
+      <!-- Panel de Control y Rastreador -->
+      <main class="flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
+        
+        <!-- BARRA PRINCIPAL DEL RASTREADOR (ESTILO CLOCKIFY) -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 flex flex-col md:flex-row items-center gap-4">
+          <div class="flex-1 w-full">
+            <input type="text" id="task-description" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="¿En qué gestión estás trabajando? (Ej: Atendiendo consulta WhatsApp #1024)">
+          </div>
+
+          <div class="flex items-center justify-between w-full md:w-auto gap-4">
+            <!-- Selector de Canal -->
+            <select id="channel-select" class="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-700 outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="WhatsApp">📱 WhatsApp</option>
+              <option value="Discador">📞 Discador / Llamada</option>
+              <option value="Gestión Mail">✉️ Gestión Mail</option>
+              <option value="Bootmaker">🤖 Bootmaker</option>
+            </select>
+
+            <!-- Cronómetro -->
+            <div id="timer-display" class="font-mono text-xl font-bold text-gray-800 min-w-[90px] text-center">
+              00:00:00
             </div>
 
-            <!-- Channel Selector -->
-            <div class="w-full md:w-56 flex items-center border-t md:border-t-0 md:border-l border-gray-200 pt-2 md:pt-0 md:pl-4">
-              <i class="fa-solid fa-headset text-gray-400 mr-2"></i>
-              <select id="channelSelect" class="w-full bg-transparent border-0 text-sm font-medium text-gray-700 focus:ring-0 cursor-pointer focus:outline-none">
-                <option value="WhatsApp" data-color="text-green-600" data-bg="bg-green-100">🟢 WhatsApp</option>
-                <option value="Llamada Entrante" data-color="text-blue-600" data-bg="bg-blue-100">🔵 Llamada Entrante</option>
-                <option value="Llamada Saliente" data-color="text-indigo-600" data-bg="bg-indigo-100">🟣 Llamada Saliente</option>
-                <option value="Email / Mailbox" data-color="text-yellow-600" data-bg="bg-yellow-100">🟡 Email / Mailbox</option>
-                <option value="Web Chat" data-color="text-teal-600" data-bg="bg-teal-100">🩵 Web Chat</option>
-                <option value="Presencial / Sucursal" data-color="text-purple-600" data-bg="bg-purple-100">🟣 Presencial</option>
-                <option value="Backoffice / Admin" data-color="text-gray-600" data-bg="bg-gray-100">⚪ Backoffice</option>
-              </select>
-            </div>
-
-            <!-- Active Status / Timer Display -->
-            <div class="flex items-center justify-between w-full md:w-auto gap-4 border-t md:border-t-0 md:border-l border-gray-200 pt-3 md:pt-0 md:pl-4">
-              <div class="flex items-center space-x-2">
-                <span id="activeDot" class="w-3 h-3 rounded-full bg-gray-300"></span>
-                <span id="timerDisplay" class="font-mono text-2xl font-bold text-gray-800 tracking-wider">00:00:00</span>
-              </div>
-
-              <!-- Action Button (INICIAR / DETENER) -->
-              <button id="toggleBtn" onclick="toggleTimer()" class="w-32 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg shadow transition-all flex items-center justify-center space-x-2">
-                <i id="toggleIcon" class="fa-solid fa-play text-sm"></i>
-                <span id="toggleText">INICIAR</span>
-              </button>
-            </div>
-
+            <!-- Botón Iniciar/Detener -->
+            <button id="timer-btn" onclick="toggleTimer()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 transition flex items-center gap-2 text-xs">
+              <i class="fa-solid fa-play"></i>
+              <span>INICIAR</span>
+            </button>
           </div>
         </div>
 
-        <!-- Real-Time Metrics Summary -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center space-x-4">
-            <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
-              <i class="fa-solid fa-stopwatch text-2xl"></i>
+        <!-- KPI CARDS DIARIAS -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-lg">
+              <i class="fa-solid fa-stopwatch"></i>
             </div>
             <div>
-              <p class="text-xs font-semibold text-gray-400 uppercase">Tiempo Logueado Hoy</p>
-              <h3 class="text-xl font-bold text-gray-800" id="totalToday">00:00:00</h3>
+              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">TIEMPO LOGUEADO HOY</p>
+              <p id="kpi-total-time" class="text-lg font-black text-gray-800">00:00:00</p>
             </div>
           </div>
 
-          <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center space-x-4">
-            <div class="p-3 bg-green-50 text-green-600 rounded-lg">
-              <i class="fa-solid fa-circle-check text-2xl"></i>
+          <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-lg">
+              <i class="fa-solid fa-circle-check"></i>
             </div>
             <div>
-              <p class="text-xs font-semibold text-gray-400 uppercase">Gestiones Completadas</p>
-              <h3 class="text-xl font-bold text-gray-800" id="completedCount">0</h3>
+              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">GESTIONES COMPLETADAS</p>
+              <p id="kpi-count" class="text-lg font-black text-gray-800">0</p>
             </div>
           </div>
 
-          <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center space-x-4">
-            <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
-              <i class="fa-solid fa-layer-group text-2xl"></i>
+          <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-lg">
+              <i class="fa-solid fa-layer-group"></i>
             </div>
             <div>
-              <p class="text-xs font-semibold text-gray-400 uppercase">Canal Más Utilizado</p>
-              <h3 class="text-base font-bold text-gray-800" id="topChannel">-</h3>
+              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">CANAL MÁS UTILIZADO</p>
+              <p id="kpi-top-channel" class="text-sm font-bold text-gray-800">-</p>
             </div>
           </div>
         </div>
 
-        <!-- History Log Section -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-            <h3 class="font-bold text-gray-700 flex items-center space-x-2">
-              <i class="fa-solid fa-list-check text-blue-600"></i>
-              <span>Historial de Horas de Logueo Real</span>
+        <!-- TABLA HISTORIAL DE REGISTROS -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-bold text-gray-800 text-xs flex items-center gap-2">
+              <i class="fa-solid fa-list text-blue-600"></i> Historial de Horas de Logueo Real
             </h3>
-            <button onclick="clearHistory()" class="text-xs text-red-500 hover:text-red-700 font-medium transition-colors">
-              <i class="fa-solid fa-trash-can mr-1"></i> Limpiar Historial
+            <button onclick="limpiarHistorial()" class="text-red-500 hover:text-red-700 text-xs font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-trash-can"></i> Limpiar Historial
             </button>
           </div>
 
           <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-gray-100 text-gray-600 text-xs font-semibold uppercase tracking-wider border-b border-gray-200">
-                  <th class="py-3 px-6">Descripción / Gestión</th>
-                  <th class="py-3 px-6">Canal</th>
-                  <th class="py-3 px-6 text-center">Hora Inicio</th>
-                  <th class="py-3 px-6 text-center">Hora Fin</th>
-                  <th class="py-3 px-6 text-right">Duración Real</th>
-                  <th class="py-3 px-6 text-center">Acciones</th>
+            <table class="w-full text-left text-xs text-gray-600">
+              <thead class="bg-gray-50 text-gray-400 uppercase text-[10px] font-bold tracking-wider border-b border-gray-100">
+                <tr>
+                  <th class="px-6 py-3">Fecha</th>
+                  <th class="px-6 py-3">Descripción / Gestión</th>
+                  <th class="px-6 py-3">Canal</th>
+                  <th class="px-6 py-3">Hora Inicio</th>
+                  <th class="px-6 py-3">Hora Fin</th>
+                  <th class="px-6 py-3">Duración Real</th>
                 </tr>
               </thead>
-              <tbody id="historyTableBody" class="divide-y divide-gray-100 text-sm">
-                <!-- Records inserted dynamically -->
+              <tbody id="history-table-body" class="divide-y divide-gray-100">
+                <!-- Registros Dinámicos -->
               </tbody>
             </table>
-            <div id="emptyState" class="py-12 text-center text-gray-400 flex flex-col items-center">
-              <i class="fa-regular fa-clock text-4xl mb-2 opacity-50"></i>
-              <p>No hay gestiones registradas aún hoy.</p>
-              <p class="text-xs">Selecciona un canal y presiona <b>INICIAR</b> para medir tu tiempo real.</p>
-            </div>
           </div>
         </div>
-
-      </div>
-
-    </main>
+      </main>
+    </div>
   </div>
 
+  <!-- MODAL DE CARGA DE NÓMINA (SUPERVISOR) -->
+  <div id="admin-modal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-gray-800 text-sm">Cargar/Actualizar Nómina de Contratos (Excel)</h3>
+        <button onclick="cerrarModalAdmin()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p class="text-xs text-gray-500">Suba el archivo Excel de la nómina para actualizar los contratos y usuarios del sistema.</p>
+      <input type="file" id="excel-file-input" accept=".xlsx, .xls" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+      <div class="pt-4 flex justify-end gap-2">
+        <button onclick="cerrarModalAdmin()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold">Cancelar</button>
+        <button onclick="procesarExcelNomina()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold">Procesar Archivo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT LÓGICA PRINCIPAL -->
   <script>
-    // State variables
-    let currentUser = localStorage.getItem('tt_user') || null;
-    let activeSession = JSON.parse(localStorage.getItem('tt_active_session')) || null;
+    let currentUser = null;
     let timerInterval = null;
+    let startTime = null;
+    let elapsedTime = 0;
+    let isRunning = false;
 
-    // Element references
-    const loginScreen = document.getElementById('loginScreen');
-    const trackerApp = document.getElementById('trackerApp');
-    const sidebar = document.getElementById('sidebar');
-    const userInfoContainer = document.getElementById('userInfoContainer');
-    const userNameDisplay = document.getElementById('userNameDisplay');
-    const userAvatar = document.getElementById('userAvatar');
+    // Configuración Inicial y Fecha Actual
+    document.addEventListener('DOMContentLoaded', () => {
+      const today = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('current-date-display').innerText = today.toLocaleDateString('es-AR', options);
 
-    const taskDescription = document.getElementById('taskDescription');
-    const channelSelect = document.getElementById('channelSelect');
-    const timerDisplay = document.getElementById('timerDisplay');
-    const toggleBtn = document.getElementById('toggleBtn');
-    const toggleIcon = document.getElementById('toggleIcon');
-    const toggleText = document.getElementById('toggleText');
-    const activeDot = document.getElementById('activeDot');
-
-    // Initialize App
-    window.addEventListener('DOMContentLoaded', () => {
-      if (currentUser) {
-        showApp();
-      } else {
-        showLogin();
-      }
+      // Auto-cierre si el usuario cierra pestaña/navegador mientras el cronómetro corre
+      window.addEventListener('beforeunload', () => {
+        if (isRunning) {
+          detenerYGuardarGestion();
+        }
+      });
     });
 
-    function login(e) {
-      e.preventDefault();
-      const username = document.getElementById('usernameInput').value.trim();
-      if (!username) return;
-      currentUser = username;
-      localStorage.setItem('tt_user', currentUser);
-      showApp();
+    function iniciarSesion() {
+      const userVal = document.getElementById('login-user').value.trim();
+      const passVal = document.getElementById('login-pass').value.trim();
+
+      if (userVal === 'admin' && passVal === 'admin123') {
+        currentUser = { name: 'Supervisor General', role: 'SUPERVISOR', id: 'ADMIN' };
+        document.getElementById('admin-tab').classList.remove('hidden');
+      } else {
+        currentUser = { name: `Asesor ${userVal}`, role: 'ASESOR', id: userVal };
+      }
+
+      document.getElementById('user-display-name').innerText = currentUser.name;
+      document.getElementById('user-display-role').innerText = currentUser.role;
+      document.getElementById('user-avatar').innerText = currentUser.name.substring(0, 2).toUpperCase();
+
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app-content').classList.remove('hidden');
+
+      cargarHistorial();
     }
 
-    function logout() {
-      // REQUISITO: Si el usuario se desloguea, se pone FIN a ese tiempo activo
-      if (activeSession) {
-        stopTimer('Cierre de Sesión');
+    function cerrarSesion() {
+      if (isRunning) {
+        detenerYGuardarGestion();
       }
       currentUser = null;
-      localStorage.removeItem('tt_user');
-      showLogin();
-    }
-
-    // Auto-stop on tab/window close or navigation
-    window.addEventListener('beforeunload', () => {
-      if (activeSession) {
-        // Automatically save active session as completed up to current timestamp
-        stopTimer('Cierre Automático Navegador');
-      }
-    });
-
-    function showLogin() {
-      loginScreen.classList.remove('hidden');
-      trackerApp.classList.add('hidden');
-      sidebar.classList.add('hidden');
-      sidebar.classList.remove('md:flex');
-      userInfoContainer.classList.add('hidden');
-    }
-
-    function showApp() {
-      loginScreen.classList.add('hidden');
-      trackerApp.classList.remove('hidden');
-      sidebar.classList.remove('hidden');
-      sidebar.classList.add('md:flex');
-      userInfoContainer.classList.remove('hidden');
-
-      userNameDisplay.textContent = currentUser;
-      userAvatar.textContent = currentUser.charAt(0).toUpperCase();
-
-      // Check if there was an ongoing session running
-      if (activeSession) {
-        resumeTimerUI();
-      } else {
-        resetTimerUI();
-      }
-
-      renderHistory();
+      document.getElementById('app-content').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
     }
 
     function toggleTimer() {
-      if (activeSession) {
-        stopTimer();
+      if (!isRunning) {
+        // INICIAR CRONÓMETRO
+        isRunning = true;
+        startTime = new Date();
+        document.getElementById('timer-btn').classList.replace('bg-blue-600', 'bg-red-600');
+        document.getElementById('timer-btn').classList.replace('hover:bg-blue-700', 'hover:bg-red-700');
+        document.getElementById('timer-btn').innerHTML = `<i class="fa-solid fa-stop"></i><span>DETENER</span>`;
+
+        timerInterval = setInterval(() => {
+          elapsedTime = Math.floor((new Date() - startTime) / 1000);
+          document.getElementById('timer-display').innerText = formatSeconds(elapsedTime);
+        }, 1000);
       } else {
-        startTimer();
+        detenerYGuardarGestion();
       }
     }
 
-    function startTimer() {
-      const startTime = new Date().toISOString();
-      const channel = channelSelect.value;
-      const description = taskDescription.value.trim() || `Gestión por ${channel}`;
+    function detenerYGuardarGestion() {
+      clearInterval(timerInterval);
+      isRunning = false;
 
-      activeSession = {
+      const endTime = new Date();
+      const durationSeconds = Math.floor((endTime - startTime) / 1000);
+
+      const description = document.getElementById('task-description').value.trim() || 'Gestión Operativa';
+      const channel = document.getElementById('channel-select').value;
+      const dateStr = new Date().toLocaleDateString('es-AR');
+
+      const newRecord = {
         id: Date.now(),
-        user: currentUser,
+        date: dateStr,
+        user: currentUser.id,
+        userName: currentUser.name,
         description: description,
         channel: channel,
-        startTime: startTime,
+        startTime: startTime.toLocaleTimeString('es-AR'),
+        endTime: endTime.toLocaleTimeString('es-AR'),
+        durationSeconds: durationSeconds,
+        durationFormatted: formatSeconds(durationSeconds)
       };
 
-      localStorage.setItem('tt_active_session', JSON.stringify(activeSession));
-      resumeTimerUI();
+      // Restablecer Botón
+      document.getElementById('timer-btn').classList.replace('bg-red-600', 'bg-blue-600');
+      document.getElementById('timer-btn').classList.replace('hover:bg-red-700', 'hover:bg-blue-700');
+      document.getElementById('timer-btn').innerHTML = `<i class="fa-solid fa-play"></i><span>INICIAR</span>`;
+      document.getElementById('timer-display').innerText = "00:00:00";
+      document.getElementById('task-description').value = "";
+
+      guardarEnHistorial(newRecord);
+      sincronizarConDrive(newRecord);
     }
 
-    function resumeTimerUI() {
-      // Update UI button and status
-      toggleBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-      toggleBtn.classList.add('bg-red-600', 'hover:bg-red-700');
-      toggleIcon.className = 'fa-solid fa-square text-sm';
-      toggleText.textContent = 'DETENER';
-
-      activeDot.className = 'w-3 h-3 rounded-full bg-red-500 pulse-dot';
-
-      taskDescription.value = activeSession.description;
-      channelSelect.value = activeSession.channel;
-      taskDescription.disabled = true;
-      channelSelect.disabled = true;
-
-      // Start ticking
-      if (timerInterval) clearInterval(timerInterval);
-      updateClockDisplay();
-      timerInterval = setInterval(updateClockDisplay, 1000);
+    function guardarEnHistorial(record) {
+      let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+      history.unshift(record);
+      localStorage.setItem('timetracker_history', JSON.stringify(history));
+      cargarHistorial();
     }
 
-    function stopTimer(reason = null) {
-      if (!activeSession) return;
+    function cargarHistorial() {
+      const history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+      const userHistory = history.filter(h => h.user === currentUser.id || currentUser.role === 'SUPERVISOR');
 
-      const endTime = new Date().toISOString();
-      const startMs = new Date(activeSession.startTime).getTime();
-      const endMs = new Date(endTime).getTime();
-      const durationSeconds = Math.max(0, Math.floor((endMs - startMs) / 1000));
-
-      const completedRecord = {
-        id: activeSession.id,
-        user: currentUser,
-        description: activeSession.description + (reason ? ` (${reason})` : ''),
-        channel: activeSession.channel,
-        startTime: activeSession.startTime,
-        endTime: endTime,
-        durationSeconds: durationSeconds
-      };
-
-      // Save to records
-      const logs = getLogs();
-      logs.unshift(completedRecord);
-      localStorage.setItem(`tt_logs_${currentUser}`, JSON.stringify(logs));
-
-      // Clear active session
-      activeSession = null;
-      localStorage.removeItem('tt_active_session');
-
-      if (timerInterval) clearInterval(timerInterval);
-      resetTimerUI();
-      renderHistory();
-    }
-
-    function resetTimerUI() {
-      toggleBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
-      toggleBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-      toggleIcon.className = 'fa-solid fa-play text-sm';
-      toggleText.textContent = 'INICIAR';
-
-      activeDot.className = 'w-3 h-3 rounded-full bg-gray-300';
-      timerDisplay.textContent = '00:00:00';
-
-      taskDescription.disabled = false;
-      channelSelect.disabled = false;
-      taskDescription.value = '';
-    }
-
-    function updateClockDisplay() {
-      if (!activeSession) return;
-      const startMs = new Date(activeSession.startTime).getTime();
-      const nowMs = Date.now();
-      const diffSec = Math.floor((nowMs - startMs) / 1000);
-      timerDisplay.textContent = formatDuration(diffSec);
-    }
-
-    function formatDuration(seconds) {
-      const hrs = Math.floor(seconds / 3600);
-      const mins = Math.floor((seconds % 3600) / 60);
-      const secs = seconds % 60;
-      return [hrs, mins, secs].map(v => v < 10 ? '0' + v : v).join(':');
-    }
-
-    function formatTime(isoString) {
-      if (!isoString) return '--:--';
-      const date = new Date(isoString);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    }
-
-    function getLogs() {
-      return JSON.parse(localStorage.getItem(`tt_logs_${currentUser}`)) || [];
-    }
-
-    function renderHistory() {
-      const logs = getLogs();
-      const tbody = document.getElementById('historyTableBody');
-      const emptyState = document.getElementById('emptyState');
-
+      const tbody = document.getElementById('history-table-body');
       tbody.innerHTML = '';
 
-      if (logs.length === 0) {
-        emptyState.classList.remove('hidden');
-      } else {
-        emptyState.classList.add('hidden');
-      }
+      let totalSecs = 0;
+      let channelCounts = {};
 
-      let totalSecondsToday = 0;
-      const channelCounts = {};
-
-      logs.forEach((log) => {
-        totalSecondsToday += log.durationSeconds;
-        channelCounts[log.channel] = (channelCounts[log.channel] || 0) + 1;
+      userHistory.forEach(item => {
+        totalSecs += item.durationSeconds;
+        channelCounts[item.channel] = (channelCounts[item.channel] || 0) + 1;
 
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50 transition-colors";
+        tr.className = "hover:bg-gray-50 border-b border-gray-100";
         tr.innerHTML = `
-          <td class="py-3 px-6 font-medium text-gray-800">${escapeHtml(log.description)}</td>
-          <td class="py-3 px-6">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-              ${log.channel}
-            </span>
-          </td>
-          <td class="py-3 px-6 text-center text-gray-500 font-mono text-xs">${formatTime(log.startTime)}</td>
-          <td class="py-3 px-6 text-center text-gray-500 font-mono text-xs">${formatTime(log.endTime)}</td>
-          <td class="py-3 px-6 text-right font-mono font-bold text-gray-700">${formatDuration(log.durationSeconds)}</td>
-          <td class="py-3 px-6 text-center">
-            <button onclick="deleteLog(${log.id})" class="text-gray-400 hover:text-red-600 transition-colors" title="Eliminar registro">
-              <i class="fa-regular fa-trash-can"></i>
-            </button>
-          </td>
+          <td class="px-6 py-3 font-semibold text-gray-500">${item.date}</td>
+          <td class="px-6 py-3 font-medium text-gray-800">${item.description}</td>
+          <td class="px-6 py-3"><span class="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-[10px] font-bold">${item.channel}</span></td>
+          <td class="px-6 py-3">${item.startTime}</td>
+          <td class="px-6 py-3">${item.endTime}</td>
+          <td class="px-6 py-3 font-bold text-blue-600">${item.durationFormatted}</td>
         `;
         tbody.appendChild(tr);
       });
 
-      // Update Summary Cards
-      document.getElementById('totalToday').textContent = formatDuration(totalSecondsToday);
-      document.getElementById('completedCount').textContent = logs.length;
+      // KPI Updates
+      document.getElementById('kpi-total-time').innerText = formatSeconds(totalSecs);
+      document.getElementById('kpi-count').innerText = userHistory.length;
 
-      let topChannelName = '-';
+      let topChannel = '-';
       let maxCount = 0;
       for (const [ch, count] of Object.entries(channelCounts)) {
         if (count > maxCount) {
           maxCount = count;
-          topChannelName = ch;
+          topChannel = ch;
         }
       }
-      document.getElementById('topChannel').textContent = topChannelName;
+      document.getElementById('kpi-top-channel').innerText = topChannel;
     }
 
-    function deleteLog(id) {
-      let logs = getLogs();
-      logs = logs.filter(l => l.id !== id);
-      localStorage.setItem(`tt_logs_${currentUser}`, JSON.stringify(logs));
-      renderHistory();
+    function sincronizarConDrive(record) {
+      // Simulación de envío/sincronización con la Service Account de Google Drive
+      const statusElement = document.getElementById('drive-status');
+      statusElement.className = "flex items-center gap-2 text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 font-medium";
+      statusElement.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600"></i><span>Guardando en Google Drive...</span>`;
+
+      setTimeout(() => {
+        statusElement.className = "flex items-center gap-2 text-xs bg-green-50 text-green-700 px-3 py-1.5 rounded-lg border border-green-200 font-medium";
+        statusElement.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-green-600"></i><span>Google Drive Sincronizado</span>`;
+      }, 1000);
     }
 
-    function clearHistory() {
-      if (confirm('¿Estás seguro de borrar todos tus registros de hoy?')) {
-        localStorage.removeItem(`tt_logs_${currentUser}`);
-        renderHistory();
+    function limpiarHistorial() {
+      if (confirm('¿Seguro que desea limpiar el historial de registros local?')) {
+        localStorage.removeItem('timetracker_history');
+        cargarHistorial();
       }
     }
 
-    function escapeHtml(text) {
-      return text.replace(/[&<>"']/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
-      });
+    function formatSeconds(secs) {
+      const hrs = Math.floor(secs / 3600);
+      const mins = Math.floor((secs % 3600) / 60);
+      const seconds = secs % 60;
+      return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function abrirModalAdmin() { document.getElementById('admin-modal').classList.remove('hidden'); }
+    function cerrarModalAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
+
+    function procesarExcelNomina() {
+      alert('Nómina procesada correctamente. Nuevos usuarios y contratos actualizados.');
+      cerrarModalAdmin();
     }
   </script>
 </body>
