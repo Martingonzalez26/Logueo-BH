@@ -10,7 +10,6 @@
   <style>
     .bg-custom-dark { background-color: #1e1e2d; }
     .bg-custom-card { background-color: #ffffff; }
-    .text-primary-blue { color: #2563eb; }
   </style>
 </head>
 <body class="bg-gray-100 font-sans text-gray-800 min-h-screen flex flex-col">
@@ -105,24 +104,23 @@
     <div class="flex-1 flex flex-col md:flex-row">
       <!-- Sidebar Nav -->
       <aside class="w-full md:w-56 bg-white border-r border-gray-200 p-4 space-y-1">
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-semibold text-xs">
+        <button onclick="switchTab('tracker')" id="nav-tracker" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-semibold text-xs text-left">
           <i class="fa-solid fa-stopwatch w-4"></i>
           Rastreador
-        </a>
-        <a href="#" onclick="alert('Sección de Reportes en construcción')" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs transition">
+        </button>
+        <button onclick="switchTab('reports')" id="nav-reports" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition">
           <i class="fa-solid fa-chart-pie w-4"></i>
           Informes / Reportes
-        </a>
-        <a href="#" id="admin-tab" onclick="abrirModalAdmin()" class="hidden flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs transition">
+        </button>
+        <button id="admin-tab" onclick="abrirModalAdmin()" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition">
           <i class="fa-solid fa-users-gear w-4 text-purple-600"></i>
           Carga de Nómina
-        </a>
+        </button>
       </aside>
 
-      <!-- Panel de Control y Rastreador -->
-      <main class="flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
-        
-        <!-- BARRA PRINCIPAL DEL RASTREADOR (ESTILO CLOCKIFY) -->
+      <!-- SECCIÓN 1: RASTREADOR (TRACKER) -->
+      <main id="tab-tracker-content" class="flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
+        <!-- BARRA PRINCIPAL DEL RASTREADOR -->
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 flex flex-col md:flex-row items-center gap-4">
           <div class="flex-1 w-full">
             <input type="text" id="task-description" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="¿En qué gestión estás trabajando? (Ej: Atendiendo consulta WhatsApp #1024)">
@@ -213,6 +211,42 @@
           </div>
         </div>
       </main>
+
+      <!-- SECCIÓN 2: INFORMES Y REPORTES (COMPLETO) -->
+      <main id="tab-reports-content" class="hidden flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
+        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
+            <div>
+              <h2 class="text-lg font-bold text-gray-800">Informes y Reportes de Horas</h2>
+              <p class="text-xs text-gray-500">Consolidado diario y exportación a Excel para facturación / F043</p>
+            </div>
+            <button onclick="exportarExcelReporte()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
+              <i class="fa-solid fa-file-excel"></i>
+              <span>Descargar Reporte (.XLSX)</span>
+            </button>
+          </div>
+
+          <!-- Tabla Resumen de Reporte -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-600">
+              <thead class="bg-gray-50 text-gray-400 uppercase text-[10px] font-bold tracking-wider border-b border-gray-100">
+                <tr>
+                  <th class="px-4 py-3">Usuario / Asesor</th>
+                  <th class="px-4 py-3">Fecha</th>
+                  <th class="px-4 py-3">Horas WhatsApp</th>
+                  <th class="px-4 py-3">Horas Discador</th>
+                  <th class="px-4 py-3">Horas Mail</th>
+                  <th class="px-4 py-3">Horas Bootmaker</th>
+                  <th class="px-4 py-3">Total Trabajado</th>
+                </tr>
+              </thead>
+              <tbody id="reports-table-body" class="divide-y divide-gray-100">
+                <!-- Carga Dinámica -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
     </div>
   </div>
 
@@ -240,13 +274,11 @@
     let elapsedTime = 0;
     let isRunning = false;
 
-    // Configuración Inicial y Fecha Actual
     document.addEventListener('DOMContentLoaded', () => {
       const today = new Date();
       const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
       document.getElementById('current-date-display').innerText = today.toLocaleDateString('es-AR', options);
 
-      // Auto-cierre si el usuario cierra pestaña/navegador mientras el cronómetro corre
       window.addEventListener('beforeunload', () => {
         if (isRunning) {
           detenerYGuardarGestion();
@@ -284,9 +316,23 @@
       document.getElementById('login-screen').classList.remove('hidden');
     }
 
+    function switchTab(tabName) {
+      if (tabName === 'tracker') {
+        document.getElementById('tab-tracker-content').classList.remove('hidden');
+        document.getElementById('tab-reports-content').classList.add('hidden');
+        document.getElementById('nav-tracker').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-semibold text-xs text-left";
+        document.getElementById('nav-reports').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition";
+      } else {
+        document.getElementById('tab-tracker-content').classList.add('hidden');
+        document.getElementById('tab-reports-content').classList.remove('hidden');
+        document.getElementById('nav-reports').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-semibold text-xs text-left";
+        document.getElementById('nav-tracker').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition";
+        cargarReportes();
+      }
+    }
+
     function toggleTimer() {
       if (!isRunning) {
-        // INICIAR CRONÓMETRO
         isRunning = true;
         startTime = new Date();
         document.getElementById('timer-btn').classList.replace('bg-blue-600', 'bg-red-600');
@@ -326,7 +372,6 @@
         durationFormatted: formatSeconds(durationSeconds)
       };
 
-      // Restablecer Botón
       document.getElementById('timer-btn').classList.replace('bg-red-600', 'bg-blue-600');
       document.getElementById('timer-btn').classList.replace('hover:bg-red-700', 'hover:bg-blue-700');
       document.getElementById('timer-btn').innerHTML = `<i class="fa-solid fa-play"></i><span>INICIAR</span>`;
@@ -371,7 +416,6 @@
         tbody.appendChild(tr);
       });
 
-      // KPI Updates
       document.getElementById('kpi-total-time').innerText = formatSeconds(totalSecs);
       document.getElementById('kpi-count').innerText = userHistory.length;
 
@@ -386,8 +430,62 @@
       document.getElementById('kpi-top-channel').innerText = topChannel;
     }
 
+    function cargarReportes() {
+      const history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+      const userHistory = history.filter(h => h.user === currentUser.id || currentUser.role === 'SUPERVISOR');
+
+      const tbody = document.getElementById('reports-table-body');
+      tbody.innerHTML = '';
+
+      // Agrupar por usuario y fecha
+      const grouped = {};
+      userHistory.forEach(item => {
+        const key = `${item.user}_${item.date}`;
+        if (!grouped[key]) {
+          grouped[key] = {
+            userName: item.userName,
+            date: item.date,
+            WhatsApp: 0,
+            Discador: 0,
+            'Gestión Mail': 0,
+            Bootmaker: 0,
+            total: 0
+          };
+        }
+        grouped[key][item.channel] = (grouped[key][item.channel] || 0) + item.durationSeconds;
+        grouped[key].total += item.durationSeconds;
+      });
+
+      for (const g of Object.values(grouped)) {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-50 border-b border-gray-100";
+        tr.innerHTML = `
+          <td class="px-4 py-3 font-bold text-gray-800">${g.userName}</td>
+          <td class="px-4 py-3 text-gray-500">${g.date}</td>
+          <td class="px-4 py-3">${formatSeconds(g.WhatsApp)}</td>
+          <td class="px-4 py-3">${formatSeconds(g.Discador)}</td>
+          <td class="px-4 py-3">${formatSeconds(g['Gestión Mail'])}</td>
+          <td class="px-4 py-3">${formatSeconds(g.Bootmaker)}</td>
+          <td class="px-4 py-3 font-bold text-blue-600">${formatSeconds(g.total)}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function exportarExcelReporte() {
+      const history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+      if (history.length === 0) {
+        alert('No hay registros para exportar.');
+        return;
+      }
+
+      const ws = XLSX.utils.json_to_sheet(history);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "ReporteHoras");
+      XLSX.writeFile(wb, `Reporte_Horas_TimeTracker_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
     function sincronizarConDrive(record) {
-      // Simulación de envío/sincronización con la Service Account de Google Drive
       const statusElement = document.getElementById('drive-status');
       statusElement.className = "flex items-center gap-2 text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 font-medium";
       statusElement.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600"></i><span>Guardando en Google Drive...</span>`;
