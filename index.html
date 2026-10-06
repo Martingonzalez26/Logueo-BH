@@ -7,10 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <style>
-    .bg-custom-dark { background-color: #1e1e2d; }
-    .bg-custom-card { background-color: #ffffff; }
-  </style>
 </head>
 <body class="bg-gray-100 font-sans text-gray-800 min-h-screen flex flex-col">
 
@@ -32,7 +28,7 @@
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
               <i class="fa-solid fa-user"></i>
             </span>
-            <input type="text" id="login-user" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-sm" placeholder="Ingrese su DNI o legajo" required>
+            <input type="text" id="login-user" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-sm" placeholder="Ingrese su DNI o Administrador" required>
           </div>
         </div>
 
@@ -53,7 +49,7 @@
       </form>
 
       <div class="mt-6 pt-6 border-t border-gray-100 text-center text-xs text-gray-400">
-        Acceso Supervisor: <span class="font-mono text-gray-600 font-bold">admin</span> | Clave: <span class="font-mono text-gray-600 font-bold">admin123</span>
+        Acceso Administrador: <span class="font-mono text-gray-600 font-bold">Administrador</span> | Clave: <span class="font-mono text-gray-600 font-bold">admin123</span>
       </div>
     </div>
   </div>
@@ -86,11 +82,11 @@
         <!-- Usuario Conectado -->
         <div class="flex items-center gap-3 pl-4 border-l border-gray-200">
           <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center" id="user-avatar">
-            AG
+            AD
           </div>
           <div class="text-left hidden sm:block">
-            <p id="user-display-name" class="text-xs font-bold text-gray-800">Nombre Asesor</p>
-            <p id="user-display-role" class="text-[10px] text-gray-400 uppercase font-semibold">Agente de Gestión</p>
+            <p id="user-display-name" class="text-xs font-bold text-gray-800">Administrador</p>
+            <p id="user-display-role" class="text-[10px] text-gray-400 uppercase font-semibold">Administrador</p>
           </div>
           <button onclick="cerrarSesion()" class="ml-2 text-xs font-semibold text-red-600 hover:text-red-800 hover:bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
             <i class="fa-solid fa-right-from-bracket"></i>
@@ -103,7 +99,7 @@
     <!-- Contenido Principal -->
     <div class="flex-1 flex flex-col md:flex-row">
       <!-- Sidebar Nav -->
-      <aside class="w-full md:w-56 bg-white border-r border-gray-200 p-4 space-y-1">
+      <aside class="w-full md:w-60 bg-white border-r border-gray-200 p-4 space-y-1">
         <button onclick="switchTab('tracker')" id="nav-tracker" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-semibold text-xs text-left">
           <i class="fa-solid fa-stopwatch w-4"></i>
           Rastreador
@@ -112,9 +108,10 @@
           <i class="fa-solid fa-chart-pie w-4"></i>
           Informes / Reportes
         </button>
-        <button id="admin-tab" onclick="abrirModalAdmin()" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition">
-          <i class="fa-solid fa-users-gear w-4 text-purple-600"></i>
-          Carga de Nómina
+        <!-- PESTAÑA EXCLUSIVA PARA EL ADMINISTRADOR -->
+        <button id="admin-tab" onclick="switchTab('admin-settings')" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition">
+          <i class="fa-solid fa-sliders w-4 text-purple-600"></i>
+          Configuración / Gestión App
         </button>
       </aside>
 
@@ -212,18 +209,38 @@
         </div>
       </main>
 
-      <!-- SECCIÓN 2: INFORMES Y REPORTES (COMPLETO) -->
+      <!-- SECCIÓN 2: INFORMES Y REPORTES (CON FILTROS POR FECHA) -->
       <main id="tab-reports-content" class="hidden flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
         <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-6">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
             <div>
               <h2 class="text-lg font-bold text-gray-800">Informes y Reportes de Horas</h2>
-              <p class="text-xs text-gray-500">Consolidado diario y exportación a Excel para facturación / F043</p>
+              <p class="text-xs text-gray-500">Filtre por fecha para visualizar y descargar el consolidado en Excel</p>
             </div>
             <button onclick="exportarExcelReporte()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
               <i class="fa-solid fa-file-excel"></i>
-              <span>Descargar Reporte (.XLSX)</span>
+              <span>Descargar Reporte Excel (.XLSX)</span>
             </button>
+          </div>
+
+          <!-- FILTROS POR FECHA -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Fecha Desde:</label>
+              <input type="date" id="filter-date-from" class="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Fecha Hasta:</label>
+              <input type="date" id="filter-date-to" class="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex items-end gap-2">
+              <button onclick="filtrarReportesPorFecha()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-lg shadow transition">
+                <i class="fa-solid fa-filter"></i> Filtrar Registros
+              </button>
+              <button onclick="restablecerFiltrosFechas()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-xs py-2.5 px-3 rounded-lg transition" title="Limpiar Filtros">
+                <i class="fa-solid fa-rotate-right"></i>
+              </button>
+            </div>
           </div>
 
           <!-- Tabla Resumen de Reporte -->
@@ -247,10 +264,65 @@
           </div>
         </div>
       </main>
+
+      <!-- SECCIÓN 3: CONFIGURACIÓN Y GESTIÓN APP (EXCLUSIVA ADMINISTRADOR) -->
+      <main id="tab-admin-settings-content" class="hidden flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
+        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-6">
+          <div class="border-b pb-4 flex justify-between items-center">
+            <div>
+              <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-sliders text-purple-600"></i> Panel de Gestión y Modificación de la App</h2>
+              <p class="text-xs text-gray-500">Módulo exclusivo para el usuario Administrador</p>
+            </div>
+            <button onclick="abrirModalAdmin()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition flex items-center gap-2">
+              <i class="fa-solid fa-file-import"></i> Actualizar Nómina (Excel)
+            </button>
+          </div>
+
+          <!-- Formulario para Agregar/Modificar Registro Manualmente -->
+          <div class="bg-purple-50/50 p-5 rounded-2xl border border-purple-100 space-y-4">
+            <h3 class="font-bold text-xs uppercase tracking-wider text-purple-900 flex items-center gap-2">
+              <i class="fa-solid fa-plus-circle text-purple-600"></i> Cargar o Corregir Tiempo Manual de un Asesor
+            </h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">DNI / Asesor</label>
+                <input type="text" id="manual-user-id" class="w-full p-2 text-xs border rounded-lg bg-white" placeholder="Ej: 38411266">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Fecha</label>
+                <input type="date" id="manual-date" class="w-full p-2 text-xs border rounded-lg bg-white">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Canal</label>
+                <select id="manual-channel" class="w-full p-2 text-xs border rounded-lg bg-white">
+                  <option value="WhatsApp">WhatsApp</option>
+                  <option value="Discador">Discador</option>
+                  <option value="Gestión Mail">Gestión Mail</option>
+                  <option value="Bootmaker">Bootmaker</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Duración (Minutos)</label>
+                <input type="number" id="manual-duration-mins" class="w-full p-2 text-xs border rounded-lg bg-white" placeholder="Ej: 60">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Descripción de la corrección</label>
+              <input type="text" id="manual-desc" class="w-full p-2 text-xs border rounded-lg bg-white" placeholder="Ej: Registro manual por corrección de fichaje">
+            </div>
+
+            <button onclick="guardarTiempoManual()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition">
+              Guardar Registro Manual
+            </button>
+          </div>
+        </div>
+      </main>
     </div>
   </div>
 
-  <!-- MODAL DE CARGA DE NÓMINA (SUPERVISOR) -->
+  <!-- MODAL DE CARGA DE NÓMINA (ADMINISTRADOR) -->
   <div id="admin-modal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -273,6 +345,7 @@
     let startTime = null;
     let elapsedTime = 0;
     let isRunning = false;
+    let registrosFiltradosCache = [];
 
     document.addEventListener('DOMContentLoaded', () => {
       const today = new Date();
@@ -290,8 +363,8 @@
       const userVal = document.getElementById('login-user').value.trim();
       const passVal = document.getElementById('login-pass').value.trim();
 
-      if (userVal === 'admin' && passVal === 'admin123') {
-        currentUser = { name: 'Supervisor General', role: 'SUPERVISOR', id: 'ADMIN' };
+      if (userVal.toLowerCase() === 'administrador' && passVal === 'admin123') {
+        currentUser = { name: 'Administrador', role: 'ADMINISTRADOR', id: 'ADMIN' };
         document.getElementById('admin-tab').classList.remove('hidden');
       } else {
         currentUser = { name: `Asesor ${userVal}`, role: 'ASESOR', id: userVal };
@@ -314,20 +387,32 @@
       currentUser = null;
       document.getElementById('app-content').classList.add('hidden');
       document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('admin-tab').classList.add('hidden');
     }
 
     function switchTab(tabName) {
+      document.getElementById('tab-tracker-content').classList.add('hidden');
+      document.getElementById('tab-reports-content').classList.add('hidden');
+      document.getElementById('tab-admin-settings-content').classList.add('hidden');
+
+      document.getElementById('nav-tracker').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition";
+      document.getElementById('nav-reports').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition";
+      document.getElementById('admin-tab').className = "hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition";
+
+      if (currentUser && currentUser.role === 'ADMINISTRADOR') {
+        document.getElementById('admin-tab').classList.remove('hidden');
+      }
+
       if (tabName === 'tracker') {
         document.getElementById('tab-tracker-content').classList.remove('hidden');
-        document.getElementById('tab-reports-content').classList.add('hidden');
         document.getElementById('nav-tracker').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-semibold text-xs text-left";
-        document.getElementById('nav-reports').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition";
-      } else {
-        document.getElementById('tab-tracker-content').classList.add('hidden');
+      } else if (tabName === 'reports') {
         document.getElementById('tab-reports-content').classList.remove('hidden');
         document.getElementById('nav-reports').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-semibold text-xs text-left";
-        document.getElementById('nav-tracker').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition";
         cargarReportes();
+      } else if (tabName === 'admin-settings') {
+        document.getElementById('tab-admin-settings-content').classList.remove('hidden');
+        document.getElementById('admin-tab').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-purple-50 text-purple-700 font-semibold text-xs text-left";
       }
     }
 
@@ -357,10 +442,12 @@
 
       const description = document.getElementById('task-description').value.trim() || 'Gestión Operativa';
       const channel = document.getElementById('channel-select').value;
+      const todayISO = new Date().toISOString().slice(0, 10);
       const dateStr = new Date().toLocaleDateString('es-AR');
 
       const newRecord = {
         id: Date.now(),
+        dateIso: todayISO,
         date: dateStr,
         user: currentUser.id,
         userName: currentUser.name,
@@ -391,7 +478,7 @@
 
     function cargarHistorial() {
       const history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
-      const userHistory = history.filter(h => h.user === currentUser.id || currentUser.role === 'SUPERVISOR');
+      const userHistory = history.filter(h => h.user === currentUser.id || currentUser.role === 'ADMINISTRADOR');
 
       const tbody = document.getElementById('history-table-body');
       tbody.innerHTML = '';
@@ -432,14 +519,25 @@
 
     function cargarReportes() {
       const history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
-      const userHistory = history.filter(h => h.user === currentUser.id || currentUser.role === 'SUPERVISOR');
+      let filtered = history.filter(h => h.user === currentUser.id || currentUser.role === 'ADMINISTRADOR');
+
+      const fromVal = document.getElementById('filter-date-from').value;
+      const toVal = document.getElementById('filter-date-to').value;
+
+      if (fromVal) {
+        filtered = filtered.filter(item => item.dateIso >= fromVal);
+      }
+      if (toVal) {
+        filtered = filtered.filter(item => item.dateIso <= toVal);
+      }
+
+      registrosFiltradosCache = filtered;
 
       const tbody = document.getElementById('reports-table-body');
       tbody.innerHTML = '';
 
-      // Agrupar por usuario y fecha
       const grouped = {};
-      userHistory.forEach(item => {
+      filtered.forEach(item => {
         const key = `${item.user}_${item.date}`;
         if (!grouped[key]) {
           grouped[key] = {
@@ -472,17 +570,65 @@
       }
     }
 
+    function filtrarReportesPorFecha() {
+      cargarReportes();
+    }
+
+    function restablecerFiltrosFechas() {
+      document.getElementById('filter-date-from').value = '';
+      document.getElementById('filter-date-to').value = '';
+      cargarReportes();
+    }
+
     function exportarExcelReporte() {
-      const history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
-      if (history.length === 0) {
-        alert('No hay registros para exportar.');
+      const dataToExport = registrosFiltradosCache.length > 0 ? registrosFiltradosCache : JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+      
+      if (dataToExport.length === 0) {
+        alert('No hay registros para exportar en el rango seleccionado.');
         return;
       }
 
-      const ws = XLSX.utils.json_to_sheet(history);
+      const ws = XLSX.utils.json_to_sheet(dataToExport);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "ReporteHoras");
-      XLSX.writeFile(wb, `Reporte_Horas_TimeTracker_${new Date().toISOString().slice(0,10)}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, "ReporteFiltrado");
+      XLSX.writeFile(wb, `Reporte_TimeTracker_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function guardarTiempoManual() {
+      const userId = document.getElementById('manual-user-id').value.trim();
+      const dateVal = document.getElementById('manual-date').value;
+      const channel = document.getElementById('manual-channel').value;
+      const mins = parseInt(document.getElementById('manual-duration-mins').value || '0');
+      const desc = document.getElementById('manual-desc').value.trim() || 'Ajuste Manual por Administrador';
+
+      if (!userId || !dateVal || mins <= 0) {
+        alert('Por favor complete todos los campos correctamente.');
+        return;
+      }
+
+      const secs = mins * 60;
+      const dateStr = new Date(dateVal + 'T00:00:00').toLocaleDateString('es-AR');
+
+      const manualRecord = {
+        id: Date.now(),
+        dateIso: dateVal,
+        date: dateStr,
+        user: userId,
+        userName: `Asesor ${userId}`,
+        description: desc,
+        channel: channel,
+        startTime: '09:00:00',
+        endTime: '10:00:00',
+        durationSeconds: secs,
+        durationFormatted: formatSeconds(secs)
+      };
+
+      guardarEnHistorial(manualRecord);
+      alert('Registro manual agregado con éxito.');
+
+      document.getElementById('manual-user-id').value = '';
+      document.getElementById('manual-duration-mins').value = '';
+      document.getElementById('manual-desc').value = '';
     }
 
     function sincronizarConDrive(record) {
