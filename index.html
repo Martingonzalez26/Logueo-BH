@@ -5,40 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TimeTracker Contact Center - Gestión de Horas</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800 min-h-screen flex flex-col">
+<body class="bg-gray-100 dark:bg-slate-900 font-sans text-gray-800 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-200">
 
   <!-- ==================== PANTALLA DE LOGIN ==================== -->
   <div id="login-screen" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-100">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-100 dark:border-slate-700">
       <div class="text-center mb-8">
         <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white text-2xl shadow-lg shadow-blue-500/30">
           <i class="fa-solid fa-clock"></i>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900">TimeTracker CC</h2>
-        <p class="text-sm text-gray-500 mt-1">Plataforma de Control de Logueo Real</p>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">TimeTracker CC</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Plataforma de Control de Logueo Real</p>
       </div>
 
       <form id="login-form" onsubmit="event.preventDefault(); iniciarSesion();" class="space-y-5">
         <div>
-          <label class="block text-xs font-semibold uppercase text-gray-600 mb-2">Usuario / DNI</label>
+          <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-2">Usuario / DNI</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
               <i class="fa-solid fa-user"></i>
             </span>
-            <input type="text" id="login-user" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-sm" placeholder="Ingrese su DNI o Administrador" required>
+            <input type="text" id="login-user" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition text-sm" placeholder="Ingrese su DNI o Administrador" required>
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold uppercase text-gray-600 mb-2">Contraseña</label>
+          <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-2">Contraseña</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
               <i class="fa-solid fa-lock"></i>
             </span>
-            <input type="password" id="login-pass" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-sm" placeholder="••••••••" required>
+            <input type="password" id="login-pass" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition text-sm" placeholder="••••••••" required>
           </div>
         </div>
 
@@ -48,8 +53,8 @@
         </button>
       </form>
 
-      <div class="mt-6 pt-6 border-t border-gray-100 text-center text-xs text-gray-400">
-        Acceso Administrador: <span class="font-mono text-gray-600 font-bold">Administrador</span> | Clave: <span class="font-mono text-gray-600 font-bold">admin123</span>
+      <div class="mt-6 pt-6 border-t border-gray-100 dark:border-slate-700 text-center text-xs text-gray-400">
+        Acceso Administrador: <span class="font-mono text-gray-600 dark:text-gray-300 font-bold">Administrador</span> | Clave: <span class="font-mono text-gray-600 dark:text-gray-300 font-bold">admin123</span>
       </div>
     </div>
   </div>
@@ -57,38 +62,44 @@
   <!-- ==================== APLICACIÓN PRINCIPAL ==================== -->
   <div id="app-content" class="hidden flex-1 flex flex-col">
     <!-- Navbar Superior -->
-    <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+    <header class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm transition-colors duration-200">
       <div class="flex items-center gap-4">
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
             <i class="fa-solid fa-clock"></i>
           </div>
-          <span class="font-bold text-lg text-gray-900 tracking-tight">TimeTracker <span class="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full uppercase">Gestión</span></span>
+          <span class="font-bold text-lg text-gray-900 dark:text-white tracking-tight">TimeTracker <span class="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-semibold px-2 py-0.5 rounded-full uppercase">Gestión</span></span>
         </div>
         <!-- FECHA DEL DÍA -->
-        <div class="hidden md:flex items-center gap-2 text-xs bg-gray-100 text-gray-600 font-medium px-3 py-1.5 rounded-lg border border-gray-200">
-          <i class="fa-regular fa-calendar-check text-blue-600"></i>
+        <div class="hidden md:flex items-center gap-2 text-xs bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 font-medium px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600">
+          <i class="fa-regular fa-calendar-check text-blue-600 dark:text-blue-400"></i>
           <span id="current-date-display">Cargando fecha...</span>
         </div>
       </div>
 
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
+        <!-- BOTÓN MODO CLARO / OSCURO -->
+        <button onclick="toggleDarkMode()" class="p-2 px-3 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-amber-400 hover:bg-gray-100 dark:hover:bg-slate-600 transition text-xs font-semibold flex items-center gap-2">
+          <i id="theme-toggle-icon" class="fa-solid fa-moon"></i>
+          <span id="theme-toggle-text" class="hidden sm:inline">Modo Oscuro</span>
+        </button>
+
         <!-- Indicador de Sincronización Google Drive -->
-        <div id="drive-status" class="flex items-center gap-2 text-xs bg-green-50 text-green-700 px-3 py-1.5 rounded-lg border border-green-200 font-medium">
-          <i class="fa-solid fa-cloud-arrow-up text-green-600"></i>
-          <span>Google Drive Sincronizado</span>
+        <div id="drive-status" class="hidden sm:flex items-center gap-2 text-xs bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 px-3 py-1.5 rounded-lg border border-green-200 dark:border-green-800 font-medium">
+          <i class="fa-solid fa-cloud-arrow-up text-green-600 dark:text-green-400"></i>
+          <span>Drive Sincronizado</span>
         </div>
 
         <!-- Usuario Conectado -->
-        <div class="flex items-center gap-3 pl-4 border-l border-gray-200">
+        <div class="flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-slate-700">
           <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center" id="user-avatar">
             AD
           </div>
           <div class="text-left hidden sm:block">
-            <p id="user-display-name" class="text-xs font-bold text-gray-800">Administrador</p>
+            <p id="user-display-name" class="text-xs font-bold text-gray-800 dark:text-gray-200">Administrador</p>
             <p id="user-display-role" class="text-[10px] text-gray-400 uppercase font-semibold">Administrador</p>
           </div>
-          <button onclick="cerrarSesion()" class="ml-2 text-xs font-semibold text-red-600 hover:text-red-800 hover:bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+          <button onclick="cerrarSesion()" class="ml-1 text-xs font-semibold text-red-600 hover:text-red-800 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-200 dark:border-red-900 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
             <i class="fa-solid fa-right-from-bracket"></i>
             <span class="hidden sm:inline">Cerrar Sesión</span>
           </button>
@@ -99,45 +110,46 @@
     <!-- Contenido Principal -->
     <div class="flex-1 flex flex-col md:flex-row">
       <!-- Sidebar Nav -->
-      <aside class="w-full md:w-60 bg-white border-r border-gray-200 p-4 space-y-1">
-        <button onclick="switchTab('tracker')" id="nav-tracker" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-semibold text-xs text-left">
+      <aside class="w-full md:w-60 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 p-4 space-y-1 transition-colors duration-200">
+        <button onclick="switchTab('tracker')" id="nav-tracker" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-semibold text-xs text-left">
           <i class="fa-solid fa-stopwatch w-4"></i>
           Rastreador
         </button>
-        <button onclick="switchTab('reports')" id="nav-reports" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition">
+        <button onclick="switchTab('reports')" id="nav-reports" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 font-medium text-xs text-left transition">
           <i class="fa-solid fa-chart-pie w-4"></i>
           Informes / Reportes
         </button>
-        <!-- PESTAÑA EXCLUSIVA PARA EL ADMINISTRADOR -->
-        <button id="admin-tab" onclick="switchTab('admin-settings')" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition">
-          <i class="fa-solid fa-sliders w-4 text-purple-600"></i>
-          Configuración / Gestión App
+        
+        <!-- PESTAÑAS EXCLUSIVAS PARA EL ADMINISTRADOR -->
+        <button id="admin-users-tab" onclick="switchTab('admin-users')" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 font-medium text-xs text-left transition">
+          <i class="fa-solid fa-users w-4 text-emerald-600 dark:text-emerald-400"></i>
+          Nómina de Usuarios
+        </button>
+        <button id="admin-tab" onclick="switchTab('admin-settings')" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 font-medium text-xs text-left transition">
+          <i class="fa-solid fa-sliders w-4 text-purple-600 dark:text-purple-400"></i>
+          Gestión de Tiempos
         </button>
       </aside>
 
       <!-- SECCIÓN 1: RASTREADOR (TRACKER) -->
       <main id="tab-tracker-content" class="flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
-        <!-- BARRA PRINCIPAL DEL RASTREADOR -->
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 flex flex-col md:flex-row items-center gap-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-slate-700 flex flex-col md:flex-row items-center gap-4">
           <div class="flex-1 w-full">
-            <input type="text" id="task-description" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="¿En qué gestión estás trabajando? (Ej: Atendiendo consulta WhatsApp #1024)">
+            <input type="text" id="task-description" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-xs dark:text-white focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="¿En qué gestión estás trabajando? (Ej: Atendiendo consulta WhatsApp #1024)">
           </div>
 
           <div class="flex items-center justify-between w-full md:w-auto gap-4">
-            <!-- Selector de Canal -->
-            <select id="channel-select" class="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-700 outline-none focus:ring-2 focus:ring-blue-500">
+            <select id="channel-select" class="px-3 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 dark:text-white rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500">
               <option value="WhatsApp">📱 WhatsApp</option>
               <option value="Discador">📞 Discador / Llamada</option>
               <option value="Gestión Mail">✉️ Gestión Mail</option>
               <option value="Bootmaker">🤖 Bootmaker</option>
             </select>
 
-            <!-- Cronómetro -->
-            <div id="timer-display" class="font-mono text-xl font-bold text-gray-800 min-w-[90px] text-center">
+            <div id="timer-display" class="font-mono text-xl font-bold text-gray-800 dark:text-white min-w-[90px] text-center">
               00:00:00
             </div>
 
-            <!-- Botón Iniciar/Detener -->
             <button id="timer-btn" onclick="toggleTimer()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 transition flex items-center gap-2 text-xs">
               <i class="fa-solid fa-play"></i>
               <span>INICIAR</span>
@@ -147,42 +159,42 @@
 
         <!-- KPI CARDS DIARIAS -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-lg">
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-lg">
               <i class="fa-solid fa-stopwatch"></i>
             </div>
             <div>
               <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">TIEMPO LOGUEADO HOY</p>
-              <p id="kpi-total-time" class="text-lg font-black text-gray-800">00:00:00</p>
+              <p id="kpi-total-time" class="text-lg font-black text-gray-800 dark:text-white">00:00:00</p>
             </div>
           </div>
 
-          <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-lg">
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 bg-green-50 dark:bg-green-950/50 text-green-600 dark:text-green-400 rounded-xl flex items-center justify-center text-lg">
               <i class="fa-solid fa-circle-check"></i>
             </div>
             <div>
               <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">GESTIONES COMPLETADAS</p>
-              <p id="kpi-count" class="text-lg font-black text-gray-800">0</p>
+              <p id="kpi-count" class="text-lg font-black text-gray-800 dark:text-white">0</p>
             </div>
           </div>
 
-          <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-lg">
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center text-lg">
               <i class="fa-solid fa-layer-group"></i>
             </div>
             <div>
               <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">CANAL MÁS UTILIZADO</p>
-              <p id="kpi-top-channel" class="text-sm font-bold text-gray-800">-</p>
+              <p id="kpi-top-channel" class="text-sm font-bold text-gray-800 dark:text-white">-</p>
             </div>
           </div>
         </div>
 
         <!-- TABLA HISTORIAL DE REGISTROS -->
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h3 class="font-bold text-gray-800 text-xs flex items-center gap-2">
-              <i class="fa-solid fa-list text-blue-600"></i> Historial de Horas de Logueo Real
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
+            <h3 class="font-bold text-gray-800 dark:text-white text-xs flex items-center gap-2">
+              <i class="fa-solid fa-list text-blue-600 dark:text-blue-400"></i> Historial de Horas de Logueo Real
             </h3>
             <button onclick="limpiarHistorial()" class="text-red-500 hover:text-red-700 text-xs font-semibold flex items-center gap-1">
               <i class="fa-solid fa-trash-can"></i> Limpiar Historial
@@ -190,8 +202,8 @@
           </div>
 
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-gray-600">
-              <thead class="bg-gray-50 text-gray-400 uppercase text-[10px] font-bold tracking-wider border-b border-gray-100">
+            <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
+              <thead class="bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-gray-300 uppercase text-[10px] font-bold tracking-wider border-b border-gray-100 dark:border-slate-700">
                 <tr>
                   <th class="px-6 py-3">Fecha</th>
                   <th class="px-6 py-3">Descripción / Gestión</th>
@@ -199,9 +211,10 @@
                   <th class="px-6 py-3">Hora Inicio</th>
                   <th class="px-6 py-3">Hora Fin</th>
                   <th class="px-6 py-3">Duración Real</th>
+                  <th class="px-6 py-3">Acciones</th>
                 </tr>
               </thead>
-              <tbody id="history-table-body" class="divide-y divide-gray-100">
+              <tbody id="history-table-body" class="divide-y divide-gray-100 dark:divide-slate-700">
                 <!-- Registros Dinámicos -->
               </tbody>
             </table>
@@ -209,13 +222,13 @@
         </div>
       </main>
 
-      <!-- SECCIÓN 2: INFORMES Y REPORTES (CON FILTROS POR FECHA) -->
+      <!-- SECCIÓN 2: INFORMES Y REPORTES -->
       <main id="tab-reports-content" class="hidden flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
-        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-6">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm space-y-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b dark:border-slate-700 pb-4">
             <div>
-              <h2 class="text-lg font-bold text-gray-800">Informes y Reportes de Horas</h2>
-              <p class="text-xs text-gray-500">Filtre por fecha para visualizar y descargar el consolidado en Excel</p>
+              <h2 class="text-lg font-bold text-gray-800 dark:text-white">Informes y Reportes de Horas</h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Filtre por fecha para visualizar y descargar el consolidado en Excel</p>
             </div>
             <button onclick="exportarExcelReporte()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
               <i class="fa-solid fa-file-excel"></i>
@@ -223,30 +236,28 @@
             </button>
           </div>
 
-          <!-- FILTROS POR FECHA -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 dark:bg-slate-700/50 p-4 rounded-xl border border-gray-200 dark:border-slate-600">
             <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Fecha Desde:</label>
-              <input type="date" id="filter-date-from" class="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Fecha Desde:</label>
+              <input type="date" id="filter-date-from" class="w-full p-2 bg-white dark:bg-slate-600 border border-gray-200 dark:border-slate-500 rounded-lg text-xs outline-none">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Fecha Hasta:</label>
-              <input type="date" id="filter-date-to" class="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Fecha Hasta:</label>
+              <input type="date" id="filter-date-to" class="w-full p-2 bg-white dark:bg-slate-600 border border-gray-200 dark:border-slate-500 rounded-lg text-xs outline-none">
             </div>
             <div class="flex items-end gap-2">
               <button onclick="filtrarReportesPorFecha()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-lg shadow transition">
                 <i class="fa-solid fa-filter"></i> Filtrar Registros
               </button>
-              <button onclick="restablecerFiltrosFechas()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-xs py-2.5 px-3 rounded-lg transition" title="Limpiar Filtros">
+              <button onclick="restablecerFiltrosFechas()" class="bg-gray-200 dark:bg-slate-600 hover:bg-gray-300 text-gray-700 dark:text-gray-200 font-bold text-xs py-2.5 px-3 rounded-lg transition">
                 <i class="fa-solid fa-rotate-right"></i>
               </button>
             </div>
           </div>
 
-          <!-- Tabla Resumen de Reporte -->
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-gray-600">
-              <thead class="bg-gray-50 text-gray-400 uppercase text-[10px] font-bold tracking-wider border-b border-gray-100">
+            <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
+              <thead class="bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-gray-300 uppercase text-[10px] font-bold tracking-wider border-b border-gray-100 dark:border-slate-700">
                 <tr>
                   <th class="px-4 py-3">Usuario / Asesor</th>
                   <th class="px-4 py-3">Fecha</th>
@@ -257,7 +268,7 @@
                   <th class="px-4 py-3">Total Trabajado</th>
                 </tr>
               </thead>
-              <tbody id="reports-table-body" class="divide-y divide-gray-100">
+              <tbody id="reports-table-body" class="divide-y divide-gray-100 dark:divide-slate-700">
                 <!-- Carga Dinámica -->
               </tbody>
             </table>
@@ -265,37 +276,77 @@
         </div>
       </main>
 
-      <!-- SECCIÓN 3: CONFIGURACIÓN Y GESTIÓN APP (EXCLUSIVA ADMINISTRADOR) -->
-      <main id="tab-admin-settings-content" class="hidden flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
-        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-6">
-          <div class="border-b pb-4 flex justify-between items-center">
+      <!-- SECCIÓN 3: NÓMINA DE USUARIOS (NUEVO) -->
+      <main id="tab-admin-users-content" class="hidden flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm space-y-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b dark:border-slate-700 pb-4">
             <div>
-              <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-sliders text-purple-600"></i> Panel de Gestión y Modificación de la App</h2>
-              <p class="text-xs text-gray-500">Módulo exclusivo para el usuario Administrador</p>
+              <h2 class="text-lg font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-users text-emerald-600 dark:text-emerald-400"></i> Nómina Completa de Usuarios Adheridos</h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Gestión de accesos, altas y bajas de asesores</p>
+            </div>
+            <button onclick="abrirModalCrearUsuario()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-2">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>Crear Nuevo Usuario</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
+              <thead class="bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-gray-300 uppercase text-[10px] font-bold tracking-wider border-b border-gray-100 dark:border-slate-700">
+                <tr>
+                  <th class="px-4 py-3">DNI / Usuario</th>
+                  <th class="px-4 py-3">Nombre y Apellido</th>
+                  <th class="px-4 py-3">Legajo</th>
+                  <th class="px-4 py-3">Rol</th>
+                  <th class="px-4 py-3">Estado</th>
+                  <th class="px-4 py-3">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body" class="divide-y divide-gray-100 dark:divide-slate-700">
+                <!-- Carga Dinámica -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
+      <!-- SECCIÓN 4: GESTIÓN DE TIEMPOS (ADMINISTRADOR) -->
+      <main id="tab-admin-settings-content" class="hidden flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm space-y-6">
+          <div class="border-b dark:border-slate-700 pb-4 flex justify-between items-center">
+            <div>
+              <h2 class="text-lg font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-sliders text-purple-600 dark:text-purple-400"></i> Ajuste y Modificación Manual de Tiempos</h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Permite agregar tiempo faltante o descontar tiempo erróneo</p>
             </div>
             <button onclick="abrirModalAdmin()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition flex items-center gap-2">
               <i class="fa-solid fa-file-import"></i> Actualizar Nómina (Excel)
             </button>
           </div>
 
-          <!-- Formulario para Agregar/Modificar Registro Manualmente -->
-          <div class="bg-purple-50/50 p-5 rounded-2xl border border-purple-100 space-y-4">
-            <h3 class="font-bold text-xs uppercase tracking-wider text-purple-900 flex items-center gap-2">
-              <i class="fa-solid fa-plus-circle text-purple-600"></i> Cargar o Corregir Tiempo Manual de un Asesor
+          <div class="bg-purple-50/50 dark:bg-purple-950/20 p-5 rounded-2xl border border-purple-100 dark:border-purple-900/50 space-y-4">
+            <h3 class="font-bold text-xs uppercase tracking-wider text-purple-900 dark:text-purple-300 flex items-center gap-2">
+              <i class="fa-solid fa-plus-minus text-purple-600"></i> Agregar o Quitar Horas/Minutos
             </h3>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
               <div>
-                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">DNI / Asesor</label>
-                <input type="text" id="manual-user-id" class="w-full p-2 text-xs border rounded-lg bg-white" placeholder="Ej: 38411266">
+                <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Operación</label>
+                <select id="manual-action-type" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white dark:border-slate-600">
+                  <option value="ADD">➕ Agregar Tiempo</option>
+                  <option value="SUBTRACT">➖ Quitar/Descontar Tiempo</option>
+                </select>
               </div>
               <div>
-                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Fecha</label>
-                <input type="date" id="manual-date" class="w-full p-2 text-xs border rounded-lg bg-white">
+                <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">DNI / Asesor</label>
+                <input type="text" id="manual-user-id" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white dark:border-slate-600" placeholder="Ej: 38411266">
               </div>
               <div>
-                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Canal</label>
-                <select id="manual-channel" class="w-full p-2 text-xs border rounded-lg bg-white">
+                <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Fecha</label>
+                <input type="date" id="manual-date" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white dark:border-slate-600">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Canal</label>
+                <select id="manual-channel" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white dark:border-slate-600">
                   <option value="WhatsApp">WhatsApp</option>
                   <option value="Discador">Discador</option>
                   <option value="Gestión Mail">Gestión Mail</option>
@@ -303,18 +354,18 @@
                 </select>
               </div>
               <div>
-                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Duración (Minutos)</label>
-                <input type="number" id="manual-duration-mins" class="w-full p-2 text-xs border rounded-lg bg-white" placeholder="Ej: 60">
+                <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Duración (Minutos)</label>
+                <input type="number" id="manual-duration-mins" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white dark:border-slate-600" placeholder="Ej: 30">
               </div>
             </div>
 
             <div>
-              <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Descripción de la corrección</label>
-              <input type="text" id="manual-desc" class="w-full p-2 text-xs border rounded-lg bg-white" placeholder="Ej: Registro manual por corrección de fichaje">
+              <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Motivo o Justificación del Cambio</label>
+              <input type="text" id="manual-desc" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white dark:border-slate-600" placeholder="Ej: Ajuste de horas por olvido de inicio de sesión">
             </div>
 
             <button onclick="guardarTiempoManual()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition">
-              Guardar Registro Manual
+              Aplicar Ajuste de Tiempo
             </button>
           </div>
         </div>
@@ -322,17 +373,54 @@
     </div>
   </div>
 
+  <!-- MODAL CREAR USUARIO -->
+  <div id="create-user-modal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
+        <h3 class="font-bold text-gray-800 dark:text-white text-sm">Alta de Nuevo Usuario</h3>
+        <button onclick="cerrarModalCrearUsuario()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">DNI / Usuario</label>
+          <input type="text" id="new-user-dni" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Ej: 41223344">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Nombre y Apellido</label>
+          <input type="text" id="new-user-name" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Ej: Perez Juan">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Legajo</label>
+          <input type="text" id="new-user-legajo" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Ej: L098234">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Rol</label>
+          <select id="new-user-role" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+            <option value="ASESOR">ASESOR</option>
+            <option value="ADMINISTRADOR">ADMINISTRADOR</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pt-4 flex justify-end gap-2">
+        <button onclick="cerrarModalCrearUsuario()" class="px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-semibold">Cancelar</button>
+        <button onclick="guardarNuevoUsuario()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold">Crear Usuario</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL DE CARGA DE NÓMINA (ADMINISTRADOR) -->
   <div id="admin-modal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-gray-800 text-sm">Cargar/Actualizar Nómina de Contratos (Excel)</h3>
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
+        <h3 class="font-bold text-gray-800 dark:text-white text-sm">Cargar/Actualizar Nómina de Contratos (Excel)</h3>
         <button onclick="cerrarModalAdmin()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <p class="text-xs text-gray-500">Suba el archivo Excel de la nómina para actualizar los contratos y usuarios del sistema.</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400">Suba el archivo Excel de la nómina para actualizar los contratos y usuarios del sistema.</p>
       <input type="file" id="excel-file-input" accept=".xlsx, .xls" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
       <div class="pt-4 flex justify-end gap-2">
-        <button onclick="cerrarModalAdmin()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold">Cancelar</button>
+        <button onclick="cerrarModalAdmin()" class="px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-semibold">Cancelar</button>
         <button onclick="procesarExcelNomina()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold">Procesar Archivo</button>
       </div>
     </div>
@@ -347,10 +435,21 @@
     let isRunning = false;
     let registrosFiltradosCache = [];
 
+    // Usuarios iniciales por defecto
+    const usuariosDefault = [
+      { id: 'Administrador', name: 'Administrador', legajo: 'L000001', role: 'ADMINISTRADOR', state: 'ACTIVO' },
+      { id: '38411266', name: 'TORRES YOHANNA', legajo: 'L0697825', role: 'ASESOR', state: 'ACTIVO' },
+      { id: '41521404', name: 'LEDESMA XIMENA', legajo: 'L0508258', role: 'ASESOR', state: 'ACTIVO' }
+    ];
+
     document.addEventListener('DOMContentLoaded', () => {
       const today = new Date();
       const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
       document.getElementById('current-date-display').innerText = today.toLocaleDateString('es-AR', options);
+
+      if (!localStorage.getItem('timetracker_users')) {
+        localStorage.setItem('timetracker_users', JSON.stringify(usuariosDefault));
+      }
 
       window.addEventListener('beforeunload', () => {
         if (isRunning) {
@@ -359,15 +458,28 @@
       });
     });
 
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      document.getElementById('theme-toggle-icon').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+      document.getElementById('theme-toggle-text').innerText = isDark ? 'Modo Claro' : 'Modo Oscuro';
+    }
+
     function iniciarSesion() {
       const userVal = document.getElementById('login-user').value.trim();
       const passVal = document.getElementById('login-pass').value.trim();
 
       if (userVal.toLowerCase() === 'administrador' && passVal === 'admin123') {
-        currentUser = { name: 'Administrador', role: 'ADMINISTRADOR', id: 'ADMIN' };
-        document.getElementById('admin-tab').classList.remove('hidden');
+        currentUser = { name: 'Administrador', role: 'ADMINISTRADOR', id: 'Administrador' };
       } else {
-        currentUser = { name: `Asesor ${userVal}`, role: 'ASESOR', id: userVal };
+        const users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
+        const found = users.find(u => u.id === userVal && u.state === 'ACTIVO');
+        
+        if (found) {
+          currentUser = found;
+        } else {
+          currentUser = { name: `Asesor ${userVal}`, role: 'ASESOR', id: userVal };
+        }
       }
 
       document.getElementById('user-display-name').innerText = currentUser.name;
@@ -376,6 +488,14 @@
 
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('app-content').classList.remove('hidden');
+
+      if (currentUser.role === 'ADMINISTRADOR') {
+        document.getElementById('admin-tab').classList.remove('hidden');
+        document.getElementById('admin-users-tab').classList.remove('hidden');
+      } else {
+        document.getElementById('admin-tab').classList.add('hidden');
+        document.getElementById('admin-users-tab').classList.add('hidden');
+      }
 
       cargarHistorial();
     }
@@ -387,32 +507,24 @@
       currentUser = null;
       document.getElementById('app-content').classList.add('hidden');
       document.getElementById('login-screen').classList.remove('hidden');
-      document.getElementById('admin-tab').classList.add('hidden');
     }
 
     function switchTab(tabName) {
       document.getElementById('tab-tracker-content').classList.add('hidden');
       document.getElementById('tab-reports-content').classList.add('hidden');
+      document.getElementById('tab-admin-users-content').classList.add('hidden');
       document.getElementById('tab-admin-settings-content').classList.add('hidden');
-
-      document.getElementById('nav-tracker').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition";
-      document.getElementById('nav-reports').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition";
-      document.getElementById('admin-tab').className = "hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium text-xs text-left transition";
-
-      if (currentUser && currentUser.role === 'ADMINISTRADOR') {
-        document.getElementById('admin-tab').classList.remove('hidden');
-      }
 
       if (tabName === 'tracker') {
         document.getElementById('tab-tracker-content').classList.remove('hidden');
-        document.getElementById('nav-tracker').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-semibold text-xs text-left";
       } else if (tabName === 'reports') {
         document.getElementById('tab-reports-content').classList.remove('hidden');
-        document.getElementById('nav-reports').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-semibold text-xs text-left";
         cargarReportes();
+      } else if (tabName === 'admin-users') {
+        document.getElementById('tab-admin-users-content').classList.remove('hidden');
+        cargarUsuarios();
       } else if (tabName === 'admin-settings') {
         document.getElementById('tab-admin-settings-content').classList.remove('hidden');
-        document.getElementById('admin-tab').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-purple-50 text-purple-700 font-semibold text-xs text-left";
       }
     }
 
@@ -421,7 +533,6 @@
         isRunning = true;
         startTime = new Date();
         document.getElementById('timer-btn').classList.replace('bg-blue-600', 'bg-red-600');
-        document.getElementById('timer-btn').classList.replace('hover:bg-blue-700', 'hover:bg-red-700');
         document.getElementById('timer-btn').innerHTML = `<i class="fa-solid fa-stop"></i><span>DETENER</span>`;
 
         timerInterval = setInterval(() => {
@@ -460,7 +571,6 @@
       };
 
       document.getElementById('timer-btn').classList.replace('bg-red-600', 'bg-blue-600');
-      document.getElementById('timer-btn').classList.replace('hover:bg-red-700', 'hover:bg-blue-700');
       document.getElementById('timer-btn').innerHTML = `<i class="fa-solid fa-play"></i><span>INICIAR</span>`;
       document.getElementById('timer-display').innerText = "00:00:00";
       document.getElementById('task-description').value = "";
@@ -491,14 +601,17 @@
         channelCounts[item.channel] = (channelCounts[item.channel] || 0) + 1;
 
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50 border-b border-gray-100";
+        tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700";
         tr.innerHTML = `
-          <td class="px-6 py-3 font-semibold text-gray-500">${item.date}</td>
-          <td class="px-6 py-3 font-medium text-gray-800">${item.description}</td>
-          <td class="px-6 py-3"><span class="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-[10px] font-bold">${item.channel}</span></td>
+          <td class="px-6 py-3 font-semibold text-gray-500 dark:text-gray-400">${item.date}</td>
+          <td class="px-6 py-3 font-medium text-gray-800 dark:text-gray-200">${item.description}</td>
+          <td class="px-6 py-3"><span class="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-full text-[10px] font-bold">${item.channel}</span></td>
           <td class="px-6 py-3">${item.startTime}</td>
           <td class="px-6 py-3">${item.endTime}</td>
-          <td class="px-6 py-3 font-bold text-blue-600">${item.durationFormatted}</td>
+          <td class="px-6 py-3 font-bold text-blue-600 dark:text-blue-400">${item.durationFormatted}</td>
+          <td class="px-6 py-3">
+            <button onclick="eliminarRegistro(${item.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -517,6 +630,15 @@
       document.getElementById('kpi-top-channel').innerText = topChannel;
     }
 
+    function eliminarRegistro(id) {
+      if (confirm('¿Eliminar este registro de tiempo?')) {
+        let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+        history = history.filter(h => h.id !== id);
+        localStorage.setItem('timetracker_history', JSON.stringify(history));
+        cargarHistorial();
+      }
+    }
+
     function cargarReportes() {
       const history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
       let filtered = history.filter(h => h.user === currentUser.id || currentUser.role === 'ADMINISTRADOR');
@@ -524,12 +646,8 @@
       const fromVal = document.getElementById('filter-date-from').value;
       const toVal = document.getElementById('filter-date-to').value;
 
-      if (fromVal) {
-        filtered = filtered.filter(item => item.dateIso >= fromVal);
-      }
-      if (toVal) {
-        filtered = filtered.filter(item => item.dateIso <= toVal);
-      }
+      if (fromVal) filtered = filtered.filter(item => item.dateIso >= fromVal);
+      if (toVal) filtered = filtered.filter(item => item.dateIso <= toVal);
 
       registrosFiltradosCache = filtered;
 
@@ -540,15 +658,7 @@
       filtered.forEach(item => {
         const key = `${item.user}_${item.date}`;
         if (!grouped[key]) {
-          grouped[key] = {
-            userName: item.userName,
-            date: item.date,
-            WhatsApp: 0,
-            Discador: 0,
-            'Gestión Mail': 0,
-            Bootmaker: 0,
-            total: 0
-          };
+          grouped[key] = { userName: item.userName, date: item.date, WhatsApp: 0, Discador: 0, 'Gestión Mail': 0, Bootmaker: 0, total: 0 };
         }
         grouped[key][item.channel] = (grouped[key][item.channel] || 0) + item.durationSeconds;
         grouped[key].total += item.durationSeconds;
@@ -556,24 +666,21 @@
 
       for (const g of Object.values(grouped)) {
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50 border-b border-gray-100";
+        tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700";
         tr.innerHTML = `
-          <td class="px-4 py-3 font-bold text-gray-800">${g.userName}</td>
-          <td class="px-4 py-3 text-gray-500">${g.date}</td>
+          <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">${g.userName}</td>
+          <td class="px-4 py-3 text-gray-500 dark:text-gray-400">${g.date}</td>
           <td class="px-4 py-3">${formatSeconds(g.WhatsApp)}</td>
           <td class="px-4 py-3">${formatSeconds(g.Discador)}</td>
           <td class="px-4 py-3">${formatSeconds(g['Gestión Mail'])}</td>
           <td class="px-4 py-3">${formatSeconds(g.Bootmaker)}</td>
-          <td class="px-4 py-3 font-bold text-blue-600">${formatSeconds(g.total)}</td>
+          <td class="px-4 py-3 font-bold text-blue-600 dark:text-blue-400">${formatSeconds(g.total)}</td>
         `;
         tbody.appendChild(tr);
       }
     }
 
-    function filtrarReportesPorFecha() {
-      cargarReportes();
-    }
-
+    function filtrarReportesPorFecha() { cargarReportes(); }
     function restablecerFiltrosFechas() {
       document.getElementById('filter-date-from').value = '';
       document.getElementById('filter-date-to').value = '';
@@ -582,31 +689,75 @@
 
     function exportarExcelReporte() {
       const dataToExport = registrosFiltradosCache.length > 0 ? registrosFiltradosCache : JSON.parse(localStorage.getItem('timetracker_history') || '[]');
-      
-      if (dataToExport.length === 0) {
-        alert('No hay registros para exportar en el rango seleccionado.');
-        return;
-      }
-
+      if (dataToExport.length === 0) { alert('No hay registros para exportar.'); return; }
       const ws = XLSX.utils.json_to_sheet(dataToExport);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "ReporteFiltrado");
       XLSX.writeFile(wb, `Reporte_TimeTracker_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
+    // GESTIÓN DE USUARIOS
+    function cargarUsuarios() {
+      const users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
+      const tbody = document.getElementById('users-table-body');
+      tbody.innerHTML = '';
+
+      users.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700";
+        tr.innerHTML = `
+          <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">${u.id}</td>
+          <td class="px-4 py-3">${u.name}</td>
+          <td class="px-4 py-3">${u.legajo || '-'}</td>
+          <td class="px-4 py-3"><span class="bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded text-[10px] font-bold">${u.role}</span></td>
+          <td class="px-4 py-3"><span class="${u.state === 'ACTIVO' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'} px-2 py-0.5 rounded text-[10px] font-bold">${u.state}</span></td>
+          <td class="px-4 py-3">
+            <button onclick="toggleEstadoUsuario('${u.id}')" class="text-xs text-blue-600 hover:underline font-bold">${u.state === 'ACTIVO' ? 'Dar de Baja' : 'Reactivar'}</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function toggleEstadoUsuario(id) {
+      let users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
+      users = users.map(u => u.id === id ? { ...u, state: u.state === 'ACTIVO' ? 'BAJA' : 'ACTIVO' } : u);
+      localStorage.setItem('timetracker_users', JSON.stringify(users));
+      cargarUsuarios();
+    }
+
+    function abrirModalCrearUsuario() { document.getElementById('create-user-modal').classList.remove('hidden'); }
+    function cerrarModalCrearUsuario() { document.getElementById('create-user-modal').classList.add('hidden'); }
+
+    function guardarNuevoUsuario() {
+      const dni = document.getElementById('new-user-dni').value.trim();
+      const name = document.getElementById('new-user-name').value.trim();
+      const legajo = document.getElementById('new-user-legajo').value.trim();
+      const role = document.getElementById('new-user-role').value;
+
+      if (!dni || !name) { alert('Ingrese DNI y Nombre'); return; }
+
+      let users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
+      users.push({ id: dni, name: name, legajo: legajo, role: role, state: 'ACTIVO' });
+      localStorage.setItem('timetracker_users', JSON.stringify(users));
+
+      cerrarModalCrearUsuario();
+      cargarUsuarios();
+    }
+
     function guardarTiempoManual() {
+      const actionType = document.getElementById('manual-action-type').value;
       const userId = document.getElementById('manual-user-id').value.trim();
       const dateVal = document.getElementById('manual-date').value;
       const channel = document.getElementById('manual-channel').value;
       const mins = parseInt(document.getElementById('manual-duration-mins').value || '0');
       const desc = document.getElementById('manual-desc').value.trim() || 'Ajuste Manual por Administrador';
 
-      if (!userId || !dateVal || mins <= 0) {
-        alert('Por favor complete todos los campos correctamente.');
-        return;
-      }
+      if (!userId || !dateVal || mins <= 0) { alert('Complete los campos correctamente.'); return; }
 
-      const secs = mins * 60;
+      let secs = mins * 60;
+      if (actionType === 'SUBTRACT') secs = -secs;
+
       const dateStr = new Date(dateVal + 'T00:00:00').toLocaleDateString('es-AR');
 
       const manualRecord = {
@@ -615,54 +766,48 @@
         date: dateStr,
         user: userId,
         userName: `Asesor ${userId}`,
-        description: desc,
+        description: `${actionType === 'SUBTRACT' ? '[DESCUENTO] ' : ''}${desc}`,
         channel: channel,
         startTime: '09:00:00',
         endTime: '10:00:00',
         durationSeconds: secs,
-        durationFormatted: formatSeconds(secs)
+        durationFormatted: formatSeconds(Math.abs(secs))
       };
 
       guardarEnHistorial(manualRecord);
-      alert('Registro manual agregado con éxito.');
-
-      document.getElementById('manual-user-id').value = '';
-      document.getElementById('manual-duration-mins').value = '';
-      document.getElementById('manual-desc').value = '';
+      alert('Ajuste de tiempo registrado con éxito.');
     }
 
     function sincronizarConDrive(record) {
       const statusElement = document.getElementById('drive-status');
-      statusElement.className = "flex items-center gap-2 text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 font-medium";
-      statusElement.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600"></i><span>Guardando en Google Drive...</span>`;
+      statusElement.className = "hidden sm:flex items-center gap-2 text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 font-medium";
+      statusElement.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600"></i><span>Sincronizando...</span>`;
 
       setTimeout(() => {
-        statusElement.className = "flex items-center gap-2 text-xs bg-green-50 text-green-700 px-3 py-1.5 rounded-lg border border-green-200 font-medium";
-        statusElement.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-green-600"></i><span>Google Drive Sincronizado</span>`;
+        statusElement.className = "hidden sm:flex items-center gap-2 text-xs bg-green-50 text-green-700 px-3 py-1.5 rounded-lg border border-green-200 font-medium";
+        statusElement.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-green-600"></i><span>Drive Sincronizado</span>`;
       }, 1000);
     }
 
     function limpiarHistorial() {
-      if (confirm('¿Seguro que desea limpiar el historial de registros local?')) {
+      if (confirm('¿Seguro que desea limpiar el historial local?')) {
         localStorage.removeItem('timetracker_history');
         cargarHistorial();
       }
     }
 
     function formatSeconds(secs) {
-      const hrs = Math.floor(secs / 3600);
-      const mins = Math.floor((secs % 3600) / 60);
-      const seconds = secs % 60;
-      return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      const absSecs = Math.abs(secs);
+      const hrs = Math.floor(absSecs / 3600);
+      const mins = Math.floor((absSecs % 3600) / 60);
+      const seconds = absSecs % 60;
+      const sign = secs < 0 ? '-' : '';
+      return `${sign}${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
 
     function abrirModalAdmin() { document.getElementById('admin-modal').classList.remove('hidden'); }
     function cerrarModalAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
-
-    function procesarExcelNomina() {
-      alert('Nómina procesada correctamente. Nuevos usuarios y contratos actualizados.');
-      cerrarModalAdmin();
-    }
+    function procesarExcelNomina() { alert('Nómina procesada correctamente.'); cerrarModalAdmin(); }
   </script>
 </body>
 </html>
