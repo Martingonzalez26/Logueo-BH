@@ -420,8 +420,9 @@
     let isRunning = false;
     let registrosFiltradosCache = [];
 
-    // RUTA EXACTA DE TU CARPETA GOOGLE DRIVE
+    // RUTA EXACTA DE TU CARPETA GOOGLE DRIVE Y WEBHOOK CONECTOR
     const driveFolderUrl = "https://drive.google.com/drive/folders/1kT4ZWWfMdYnGc5pOJZhikzG89pjoEnGQ";
+    const scriptDriveUrl = "https://script.google.com/macros/s/AKfycbxnKVNoIWLrpivUWu-tJGv9lJDpK458L5ORmIBpXofZK8Hx-ML4J6oQ5Xe2RAU7dObS/exec";
 
     const nominaCompleta = [
       { id: 'Palacio Karin Natali', name: 'Palacio Karin Natali', turno: 'Tarde', contrato: 7, horario: '14:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
@@ -480,6 +481,28 @@
 
     function abrirGoogleDrive() {
       window.open(driveFolderUrl, '_blank');
+    }
+
+    function sincronizarConDrive(record) {
+      const statusElement = document.getElementById('drive-status');
+      if (statusElement) {
+        statusElement.className = "flex items-center gap-2 text-xs bg-blue-50 text-blue-700 px-3 py-2 rounded-xl border border-blue-200 font-medium cursor-pointer";
+        statusElement.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600"></i><span>Guardando en Drive...</span>`;
+      }
+
+      fetch(scriptDriveUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(record)
+      })
+      .then(() => {
+        if (statusElement) {
+          statusElement.className = "flex items-center gap-2 text-xs bg-green-50 text-green-700 px-3 py-2 rounded-xl border border-green-200 font-medium cursor-pointer hover:bg-green-100";
+          statusElement.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-green-600"></i><span>Guardado en Drive</span>`;
+        }
+      })
+      .catch(err => console.error("Error al guardar en Drive:", err));
     }
 
     function iniciarSesion() {
@@ -581,6 +604,7 @@
       document.getElementById('task-description').value = "";
 
       guardarEnHistorial(newRecord);
+      sincronizarConDrive(newRecord);
     }
 
     function guardarEnHistorial(record) {
@@ -590,7 +614,6 @@
       cargarHistorial();
     }
 
-    // CARGA OPTIMIZADA (RÁPIDA)
     function cargarHistorial() {
       const history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
       const todayISO = new Date().toISOString().slice(0, 10);
@@ -604,7 +627,6 @@
       let totalSecsToday = 0;
       userTodayHistory.forEach(item => totalSecsToday += item.durationSeconds);
 
-      // Limita la lista visual a 30 elementos para máxima fluidez
       userAllHistory.slice(0, 30).forEach(item => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700";
