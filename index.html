@@ -178,7 +178,7 @@
           </div>
         </div>
 
-        <!-- TABLA -->
+        <!-- TABLA HISTORIAL -->
         <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
             <h3 class="font-bold text-gray-800 dark:text-white text-xs flex items-center gap-2"><i class="fa-solid fa-list text-blue-600 dark:text-blue-400"></i> Historial de Gestiones</h3>
@@ -724,24 +724,74 @@
       cargarReportes();
     }
 
+    // ==========================================
+    // EXPORTACIÓN EXCEL CONSOLIDADA Y DETALLADA
+    // ==========================================
+
     function exportarExcelDetallado() {
       const dataToExport = registrosFiltradosCache.length > 0 ? registrosFiltradosCache : JSON.parse(localStorage.getItem('timetracker_history') || '[]');
-      if (dataToExport.length === 0) return alert('Sin registros');
+      if (dataToExport.length === 0) return alert('No hay registros disponibles para exportar.');
       
-      const ws = XLSX.utils.json_to_sheet(dataToExport.map(r => ({ Fecha: r.date, Asesor: r.userName, Descripción: r.description, Canal: r.channel, Inicio: r.startTime, Fin: r.endTime, Duracion: r.durationFormatted })));
+      const ws = XLSX.utils.json_to_sheet(dataToExport.map(r => ({
+        'Fecha': r.date,
+        'Asesor': r.userName || r.user,
+        'Descripción': r.description,
+        'Canal': r.channel,
+        'Hora Inicio': r.startTime,
+        'Hora Fin': r.endTime,
+        'Duración': r.durationFormatted
+      })));
+
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Detalle");
+      XLSX.utils.book_append_sheet(wb, ws, "Detalle de Gestiones");
       XLSX.writeFile(wb, `Reporte_Detallado_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
     function exportarExcelResumido() {
       const dataToExport = registrosFiltradosCache.length > 0 ? registrosFiltradosCache : JSON.parse(localStorage.getItem('timetracker_history') || '[]');
-      if (dataToExport.length === 0) return alert('Sin registros');
+      const users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
 
-      const ws = XLSX.utils.json_to_sheet(dataToExport.map(r => ({ Asesor: r.userName, Fecha: r.date, Canal: r.channel, DuracionSegundos: r.durationSeconds })));
+      if (dataToExport.length === 0) return alert('No hay registros disponibles para exportar.');
+
+      // Agrupar tiempo acumulado por Asesor y Fecha
+      const summaryMap = {};
+
+      dataToExport.forEach(rec => {
+        const key = `${rec.userName || rec.user}_${rec.dateIso || rec.date}`;
+        if (!summaryMap[key]) {
+          const userObj = users.find(u => u.name === (rec.userName || rec.user)) || {};
+          summaryMap[key] = {
+            Fecha: rec.date,
+            Asesor: rec.userName || rec.user,
+            HorasContrato: parseFloat(userObj.contrato) || 6.0,
+            TotalSegundos: 0,
+            CantidadGestiones: 0
+          };
+        }
+        summaryMap[key].TotalSegundos += (rec.durationSeconds || 0);
+        summaryMap[key].CantidadGestiones += 1;
+      });
+
+      // Mapear los acumulados a filas estructuradas con cálculo de contrato
+      const rows = Object.values(summaryMap).map(item => {
+        const contratoSegundos = item.HorasContrato * 3600;
+        const faltantesSegundos = contratoSegundos - item.TotalSegundos;
+
+        return {
+          'Fecha': item.Fecha,
+          'Asesor': item.Asesor,
+          'Horas Contrato': `${item.HorasContrato} hs`,
+          'Total Trabajado': formatSeconds(item.TotalSegundos),
+          'Horas Faltantes / Compensar': faltantesSegundos > 0 ? formatSeconds(faltantesSegundos) : '00:00:00',
+          'Estado Contrato': faltantesSegundos <= 0 ? 'CUMPLIDO' : 'PENDIENTE',
+          'Total Gestiones': item.CantidadGestiones
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Consolidado");
-      XLSX.writeFile(wb, `Reporte_Consolidado_${new Date().toISOString().slice(0,10)}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, "Resumen Consolidado");
+      XLSX.writeFile(wb, `Reporte_Consolidado_Asesores_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
     function cargarUsuarios() {
