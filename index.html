@@ -618,13 +618,29 @@
       let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
       const todayISO = new Date().toISOString().slice(0, 10);
 
-      // Si es ADMINISTRADOR, obtiene todo el historial acumulado desde Google Sheets
+      // Si es ADMINISTRADOR, obtiene el historial unificado de la nube vía JSONP
       if (currentUser && currentUser.role === 'ADMINISTRADOR') {
         try {
-          const response = await fetch(scriptDriveUrl);
-          const remoteData = await response.json();
+          const remoteData = await new Promise((resolve, reject) => {
+            const callbackName = 'googleSheetsCallback_' + Math.round(100000 * Math.random());
+            window[callbackName] = function(data) {
+              delete window[callbackName];
+              if (script.parentNode) document.body.removeChild(script);
+              resolve(data);
+            };
+
+            const script = document.createElement('script');
+            script.src = scriptDriveUrl + (scriptDriveUrl.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+            script.onerror = function(err) {
+              delete window[callbackName];
+              if (script.parentNode) document.body.removeChild(script);
+              reject(err);
+            };
+            document.body.appendChild(script);
+          });
+
           if (Array.isArray(remoteData) && remoteData.length > 0) {
-            history = remoteData.reverse(); // Mostrar los más recientes primero
+            history = remoteData.reverse(); // Muestra primero lo más reciente
           }
         } catch (err) {
           console.error("Error al cargar historial desde la nube:", err);
@@ -640,7 +656,7 @@
       let totalSecsToday = 0;
       userTodayHistory.forEach(item => totalSecsToday += item.durationSeconds);
 
-      // Renderizar máximo 30 registros
+      // Renderiza máximo 30 registros
       userAllHistory.slice(0, 30).forEach(item => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700";
