@@ -3,215 +3,229 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TimeTracker Contact Center - Control de Contratos y Logueo Real</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>TimeTracker CC - Control de Contratos y Logueo Real</title>
   <script>
-    tailwind.config = { darkMode: 'class' }
+    // Aplica el tema guardado antes de pintar (evita parpadeo)
+    try { if (localStorage.getItem('tt_tema') === 'dark') document.documentElement.classList.add('dark'); } catch (e) {}
   </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    .tab-btn.activo { background: rgb(239 246 255); color: rgb(29 78 216); font-weight: 600; }
+    .dark .tab-btn.activo { background: rgb(30 58 138 / .4); color: rgb(147 197 253); }
+    .inp { width: 100%; padding: .5rem; font-size: .75rem; border: 1px solid rgb(229 231 235); border-radius: .5rem; background: #fff; outline: none; }
+    .dark .inp { background: rgb(51 65 85); border-color: rgb(71 85 105); color: #fff; }
+    .inp:focus { box-shadow: 0 0 0 2px rgb(59 130 246); }
+    .chip { padding: .15rem .6rem; border-radius: 9999px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    #toasts > div { animation: entra .2s ease-out; }
+    @keyframes entra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  </style>
 </head>
 <body class="bg-gray-100 dark:bg-slate-900 font-sans text-gray-800 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-200">
 
-  <!-- PANTALLA DE LOGIN -->
+  <!-- ============ LOGIN ============ -->
   <div id="login-screen" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-100 dark:border-slate-700">
       <div class="text-center mb-8">
-        <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white text-2xl shadow-lg shadow-blue-500/30">
-          <i class="fa-solid fa-clock"></i>
-        </div>
+        <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white text-2xl shadow-lg shadow-blue-500/30"><i class="fa-solid fa-clock"></i></div>
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">TimeTracker CC</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Plataforma de Control de Logueo Real</p>
       </div>
 
       <form id="login-form" onsubmit="event.preventDefault(); iniciarSesion();" class="space-y-5">
         <div>
-          <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-2">Usuario / Nombre / DNI</label>
+          <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-2">Nombre y apellido</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa-solid fa-user"></i></span>
-            <input type="text" id="login-user" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition text-sm" placeholder="Ingrese su Nombre o Administrador" required>
+            <input type="text" id="login-user" autocomplete="username" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition text-sm" placeholder="Ej: Rojas Carla" required>
           </div>
         </div>
-
         <div>
-          <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-2">Contraseña</label>
+          <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-2">Clave</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa-solid fa-lock"></i></span>
-            <input type="password" id="login-pass" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition text-sm" placeholder="••••••••" required>
+            <input type="password" id="login-pass" autocomplete="current-password" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition text-sm" placeholder="••••••••" required>
           </div>
         </div>
-
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-blue-600/30 transition duration-200 text-sm flex items-center justify-center gap-2">
-          <span>Ingresar a la Plataforma</span>
-          <i class="fa-solid fa-arrow-right"></i>
+        <div id="login-error" class="hidden text-xs font-semibold text-red-600 bg-red-50 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900 rounded-xl px-3 py-2"></div>
+        <button id="login-btn" type="submit" class="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-blue-600/30 transition duration-200 text-sm flex items-center justify-center gap-2">
+          <span>Ingresar a la Plataforma</span><i class="fa-solid fa-arrow-right"></i>
         </button>
       </form>
 
-      <div class="mt-6 pt-6 border-t border-gray-100 dark:border-slate-700 text-center text-xs text-gray-400">
-        Acceso Administrador: <span class="font-mono text-gray-600 dark:text-gray-300 font-bold">Administrador</span> | Clave: <span class="font-mono text-gray-600 dark:text-gray-300 font-bold">admin123</span>
+      <div class="mt-6 pt-6 border-t border-gray-100 dark:border-slate-700 text-center text-xs text-gray-400 leading-relaxed">
+        <b>¿Primer ingreso?</b> La clave que escribas queda como tu clave personal.<br>Si la olvidaste, pedile a tu coordinador que la restablezca.
       </div>
     </div>
   </div>
 
-  <!-- APLICACIÓN PRINCIPAL -->
+  <!-- ============ APP ============ -->
   <div id="app-content" class="hidden flex-1 flex flex-col">
-    <header class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm transition-colors duration-200">
+    <header class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30 shadow-sm">
       <div class="flex items-center gap-4">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm"><i class="fa-solid fa-clock"></i></div>
+          <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm"><i class="fa-solid fa-clock"></i></div>
           <span class="font-bold text-lg text-gray-900 dark:text-white tracking-tight">TimeTracker <span class="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-semibold px-2 py-0.5 rounded-full uppercase">Gestión</span></span>
         </div>
         <div class="hidden md:flex items-center gap-2 text-xs bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 font-medium px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600">
-          <i class="fa-regular fa-calendar-check text-blue-600 dark:text-blue-400"></i>
-          <span id="current-date-display">Cargando fecha...</span>
+          <i class="fa-regular fa-calendar-check text-blue-600 dark:text-blue-400"></i><span id="current-date-display"></span>
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <!-- BOTÓN DE GOOGLE DRIVE EN NAVBAR (SOLO ADMIN) -->
+      <div class="flex items-center gap-2 flex-wrap">
         <button id="admin-drive-btn" onclick="abrirGoogleDrive()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow transition items-center gap-2" title="Abrir carpeta de Google Drive">
-          <i class="fa-brands fa-google-drive text-sm"></i>
-          <span>Abrir Drive</span>
+          <i class="fa-brands fa-google-drive text-sm"></i><span>Abrir Drive</span>
         </button>
-
+        <button id="sync-status" onclick="sincronizarPendientes(true)" class="flex items-center gap-2 text-xs px-3 py-2 rounded-xl border font-medium transition" title="Estado de envío a Google Sheets (clic para reintentar)"></button>
         <button onclick="toggleDarkMode()" class="p-2 px-3 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-amber-400 hover:bg-gray-100 dark:hover:bg-slate-600 transition text-xs font-semibold flex items-center gap-2">
-          <i id="theme-toggle-icon" class="fa-solid fa-moon"></i>
-          <span id="theme-toggle-text" class="hidden sm:inline">Modo Oscuro</span>
+          <i id="theme-toggle-icon" class="fa-solid fa-moon"></i><span id="theme-toggle-text" class="hidden sm:inline">Modo Oscuro</span>
         </button>
-
-        <button onclick="abrirGoogleDrive()" id="drive-status" class="flex items-center gap-2 text-xs bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 px-3 py-2 rounded-xl border border-green-200 dark:border-green-800 font-medium hover:bg-green-100 dark:hover:bg-green-900/60 transition cursor-pointer" title="Haga clic para abrir la carpeta de Drive">
-          <i class="fa-solid fa-cloud-arrow-up text-green-600 dark:text-green-400"></i>
-          <span>Drive Sincronizado</span>
-        </button>
-
-        <div class="flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-slate-700">
-          <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center" id="user-avatar">AD</div>
+        <div class="flex items-center gap-2 pl-3 border-l border-gray-200 dark:border-slate-700">
+          <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center" id="user-avatar"></div>
           <div class="text-left hidden sm:block">
-            <p id="user-display-name" class="text-xs font-bold text-gray-800 dark:text-gray-200">Administrador</p>
-            <p id="user-display-role" class="text-[10px] text-gray-400 uppercase font-semibold">ADMINISTRADOR</p>
+            <p id="user-display-name" class="text-xs font-bold text-gray-800 dark:text-gray-200"></p>
+            <p id="user-display-role" class="text-[10px] text-gray-400 uppercase font-semibold"></p>
           </div>
-          <button onclick="cerrarSesion()" class="ml-1 text-xs font-semibold text-red-600 hover:text-red-800 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-200 dark:border-red-900 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span class="hidden sm:inline">Cerrar Sesión</span>
+          <button onclick="abrirModalClave()" class="text-xs text-gray-500 hover:text-blue-600 dark:text-gray-400 px-2 py-1.5" title="Cambiar mi clave"><i class="fa-solid fa-key"></i></button>
+          <button onclick="cerrarSesion()" class="text-xs font-semibold text-red-600 hover:text-red-800 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-200 dark:border-red-900 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+            <i class="fa-solid fa-right-from-bracket"></i><span class="hidden sm:inline">Cerrar Sesión</span>
           </button>
         </div>
       </div>
     </header>
 
     <div class="flex-1 flex flex-col md:flex-row">
-      <!-- Sidebar Nav -->
-      <aside class="w-full md:w-60 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 p-4 space-y-1 transition-colors duration-200">
-        <button onclick="switchTab('tracker')" id="nav-tracker" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-semibold text-xs text-left">
-          <i class="fa-solid fa-stopwatch w-4"></i> Rastreador
+      <aside class="w-full md:w-60 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 p-4 space-y-1">
+        <button onclick="switchTab('tracker')" id="nav-tracker" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 text-xs text-left transition">
+          <i id="nav-tracker-icon" class="fa-solid fa-stopwatch w-4"></i><span id="nav-tracker-label">Rastreador</span>
         </button>
-        <button onclick="switchTab('reports')" id="nav-reports" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 font-medium text-xs text-left transition">
+        <button onclick="switchTab('reports')" id="nav-reports" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 text-xs text-left transition">
           <i class="fa-solid fa-chart-pie w-4"></i> Informes / Reportes
         </button>
-        
-        <button id="admin-users-tab" onclick="switchTab('admin-users')" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 font-medium text-xs text-left transition">
+        <button id="nav-admin-users" onclick="switchTab('admin-users')" class="tab-btn hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 text-xs text-left transition">
           <i class="fa-solid fa-users w-4 text-emerald-600 dark:text-emerald-400"></i> Nómina de Usuarios
         </button>
-        <button id="admin-tab" onclick="switchTab('admin-settings')" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 font-medium text-xs text-left transition">
+        <button id="nav-admin-settings" onclick="switchTab('admin-settings')" class="tab-btn hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 text-xs text-left transition">
           <i class="fa-solid fa-sliders w-4 text-purple-600 dark:text-purple-400"></i> Gestión de Tiempos
         </button>
-
         <button id="admin-sidebar-drive-btn" onclick="abrirGoogleDrive()" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-xs text-left transition mt-4 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100">
           <i class="fa-brands fa-google-drive w-4 text-emerald-600"></i> Carpeta Drive
         </button>
       </aside>
 
-      <!-- SECCIÓN 1: RASTREADOR -->
-      <main id="tab-tracker-content" class="flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-slate-700 flex flex-col md:flex-row items-center gap-4">
-          <div class="flex-1 w-full">
-            <input type="text" id="task-description" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-xs dark:text-white focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="¿En qué gestión estás trabajando?">
+      <!-- ============ TAB 1: RASTREADOR (asesor) / MONITOR (admin) ============ -->
+      <main id="tab-tracker-content" class="flex-1 p-4 md:p-6 space-y-6 max-w-6xl mx-auto w-full">
+
+        <!-- Vista ASESOR -->
+        <section id="asesor-tracker" class="space-y-6">
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-slate-700 flex flex-col md:flex-row items-center gap-4">
+            <div class="flex-1 w-full">
+              <input type="text" id="task-description" maxlength="200" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-xs dark:text-white focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="¿En qué gestión estás trabajando?">
+            </div>
+            <div class="flex items-center justify-between w-full md:w-auto gap-4">
+              <select id="channel-select" onchange="cambioDeCanal()" class="px-3 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 dark:text-white rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500" title="Si cambiás de canal con el timer en marcha, se cierra la gestión actual y empieza otra en el canal nuevo">
+                <option value="WhatsApp">📱 WhatsApp</option>
+                <option value="Discador">📞 Discador / Llamada</option>
+                <option value="Gestión Mail">✉️ Gestión Mail</option>
+                <option value="Bootmaker">🤖 Bootmaker</option>
+              </select>
+              <div id="timer-display" class="font-mono text-xl font-bold text-gray-800 dark:text-white min-w-[90px] text-center">00:00:00</div>
+              <button id="timer-btn" onclick="toggleTimer()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 transition flex items-center gap-2 text-xs"></button>
+            </div>
           </div>
+          <p id="timer-hint" class="hidden -mt-4 text-[11px] text-gray-500 dark:text-gray-400 px-1"><i class="fa-solid fa-circle-info"></i> Gestión en curso. Si cambiás el canal, se registra el cambio y el tiempo sigue contando en el canal nuevo.</p>
 
-          <div class="flex items-center justify-between w-full md:w-auto gap-4">
-            <select id="channel-select" class="px-3 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 dark:text-white rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="WhatsApp">📱 WhatsApp</option>
-              <option value="Discador">📞 Discador / Llamada</option>
-              <option value="Gestión Mail">✉️ Gestión Mail</option>
-              <option value="Bootmaker">🤖 Bootmaker</option>
-            </select>
-
-            <div id="timer-display" class="font-mono text-xl font-bold text-gray-800 dark:text-white min-w-[90px] text-center">00:00:00</div>
-
-            <button id="timer-btn" onclick="toggleTimer()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 transition flex items-center gap-2 text-xs">
-              <i class="fa-solid fa-play"></i><span>INICIAR</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- KPIS -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-file-contract"></i></div>
-            <div>
-              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">CONTRATO DIARIO</p>
-              <p id="kpi-contract-hours" class="text-lg font-black text-gray-800 dark:text-white">--</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+              <div class="w-12 h-12 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-file-contract"></i></div>
+              <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Contrato diario</p><p id="kpi-contract-hours" class="text-lg font-black text-gray-800 dark:text-white">--</p></div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+              <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-stopwatch"></i></div>
+              <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total multicanal hoy</p><p id="kpi-total-time" class="text-lg font-black text-gray-800 dark:text-white">00:00:00</p></div>
+            </div>
+            <div id="kpi-contract-box" class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-amber-200 dark:border-amber-800/60 shadow-sm flex items-center gap-4">
+              <div id="kpi-contract-icon" class="w-12 h-12 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-hourglass-half"></i></div>
+              <div><p id="kpi-contract-status-title" class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Hs faltantes / compensar</p><p id="kpi-remaining-time" class="text-lg font-black text-amber-700 dark:text-amber-300">00:00:00</p></div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+              <div class="w-12 h-12 bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-right-left"></i></div>
+              <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Cambios de canal hoy</p><p id="kpi-channel-switches" class="text-lg font-black text-gray-800 dark:text-white">0</p></div>
             </div>
           </div>
 
-          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-stopwatch"></i></div>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
+              <h3 class="font-bold text-gray-800 dark:text-white text-xs flex items-center gap-2"><i class="fa-solid fa-list text-blue-600 dark:text-blue-400"></i> Mis gestiones (últimos 30 días)</h3>
+              <button onclick="cargarMisRegistros(true)" class="text-blue-600 dark:text-blue-400 text-xs font-semibold flex items-center gap-1"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
+                <thead class="bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-gray-300 uppercase text-[10px] font-bold">
+                  <tr><th class="px-6 py-3">Fecha</th><th class="px-6 py-3">Descripción</th><th class="px-6 py-3">Canal</th><th class="px-6 py-3">Hora inicio</th><th class="px-6 py-3">Hora fin</th><th class="px-6 py-3">Duración</th><th class="px-6 py-3">Estado</th></tr>
+                </thead>
+                <tbody id="history-table-body" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Vista ADMIN: monitor en vivo -->
+        <section id="admin-monitor" class="hidden space-y-6">
+          <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">TOTAL MULTICANAL HOY</p>
-              <p id="kpi-total-time" class="text-lg font-black text-gray-800 dark:text-white">00:00:00</p>
+              <h2 class="text-lg font-bold text-gray-800 dark:text-white">Monitor del día</h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Se actualiza solo cada 60 segundos · <span id="monitor-actualizado">—</span></p>
+            </div>
+            <div class="flex gap-2">
+              <input id="monitor-buscar" oninput="renderMonitor()" class="inp !w-48" placeholder="Buscar asesor…">
+              <button onclick="cargarMonitor(true)" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl"><i class="fa-solid fa-rotate"></i> Actualizar</button>
             </div>
           </div>
 
-          <div id="kpi-contract-box" class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-amber-200 dark:border-amber-800/60 shadow-sm flex items-center gap-4">
-            <div id="kpi-contract-icon" class="w-12 h-12 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-hourglass-half"></i></div>
-            <div>
-              <p id="kpi-contract-status-title" class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">HS FALTANTES / COMPENSAR</p>
-              <p id="kpi-remaining-time" class="text-lg font-black text-amber-700 dark:text-amber-300">00:00:00</p>
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Trabajando ahora</p><p id="mon-kpi-activos" class="text-2xl font-black text-emerald-600">0</p></div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Horas del equipo hoy</p><p id="mon-kpi-horas" class="text-2xl font-black text-gray-800 dark:text-white">00:00:00</p></div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Contrato cumplido</p><p id="mon-kpi-cumplidos" class="text-2xl font-black text-blue-600">0</p></div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Sin actividad hoy</p><p id="mon-kpi-sin" class="text-2xl font-black text-amber-600">0</p></div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
+                <thead class="bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-gray-300 uppercase text-[10px] font-bold">
+                  <tr><th class="px-4 py-3">Asesor</th><th class="px-4 py-3">Turno</th><th class="px-4 py-3">Ahora</th><th class="px-4 py-3">Contrato</th><th class="px-4 py-3">Trabajado hoy</th><th class="px-4 py-3">Faltante</th><th class="px-4 py-3">Cambios canal</th><th class="px-4 py-3">Gestiones</th></tr>
+                </thead>
+                <tbody id="monitor-table-body" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
+              </table>
             </div>
           </div>
 
-          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-right-left"></i></div>
-            <div>
-              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">CAMBIOS DE CANAL HOY</p>
-              <p id="kpi-channel-switches" class="text-lg font-black text-gray-800 dark:text-white">0</p>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-700">
+              <h3 class="font-bold text-gray-800 dark:text-white text-xs flex items-center gap-2"><i class="fa-solid fa-list text-blue-600 dark:text-blue-400"></i> Gestiones registradas hoy</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
+                <thead class="bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-gray-300 uppercase text-[10px] font-bold">
+                  <tr><th class="px-4 py-3">Asesor</th><th class="px-4 py-3">Descripción</th><th class="px-4 py-3">Canal</th><th class="px-4 py-3">Inicio</th><th class="px-4 py-3">Fin</th><th class="px-4 py-3">Duración</th><th class="px-4 py-3">Acciones</th></tr>
+                </thead>
+                <tbody id="admin-history-body" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
+              </table>
             </div>
           </div>
-        </div>
-
-        <!-- TABLA HISTORIAL -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
-            <h3 class="font-bold text-gray-800 dark:text-white text-xs flex items-center gap-2"><i class="fa-solid fa-list text-blue-600 dark:text-blue-400"></i> Historial de Gestiones</h3>
-            <button onclick="limpiarHistorial()" class="text-red-500 hover:text-red-700 text-xs font-semibold flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Limpiar Historial</button>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
-              <thead class="bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-gray-300 uppercase text-[10px] font-bold border-b border-gray-100 dark:border-slate-700">
-                <tr>
-                  <th class="px-6 py-3">Fecha</th>
-                  <th class="px-6 py-3">Asesor / Operador</th>
-                  <th class="px-6 py-3">Descripción</th>
-                  <th class="px-6 py-3">Canal</th>
-                  <th class="px-6 py-3">Hora Inicio</th>
-                  <th class="px-6 py-3">Hora Fin</th>
-                  <th class="px-6 py-3">Duración</th>
-                  <th class="px-6 py-3">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="history-table-body" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
-            </table>
-          </div>
-        </div>
+        </section>
       </main>
 
-      <!-- SECCIÓN 2: INFORMES Y REPORTES -->
-      <main id="tab-reports-content" class="hidden flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
+      <!-- ============ TAB 2: REPORTES ============ -->
+      <main id="tab-reports-content" class="hidden flex-1 p-4 md:p-6 space-y-6 max-w-6xl mx-auto w-full">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm space-y-6">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b dark:border-slate-700 pb-4">
             <div>
               <h2 class="text-lg font-bold text-gray-800 dark:text-white">Informes y Reportes de Logueo</h2>
-              <p class="text-xs text-gray-500 dark:text-gray-400">Descarga de reportes detallados y consolidados</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Totales por asesor y día, con el contrato de cada uno</p>
             </div>
             <div class="flex flex-wrap gap-2">
               <button onclick="exportarExcelDetallado()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-2"><i class="fa-solid fa-list-check"></i><span>Excel Detallado</span></button>
@@ -221,44 +235,34 @@
 
           <div class="bg-gray-50 dark:bg-slate-700/50 p-4 rounded-xl border border-gray-200 dark:border-slate-600 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2 border-b dark:border-slate-600 pb-3">
-              <span class="text-xs font-bold text-gray-700 dark:text-gray-200 uppercase">Filtros Rápidos:</span>
+              <span class="text-xs font-bold text-gray-700 dark:text-gray-200 uppercase">Filtros rápidos:</span>
               <div class="flex flex-wrap gap-1.5">
-                <button onclick="setQuickDateFilter('today')" class="px-3 py-1 bg-white dark:bg-slate-600 border text-xs font-bold rounded-lg">Hoy</button>
-                <button onclick="setQuickDateFilter('yesterday')" class="px-3 py-1 bg-white dark:bg-slate-600 border text-xs font-bold rounded-lg">Ayer</button>
-                <button onclick="setQuickDateFilter('week')" class="px-3 py-1 bg-white dark:bg-slate-600 border text-xs font-bold rounded-lg">Esta Semana</button>
-                <button onclick="setQuickDateFilter('month')" class="px-3 py-1 bg-white dark:bg-slate-600 border text-xs font-bold rounded-lg">Este Mes</button>
+                <button onclick="setQuickDateFilter('today')" class="px-3 py-1 bg-white dark:bg-slate-600 border dark:border-slate-500 text-xs font-bold rounded-lg">Hoy</button>
+                <button onclick="setQuickDateFilter('yesterday')" class="px-3 py-1 bg-white dark:bg-slate-600 border dark:border-slate-500 text-xs font-bold rounded-lg">Ayer</button>
+                <button onclick="setQuickDateFilter('week')" class="px-3 py-1 bg-white dark:bg-slate-600 border dark:border-slate-500 text-xs font-bold rounded-lg">Esta semana</button>
+                <button onclick="setQuickDateFilter('month')" class="px-3 py-1 bg-white dark:bg-slate-600 border dark:border-slate-500 text-xs font-bold rounded-lg">Este mes</button>
               </div>
             </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Desde:</label>
-                <input type="date" id="filter-date-from" class="w-full p-2 bg-white dark:bg-slate-600 border rounded-lg text-xs">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Hasta:</label>
-                <input type="date" id="filter-date-to" class="w-full p-2 bg-white dark:bg-slate-600 border rounded-lg text-xs">
-              </div>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Desde:</label><input type="date" id="filter-date-from" class="inp"></div>
+              <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Hasta:</label><input type="date" id="filter-date-to" class="inp"></div>
+              <div id="filter-asesor-wrap"><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Asesor:</label><input type="text" id="filter-asesor" oninput="renderReportes()" class="inp" placeholder="Todos"></div>
               <div class="flex items-end gap-2">
                 <button onclick="filtrarReportesPorFecha()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-lg shadow"><i class="fa-solid fa-filter"></i> Filtrar</button>
-                <button onclick="restablecerFiltrosFechas()" class="bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-gray-200 font-bold text-xs py-2.5 px-3 rounded-lg"><i class="fa-solid fa-rotate-right"></i></button>
+                <button onclick="restablecerFiltrosFechas()" title="Ver todo el historial" class="bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-gray-200 font-bold text-xs py-2.5 px-3 rounded-lg"><i class="fa-solid fa-rotate-right"></i></button>
               </div>
             </div>
           </div>
 
+          <p id="reports-summary" class="text-xs text-gray-500 dark:text-gray-400"></p>
+
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
-              <thead class="bg-gray-50 dark:bg-slate-700 uppercase text-[10px] font-bold border-b border-gray-100 dark:border-slate-700">
+              <thead class="bg-gray-50 dark:bg-slate-700 uppercase text-[10px] font-bold">
                 <tr>
-                  <th class="px-4 py-3">Asesor</th>
-                  <th class="px-4 py-3">Fecha</th>
-                  <th class="px-4 py-3">Contrato</th>
-                  <th class="px-4 py-3">Hs WhatsApp</th>
-                  <th class="px-4 py-3">Hs Discador</th>
-                  <th class="px-4 py-3">Hs Mail</th>
-                  <th class="px-4 py-3">Hs Bootmaker</th>
-                  <th class="px-4 py-3">Total Día</th>
-                  <th class="px-4 py-3">Estado</th>
+                  <th class="px-3 py-3">Asesor</th><th class="px-3 py-3">Fecha</th><th class="px-3 py-3">Contrato</th>
+                  <th class="px-3 py-3">WhatsApp</th><th class="px-3 py-3">Discador</th><th class="px-3 py-3">Mail</th><th class="px-3 py-3">Bootmaker</th>
+                  <th class="px-3 py-3">Ajustes</th><th class="px-3 py-3">Total día</th><th class="px-3 py-3">Faltante</th><th class="px-3 py-3">Cambios</th><th class="px-3 py-3">Estado</th>
                 </tr>
               </thead>
               <tbody id="reports-table-body" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
@@ -267,29 +271,24 @@
         </div>
       </main>
 
-      <!-- SECCIÓN 3: NÓMINA USUARIOS -->
-      <main id="tab-admin-users-content" class="hidden flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
+      <!-- ============ TAB 3: NÓMINA ============ -->
+      <main id="tab-admin-users-content" class="hidden flex-1 p-4 md:p-6 space-y-6 max-w-6xl mx-auto w-full">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm space-y-6">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b dark:border-slate-700 pb-4">
             <div>
               <h2 class="text-lg font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-users text-emerald-600"></i> Nómina de Operadores</h2>
-              <p class="text-xs text-gray-500">Gestión de datos de operadores y contratos</p>
+              <p class="text-xs text-gray-500">Se guarda en la hoja "Usuarios" de la planilla</p>
             </div>
-            <button onclick="abrirModalCrearUsuario()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow flex items-center gap-2"><i class="fa-solid fa-user-plus"></i><span>Nuevo Usuario</span></button>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="abrirModalAdmin()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow flex items-center gap-2"><i class="fa-solid fa-file-import"></i><span>Importar Excel</span></button>
+              <button onclick="abrirModalCrearUsuario()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow flex items-center gap-2"><i class="fa-solid fa-user-plus"></i><span>Nuevo Usuario</span></button>
+            </div>
           </div>
-
+          <input id="users-buscar" oninput="renderUsuarios()" class="inp !w-64" placeholder="Buscar operador…">
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
-              <thead class="bg-gray-50 dark:bg-slate-700 uppercase text-[10px] font-bold border-b border-gray-100 dark:border-slate-700">
-                <tr>
-                  <th class="px-4 py-3">Operador</th>
-                  <th class="px-4 py-3">Turno</th>
-                  <th class="px-4 py-3">Contrato</th>
-                  <th class="px-4 py-3">Horario</th>
-                  <th class="px-4 py-3">Rol</th>
-                  <th class="px-4 py-3">Estado</th>
-                  <th class="px-4 py-3">Acciones</th>
-                </tr>
+              <thead class="bg-gray-50 dark:bg-slate-700 uppercase text-[10px] font-bold">
+                <tr><th class="px-4 py-3">Operador</th><th class="px-4 py-3">Turno</th><th class="px-4 py-3">Contrato</th><th class="px-4 py-3">Horario</th><th class="px-4 py-3">Rol</th><th class="px-4 py-3">Clave</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">Acciones</th></tr>
               </thead>
               <tbody id="users-table-body" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
             </table>
@@ -297,608 +296,996 @@
         </div>
       </main>
 
-      <!-- SECCIÓN 4: GESTIÓN TIEMPOS -->
-      <main id="tab-admin-settings-content" class="hidden flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
+      <!-- ============ TAB 4: AJUSTES ============ -->
+      <main id="tab-admin-settings-content" class="hidden flex-1 p-4 md:p-6 space-y-6 max-w-6xl mx-auto w-full">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm space-y-6">
-          <div class="border-b dark:border-slate-700 pb-4 flex justify-between items-center">
-            <div>
-              <h2 class="text-lg font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-sliders text-purple-600"></i> Ajuste Manual de Tiempos</h2>
-              <p class="text-xs text-gray-500">Agregar o descontar tiempos de gestión</p>
-            </div>
-            <button onclick="abrirModalAdmin()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2 rounded-xl"><i class="fa-solid fa-file-import"></i> Actualizar Nómina (Excel)</button>
+          <div class="border-b dark:border-slate-700 pb-4">
+            <h2 class="text-lg font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-sliders text-purple-600"></i> Ajuste Manual de Tiempos</h2>
+            <p class="text-xs text-gray-500">El ajuste se guarda en la planilla y se suma (o resta) al total del día del asesor</p>
           </div>
-
           <div class="bg-purple-50/50 dark:bg-purple-950/20 p-5 rounded-2xl border border-purple-100 dark:border-purple-900/50 space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
-              <div>
-                <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Operación</label>
-                <select id="manual-action-type" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white">
-                  <option value="ADD">➕ Agregar Tiempo</option>
-                  <option value="SUBTRACT">➖ Descontar Tiempo</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Nombre Operador</label>
-                <input type="text" id="manual-user-id" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white" placeholder="Nombre completo">
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Fecha</label>
-                <input type="date" id="manual-date" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white">
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Canal</label>
-                <select id="manual-channel" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white">
-                  <option value="WhatsApp">WhatsApp</option>
-                  <option value="Discador">Discador</option>
-                  <option value="Gestión Mail">Gestión Mail</option>
-                  <option value="Bootmaker">Bootmaker</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Duración (Minutos)</label>
-                <input type="number" id="manual-duration-mins" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white" placeholder="Minutos">
-              </div>
+              <div><label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Operación</label>
+                <select id="manual-action-type" class="inp"><option value="ADD">➕ Agregar tiempo</option><option value="SUBTRACT">➖ Descontar tiempo</option></select></div>
+              <div><label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Operador</label><select id="manual-user-id" class="inp"></select></div>
+              <div><label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Fecha</label><input type="date" id="manual-date" class="inp"></div>
+              <div><label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Canal</label>
+                <select id="manual-channel" class="inp"><option>WhatsApp</option><option>Discador</option><option>Gestión Mail</option><option>Bootmaker</option></select></div>
+              <div><label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Duración (minutos)</label><input type="number" min="1" max="720" id="manual-duration-mins" class="inp" placeholder="Minutos"></div>
             </div>
+            <div><label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Motivo / justificación</label><input type="text" maxlength="200" id="manual-desc" class="inp" placeholder="Ej: Se olvidó de iniciar el timer de 14:00 a 14:30"></div>
+            <button id="manual-btn" onclick="guardarTiempoManual()" class="bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow">Aplicar ajuste</button>
+          </div>
 
-            <div>
-              <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Motivo / Justificación</label>
-              <input type="text" id="manual-desc" class="w-full p-2 text-xs border rounded-lg bg-white dark:bg-slate-700 dark:text-white" placeholder="Ej: Ajuste por olvido">
+          <div>
+            <h3 class="font-bold text-gray-800 dark:text-white text-xs mb-3">Ajustes de los últimos 60 días</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
+                <thead class="bg-gray-50 dark:bg-slate-700 uppercase text-[10px] font-bold">
+                  <tr><th class="px-4 py-3">Fecha</th><th class="px-4 py-3">Operador</th><th class="px-4 py-3">Canal</th><th class="px-4 py-3">Ajuste</th><th class="px-4 py-3">Motivo</th><th class="px-4 py-3">Acciones</th></tr>
+                </thead>
+                <tbody id="ajustes-table-body" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
+              </table>
             </div>
-
-            <button onclick="guardarTiempoManual()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow">Aplicar Ajuste</button>
           </div>
         </div>
       </main>
     </div>
   </div>
 
-  <!-- MODAL CREAR USUARIO -->
+  <!-- ============ MODAL USUARIO ============ -->
   <div id="create-user-modal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
       <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
-        <h3 class="font-bold text-gray-800 dark:text-white text-sm">Nuevo Operador</h3>
+        <h3 id="user-modal-title" class="font-bold text-gray-800 dark:text-white text-sm">Nuevo operador</h3>
         <button onclick="cerrarModalCrearUsuario()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
+      <input type="hidden" id="edit-user-id">
       <div class="space-y-3">
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Nombre y Apellido</label>
-          <input type="text" id="new-user-name" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:text-white">
+        <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Nombre y apellido</label><input type="text" id="new-user-name" class="inp"><p id="name-lock-hint" class="hidden text-[10px] text-gray-400 mt-1">El nombre no se puede cambiar porque identifica sus registros.</p></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Turno</label><select id="new-user-turno" class="inp"><option>Mañana</option><option>Tarde</option><option>-</option></select></div>
+          <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Contrato (hs/día)</label><input type="number" step="0.5" min="0" max="12" id="new-user-contrato" class="inp" placeholder="Ej: 6"></div>
         </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Turno</label>
-          <select id="new-user-turno" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:text-white">
-            <option value="Mañana">Mañana</option>
-            <option value="Tarde">Tarde</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Contrato (Hs/Día)</label>
-          <input type="number" step="0.5" id="new-user-contrato" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:text-white" placeholder="Ej: 6">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Horario</label>
-          <input type="text" id="new-user-horario" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:text-white" placeholder="Ej: 08:00 - 14:00">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Rol</label>
-          <select id="new-user-role" class="w-full p-2 border rounded-lg text-xs dark:bg-slate-700 dark:text-white">
-            <option value="ASESOR">ASESOR</option>
-            <option value="ADMINISTRADOR">ADMINISTRADOR</option>
-          </select>
+        <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Horario</label><input type="text" id="new-user-horario" class="inp" placeholder="Ej: 08:00 - 14:00"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Rol</label><select id="new-user-role" class="inp"><option value="ASESOR">ASESOR</option><option value="ADMINISTRADOR">ADMINISTRADOR</option></select></div>
+          <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Estado</label><select id="new-user-state" class="inp"><option value="ACTIVO">ACTIVO</option><option value="BAJA">BAJA</option></select></div>
         </div>
       </div>
-
       <div class="pt-4 flex justify-end gap-2">
         <button onclick="cerrarModalCrearUsuario()" class="px-4 py-2 bg-gray-100 dark:bg-slate-700 text-xs font-semibold rounded-xl">Cancelar</button>
-        <button onclick="guardarNuevoUsuario()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl">Crear Operador</button>
+        <button id="user-save-btn" onclick="guardarNuevoUsuario()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-semibold rounded-xl">Guardar</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL EXCEL -->
+  <!-- ============ MODAL IMPORTAR EXCEL ============ -->
   <div id="admin-modal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
       <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
-        <h3 class="font-bold text-gray-800 dark:text-white text-sm">Cargar Nómina (Excel)</h3>
+        <h3 class="font-bold text-gray-800 dark:text-white text-sm">Importar nómina desde Excel</h3>
         <button onclick="cerrarModalAdmin()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <input type="file" id="excel-file-input" accept=".xlsx, .xls" class="block w-full text-xs text-gray-500">
+      <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Primera hoja del archivo, con encabezados en la fila 1. Columnas reconocidas: <b>Nombre</b> (u Operador / Asesor), <b>Turno</b>, <b>Contrato</b>, <b>Horario</b>, <b>Rol</b> y <b>Estado</b>. Si el operador ya existe se actualiza; si no, se crea.</p>
+      <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" class="block w-full text-xs text-gray-500">
+      <div id="import-progress" class="hidden text-xs font-semibold text-blue-600"></div>
       <div class="pt-4 flex justify-end gap-2">
         <button onclick="cerrarModalAdmin()" class="px-4 py-2 bg-gray-100 dark:bg-slate-700 text-xs font-semibold rounded-xl">Cancelar</button>
-        <button onclick="procesarExcelNomina()" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl">Procesar</button>
+        <button id="import-btn" onclick="procesarExcelNomina()" class="px-4 py-2 bg-blue-600 disabled:opacity-60 text-white text-xs font-semibold rounded-xl">Procesar</button>
       </div>
     </div>
   </div>
 
-  <!-- JAVASCRIPT -->
+  <!-- ============ MODAL CAMBIAR CLAVE ============ -->
+  <div id="clave-modal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
+        <h3 class="font-bold text-gray-800 dark:text-white text-sm">Cambiar mi clave</h3>
+        <button onclick="cerrarModalClave()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="space-y-3">
+        <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Clave actual</label><input type="password" id="clave-actual" class="inp"></div>
+        <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Clave nueva (mínimo 4 caracteres)</label><input type="password" id="clave-nueva" class="inp"></div>
+        <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Repetir clave nueva</label><input type="password" id="clave-nueva2" class="inp"></div>
+      </div>
+      <div class="pt-2 flex justify-end gap-2">
+        <button onclick="cerrarModalClave()" class="px-4 py-2 bg-gray-100 dark:bg-slate-700 text-xs font-semibold rounded-xl">Cancelar</button>
+        <button id="clave-btn" onclick="cambiarClave()" class="px-4 py-2 bg-blue-600 disabled:opacity-60 text-white text-xs font-semibold rounded-xl">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts" class="fixed bottom-4 right-4 z-[60] space-y-2 max-w-sm"></div>
+
   <script>
-    let currentUser = null;
-    let timerInterval = null;
-    let startTime = null;
-    let elapsedTime = 0;
-    let isRunning = false;
-    let registrosFiltradosCache = [];
-    let historyGlobal = [];
-
-    // RUTA EXACTA DE TU CARPETA GOOGLE DRIVE Y WEBHOOK CONECTOR
-    const driveFolderUrl = "https://drive.google.com/drive/folders/1kT4ZWWfMdYnGc5pOJZhikzG89pjoEnGQ";
+    /* ==============================================================
+     * CONFIGURACIÓN (no modificar la URL del script)
+     * ============================================================== */
     const scriptDriveUrl = "https://script.google.com/macros/s/AKfycbxnKVNoIWLrpivUWu-tJGv9lJDpK458L5ORmIBpXofZK8Hx-ML4J6oQ5Xe2RAU7dObS/exec";
+    const driveFolderUrl = "https://drive.google.com/drive/folders/1kT4ZWWfMdYnGc5pOJZhikzG89pjoEnGQ";
+    const CANALES = ['WhatsApp', 'Discador', 'Gestión Mail', 'Bootmaker'];
+    const LS = { sesion: 'tt_sesion', outbox: 'tt_outbox', rechazados: 'tt_rechazados', tema: 'tt_tema', timer: id => 'tt_timer_' + id };
 
-    const nominaCompleta = [
-      { id: 'Palacio Karin Natali', name: 'Palacio Karin Natali', turno: 'Tarde', contrato: 7, horario: '14:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Balestri Fernandez Silvina Veronica', name: 'Balestri Fernandez Silvina Veronica', turno: 'Tarde', contrato: 7, horario: '14:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Yañez Mon Natalia Alejandra', name: 'Yañez Mon Natalia Alejandra', turno: 'Tarde', contrato: 7, horario: '14:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Rios Liliana Beatriz', name: 'Rios Liliana Beatriz', turno: 'Mañana', contrato: 7, horario: '08:00 - 15:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Reyna Rocío Agustina', name: 'Reyna Rocío Agustina', turno: 'Mañana', contrato: 7, horario: '08:00 - 15:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Lucero Miranda Pablo David', name: 'Lucero Miranda Pablo David', turno: 'Tarde', contrato: 7, horario: '14:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Pasteris Lucas', name: 'Pasteris Lucas', turno: 'Mañana', contrato: 7, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Gorosito Magni Maria Antonela', name: 'Gorosito Magni Maria Antonela', turno: 'Mañana', contrato: 7, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Charras Tania Pamela', name: 'Charras Tania Pamela', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Lopez Giuliana Evelyn', name: 'Lopez Giuliana Evelyn', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Rojas Carla', name: 'Rojas Carla', turno: 'Tarde', contrato: 6.5, horario: '14:30 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Coronet Karen Mailen', name: 'Coronet Karen Mailen', turno: 'Tarde', contrato: 6.5, horario: '14:30 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Luna Leticia Micaela', name: 'Luna Leticia Micaela', turno: 'Tarde', contrato: 6.5, horario: '14:30 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Bustos Georgina Magalí', name: 'Bustos Georgina Magalí', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Cardona Maria Eugenia', name: 'Cardona Maria Eugenia', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Jimenez Carla', name: 'Jimenez Carla', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Olivera Agostina Del Milagro', name: 'Olivera Agostina Del Milagro', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Villarreal Tania Micaela', name: 'Villarreal Tania Micaela', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Salvo Alexa', name: 'Salvo Alexa', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Suarez Candela Natali', name: 'Suarez Candela Natali', turno: 'Tarde', contrato: 6.5, horario: '08:00 - 15:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Caminos Ochoa Abril Denise', name: 'Caminos Ochoa Abril Denise', turno: 'Tarde', contrato: 6.5, horario: '15:00 a 21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Sabas Yamir Jesus', name: 'Sabas Yamir Jesus', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Gonzalez Natasha Andrea', name: 'Gonzalez Natasha Andrea', turno: 'Mañana', contrato: 6.5, horario: '08:00 - 14:30', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Altamirano Johana Soledad', name: 'Altamirano Johana Soledad', turno: 'Tarde', contrato: 6, horario: '15:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Prado Maria Trinidad', name: 'Prado Maria Trinidad', turno: 'Mañana', contrato: 6, horario: '08:00 - 14:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Quinteros Dario Sebastian', name: 'Quinteros Dario Sebastian', turno: 'Mañana', contrato: 6, horario: '09:00 - 15:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Vega Sofia Valentina', name: 'Vega Sofia Valentina', turno: 'Tarde', contrato: 6, horario: '15:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Acosta Valentina Micaela', name: 'Acosta Valentina Micaela', turno: 'Mañana', contrato: 6, horario: '08:00 - 14:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Gallardo Lourdes', name: 'Gallardo Lourdes', turno: 'Mañana', contrato: 6, horario: '08:00 - 14:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Ramirez Agustina', name: 'Ramirez Agustina', turno: 'Tarde', contrato: 6, horario: '15:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Valenzuela Josefina del Milagro', name: 'Valenzuela Josefina del Milagro', turno: 'Tarde', contrato: 6, horario: '15:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Diaz Micaela Kiara Sofia', name: 'Diaz Micaela Kiara Sofia', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Gomez Arce Axel Javier', name: 'Gomez Arce Axel Javier', turno: 'Mañana', contrato: 6, horario: '08:00-14:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Villarruel Sol Ailin', name: 'Villarruel Sol Ailin', turno: 'Mañana', contrato: 6, horario: '08:00-14:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Yurca Kiara', name: 'Yurca Kiara', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'LISBOA ZOE LISETH', name: 'LISBOA ZOE LISETH', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'MONTIVERO FLORENCIA ABIGAIL', name: 'MONTIVERO FLORENCIA ABIGAIL', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'VELÁZQUEZ ANA SABRINA', name: 'VELÁZQUEZ ANA SABRINA', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'VALENZUELA VEGA MILENA CELESTE', name: 'VALENZUELA VEGA MILENA CELESTE', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'PAEZ LUNA ROCIO ARIANA', name: 'PAEZ LUNA ROCIO ARIANA', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'PALACIOS GALAZ ABIGAIL LUCILA', name: 'PALACIOS GALAZ ABIGAIL LUCILA', turno: 'Tarde', contrato: 6, horario: '15:00-21:00', role: 'ASESOR', state: 'ACTIVO' },
-      { id: 'Administrador', name: 'Administrador General', turno: '-', contrato: '-', horario: '-', role: 'ADMINISTRADOR', state: 'ACTIVO' }
-    ];
+    let sesion = null;          // { token, user: {id, name, role, contrato, ...} }
+    let timer = null;           // { inicio (ms), canal, desc }
+    let intervalos = [];
+    let enviando = false;
+    let ultimoErrorSync = null;
+    let misRegistros = [];      // registros del asesor que ya están en la planilla
+    let monitorData = null;
+    let usuariosCache = [];
+    let reporteRegistros = [], reporteFilas = [];
+    let reportesIniciados = false;
 
+    /* ==============================================================
+     * UTILIDADES
+     * ============================================================== */
+    const $ = id => document.getElementById(id);
+    const pad = n => String(n).padStart(2, '0');
+    const esAdmin = () => !!sesion && sesion.user.role === 'ADMINISTRADOR';
+    const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+    // Fechas SIEMPRE en hora local (Argentina), nunca con toISOString()
+    function fechaISO(d = new Date()) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+    function isoADMY(iso) { const [y, m, d] = String(iso).split('-'); return `${d}/${m}/${y}`; }
+    function horaHMS(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+    function sumarDias(iso, n) { const [y, m, d] = iso.split('-').map(Number); return fechaISO(new Date(y, m - 1, d + n)); }
+    function inicioDelDia(d = new Date()) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
+
+    function formatSeconds(secs) {
+      secs = Math.round(secs || 0);
+      const a = Math.abs(secs);
+      return `${secs < 0 ? '-' : ''}${pad(Math.floor(a / 3600))}:${pad(Math.floor((a % 3600) / 60))}:${pad(a % 60)}`;
+    }
+    function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+    function uuid() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    }
+    function lsGet(k, def) { try { const v = localStorage.getItem(k); return v === null ? def : JSON.parse(v); } catch (e) { return def; } }
+    function lsSet(k, v) { try { if (v === null || v === undefined) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { console.error(e); } }
+
+    function toast(msg, tipo = 'info') {
+      const colores = { info: 'bg-slate-800 text-white', ok: 'bg-emerald-600 text-white', error: 'bg-red-600 text-white', warn: 'bg-amber-500 text-white' };
+      const el = document.createElement('div');
+      el.className = `${colores[tipo] || colores.info} text-xs font-semibold px-4 py-3 rounded-xl shadow-lg`;
+      el.textContent = msg;
+      $('toasts').appendChild(el);
+      setTimeout(() => el.remove(), tipo === 'error' ? 7000 : 4000);
+    }
+    function filaMensaje(tbodyId, cols, html) { $(tbodyId).innerHTML = `<tr><td colspan="${cols}" class="px-6 py-6 text-center text-gray-400">${html}</td></tr>`; }
+    const cargando = '<i class="fa-solid fa-spinner fa-spin"></i> Cargando…';
+
+    /* ==============================================================
+     * CONEXIÓN CON GOOGLE APPS SCRIPT (JSONP)
+     * ============================================================== */
+    function api(action, payload = {}, { timeout = 25000 } = {}) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'googleSheetsCallback_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        const q = new URLSearchParams({ action, callback: callbackName, payload: JSON.stringify(payload) });
+        if (sesion && sesion.token) q.set('token', sesion.token);
+        const url = scriptDriveUrl + (scriptDriveUrl.includes('?') ? '&' : '?') + q.toString();
+        if (url.length > 7500) return reject(Object.assign(new Error('Los datos a enviar son demasiado grandes.'), { code: 'VALIDACION' }));
+
+        const script = document.createElement('script');
+        let terminado = false;
+        const fin = () => { terminado = true; clearTimeout(t); window[callbackName] = () => {}; script.remove(); };
+
+        window[callbackName] = data => {
+          fin();
+          if (data && data.ok) return resolve(data);
+          const err = Object.assign(new Error((data && data.error) || 'Respuesta inválida del servidor.'), { code: (data && data.code) || 'ERROR' });
+          if (err.code === 'SESION') sesionExpirada(err.message);
+          reject(err);
+        };
+        script.onerror = () => { if (!terminado) { fin(); reject(Object.assign(new Error('Sin conexión con Google Sheets.'), { code: 'RED' })); } };
+        const t = setTimeout(() => { if (!terminado) { fin(); reject(Object.assign(new Error('Google Sheets no respondió a tiempo.'), { code: 'RED' })); } }, timeout);
+        script.src = url;
+        document.body.appendChild(script);
+      });
+    }
+
+    // Lectura centralizada desde la planilla (el servidor filtra: el asesor solo recibe lo suyo)
+    async function obtenerDatosRemotos(filtros = {}) {
+      const r = await api('listar', filtros, { timeout: 40000 });
+      return r.rows || [];
+    }
+
+    /* ==============================================================
+     * SESIÓN
+     * ============================================================== */
     document.addEventListener('DOMContentLoaded', () => {
-      const today = new Date();
-      document.getElementById('current-date-display').innerText = today.toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      localStorage.setItem('timetracker_users', JSON.stringify(nominaCompleta));
+      $('current-date-display').innerText = new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      pintarTema();
+      const guardada = lsGet(LS.sesion, null);
+      if (guardada && guardada.token && guardada.user) { sesion = guardada; entrarApp(); }
+      window.addEventListener('online', () => sincronizarPendientes());
+      window.addEventListener('beforeunload', e => {
+        if (sesion && pendientesPropios().length) { e.preventDefault(); e.returnValue = ''; }
+      });
     });
 
-    function toggleDarkMode() {
-      document.documentElement.classList.toggle('dark');
-    }
-
-    function abrirGoogleDrive() {
-      window.open(driveFolderUrl, '_blank');
-    }
-
-    function sincronizarConDrive(record) {
-      const statusElement = document.getElementById('drive-status');
-      if (statusElement) {
-        statusElement.className = "flex items-center gap-2 text-xs bg-blue-50 text-blue-700 px-3 py-2 rounded-xl border border-blue-200 font-medium cursor-pointer";
-        statusElement.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600"></i><span>Guardando en Drive...</span>`;
-      }
-
-      fetch(scriptDriveUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(record)
-      })
-      .then(() => {
-        if (statusElement) {
-          statusElement.className = "flex items-center gap-2 text-xs bg-green-50 text-green-700 px-3 py-2 rounded-xl border border-green-200 font-medium cursor-pointer hover:bg-green-100";
-          statusElement.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-green-600"></i><span>Guardado en Drive</span>`;
-        }
-      })
-      .catch(err => console.error("Error al guardar en Drive:", err));
-    }
-
-    function iniciarSesion() {
-      const userVal = document.getElementById('login-user').value.trim();
-      const passVal = document.getElementById('login-pass').value.trim();
-      const normalizedUser = userVal.toLowerCase();
-
-      if ((normalizedUser === 'administrador' || normalizedUser === 'admin') && passVal === 'admin123') {
-        currentUser = { name: 'Administrador', role: 'ADMINISTRADOR', id: 'Administrador', contrato: 8 };
-      } else {
-        let users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
-        const found = users.find(u => u.name.toLowerCase().includes(normalizedUser) || u.id.toLowerCase() === normalizedUser);
-        currentUser = found || { name: userVal, role: 'ASESOR', id: userVal, contrato: 6 };
-      }
-
-      document.getElementById('user-display-name').innerText = currentUser.name;
-      document.getElementById('user-display-role').innerText = currentUser.role;
-      document.getElementById('user-avatar').innerText = currentUser.name.substring(0, 2).toUpperCase();
-
-      document.getElementById('login-screen').classList.add('hidden');
-      document.getElementById('app-content').classList.remove('hidden');
-
-      const isAdmin = (currentUser.role === 'ADMINISTRADOR' || currentUser.name.toLowerCase().includes('admin'));
-
-      if (isAdmin) {
-        document.getElementById('admin-tab').classList.remove('hidden');
-        document.getElementById('admin-users-tab').classList.remove('hidden');
-        document.getElementById('admin-drive-btn').classList.remove('hidden');
-        document.getElementById('admin-drive-btn').classList.add('flex');
-        document.getElementById('admin-sidebar-drive-btn').classList.remove('hidden');
-      }
-
-      cargarHistorial();
-    }
-
-    function cerrarSesion() {
-      if (isRunning) detenerYGuardarGestion();
-      currentUser = null;
-      document.getElementById('app-content').classList.add('hidden');
-      document.getElementById('login-screen').classList.remove('hidden');
-    }
-
-    function switchTab(tabName) {
-      document.getElementById('tab-tracker-content').classList.add('hidden');
-      document.getElementById('tab-reports-content').classList.add('hidden');
-      document.getElementById('tab-admin-users-content').classList.add('hidden');
-      document.getElementById('tab-admin-settings-content').classList.add('hidden');
-
-      if (tabName === 'tracker') document.getElementById('tab-tracker-content').classList.remove('hidden');
-      else if (tabName === 'reports') { document.getElementById('tab-reports-content').classList.remove('hidden'); cargarReportes(); }
-      else if (tabName === 'admin-users') { document.getElementById('tab-admin-users-content').classList.remove('hidden'); cargarUsuarios(); }
-      else if (tabName === 'admin-settings') document.getElementById('tab-admin-settings-content').classList.remove('hidden');
-    }
-
-    function toggleTimer() {
-      if (!isRunning) {
-        isRunning = true;
-        startTime = new Date();
-        document.getElementById('timer-btn').classList.replace('bg-blue-600', 'bg-red-600');
-        document.getElementById('timer-btn').innerHTML = `<i class="fa-solid fa-stop"></i><span>DETENER</span>`;
-
-        timerInterval = setInterval(() => {
-          elapsedTime = Math.floor((new Date() - startTime) / 1000);
-          document.getElementById('timer-display').innerText = formatSeconds(elapsedTime);
-        }, 1000);
-      } else {
-        detenerYGuardarGestion();
-      }
-    }
-
-    function detenerYGuardarGestion() {
-      clearInterval(timerInterval);
-      isRunning = false;
-
-      const endTime = new Date();
-      const durationSeconds = Math.floor((endTime - startTime) / 1000);
-      const description = document.getElementById('task-description').value.trim() || 'Gestión Operativa';
-      const channel = document.getElementById('channel-select').value;
-      const todayISO = new Date().toISOString().slice(0, 10);
-      const dateStr = new Date().toLocaleDateString('es-AR');
-
-      const newRecord = {
-        id: Date.now(),
-        dateIso: todayISO,
-        date: dateStr,
-        user: currentUser.id,
-        userName: currentUser.name,
-        description: description,
-        channel: channel,
-        startTime: startTime.toLocaleTimeString('es-AR'),
-        endTime: endTime.toLocaleTimeString('es-AR'),
-        durationSeconds: durationSeconds,
-        durationFormatted: formatSeconds(durationSeconds)
-      };
-
-      document.getElementById('timer-btn').classList.replace('bg-red-600', 'bg-blue-600');
-      document.getElementById('timer-btn').innerHTML = `<i class="fa-solid fa-play"></i><span>INICIAR</span>`;
-      document.getElementById('timer-display').innerText = "00:00:00";
-      document.getElementById('task-description').value = "";
-
-      guardarEnHistorial(newRecord);
-      sincronizarConDrive(newRecord);
-    }
-
-    function guardarEnHistorial(record) {
-      let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
-      history.unshift(record);
-      localStorage.setItem('timetracker_history', JSON.stringify(history));
-      cargarHistorial();
-    }
-
-    async function obtenerDatosRemotos() {
+    async function iniciarSesion() {
+      const usuario = $('login-user').value.trim();
+      const clave = $('login-pass').value;
+      const btn = $('login-btn');
+      $('login-error').classList.add('hidden');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Verificando…</span>';
       try {
-        const remoteData = await new Promise((resolve, reject) => {
-          const callbackName = 'googleSheetsCallback_' + Math.round(100000 * Math.random());
-          window[callbackName] = function(data) {
-            delete window[callbackName];
-            if (script.parentNode) document.body.removeChild(script);
-            resolve(data);
-          };
-
-          const script = document.createElement('script');
-          script.src = scriptDriveUrl + (scriptDriveUrl.includes('?') ? '&' : '?') + 'callback=' + callbackName;
-          script.onerror = function(err) {
-            delete window[callbackName];
-            if (script.parentNode) document.body.removeChild(script);
-            reject(err);
-          };
-          document.body.appendChild(script);
-        });
-
-        if (Array.isArray(remoteData) && remoteData.length > 0) {
-          return remoteData.reverse();
-        }
-      } catch (err) {
-        console.error("Error al cargar historial desde la nube:", err);
+        const r = await api('login', { usuario, clave });
+        sesion = { token: r.token, user: r.user };
+        lsSet(LS.sesion, sesion);
+        $('login-pass').value = '';
+        if (r.primerIngreso) toast('Listo: esa clave quedó guardada como tu clave personal.', 'ok');
+        entrarApp();
+      } catch (e) {
+        $('login-error').textContent = e.message;
+        $('login-error').classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Ingresar a la Plataforma</span><i class="fa-solid fa-arrow-right"></i>';
       }
-      return JSON.parse(localStorage.getItem('timetracker_history') || '[]');
     }
 
-    async function cargarHistorial() {
-      let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
-      const todayISO = new Date().toISOString().slice(0, 10);
+    function entrarApp() {
+      const u = sesion.user;
+      $('user-display-name').innerText = u.name;
+      $('user-display-role').innerText = u.role;
+      $('user-avatar').innerText = u.name.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+      $('login-screen').classList.add('hidden');
+      $('app-content').classList.remove('hidden');
 
-      if (currentUser && currentUser.role === 'ADMINISTRADOR') {
-        history = await obtenerDatosRemotos();
+      const admin = esAdmin();
+      ['nav-admin-users', 'nav-admin-settings', 'admin-sidebar-drive-btn'].forEach(id => $(id).classList.toggle('hidden', !admin));
+      $('admin-drive-btn').classList.toggle('hidden', !admin);
+      $('admin-drive-btn').classList.toggle('flex', admin);
+      $('asesor-tracker').classList.toggle('hidden', admin);
+      $('admin-monitor').classList.toggle('hidden', !admin);
+      $('filter-asesor-wrap').classList.toggle('hidden', !admin);
+      $('nav-tracker-label').textContent = admin ? 'Monitor en vivo' : 'Rastreador';
+      $('nav-tracker-icon').className = (admin ? 'fa-solid fa-tower-broadcast' : 'fa-solid fa-stopwatch') + ' w-4';
+
+      reportesIniciados = false;
+      switchTab('tracker');
+      detenerIntervalos();
+      intervalos.push(setInterval(tick, 1000));
+      intervalos.push(setInterval(() => sincronizarPendientes(), 30000));
+      if (admin) {
+        cargarMonitor();
+        intervalos.push(setInterval(() => cargarMonitor(), 60000));
+      } else {
+        restaurarTimer();
+        pintarBotonTimer();
+        renderMisRegistros();
+        cargarMisRegistros();
+        intervalos.push(setInterval(() => cargarMisRegistros(), 180000));
       }
+      sincronizarPendientes();
+    }
 
-      historyGlobal = history;
+    function detenerIntervalos() { intervalos.forEach(clearInterval); intervalos = []; }
 
-      const userTodayHistory = history.filter(h => (h.user === currentUser.id || currentUser.role === 'ADMINISTRADOR') && (h.dateIso === todayISO || h.date === new Date().toLocaleDateString('es-AR')));
-      const userAllHistory = history.filter(h => h.user === currentUser.id || currentUser.role === 'ADMINISTRADOR');
+    async function cerrarSesion() {
+      if (timer) {
+        if (!confirm('Tenés una gestión en curso. ¿La detenemos y la registramos antes de salir?')) return;
+        detenerGestion();
+      }
+      if (pendientesPropios().length) await sincronizarPendientes();
+      if (pendientesPropios().length && !confirm(`Quedan ${pendientesPropios().length} gestiones sin enviar a la planilla (sin conexión). Se van a enviar la próxima vez que ingreses desde esta PC. ¿Salir igual?`)) return;
+      api('logout').catch(() => {});
+      salir();
+    }
 
-      const tbody = document.getElementById('history-table-body');
-      tbody.innerHTML = '';
+    function salir(mensaje) {
+      detenerIntervalos();
+      sesion = null; timer = null;
+      lsSet(LS.sesion, null);
+      $('app-content').classList.add('hidden');
+      $('login-screen').classList.remove('hidden');
+      if (mensaje) { $('login-error').textContent = mensaje; $('login-error').classList.remove('hidden'); }
+    }
 
-      let totalSecsToday = 0;
-      userTodayHistory.forEach(item => totalSecsToday += item.durationSeconds);
+    function sesionExpirada(msg) {
+      if (!sesion) return;
+      // El timer en curso y los pendientes quedan guardados en esta PC y se recuperan al volver a ingresar.
+      salir(msg || 'Tu sesión expiró. Volvé a ingresar.');
+    }
 
-      userAllHistory.slice(0, 30).forEach(item => {
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700";
-        tr.innerHTML = `
-          <td class="px-6 py-3 font-semibold text-gray-500">${item.date}</td>
-          <td class="px-6 py-3 font-bold text-gray-800 dark:text-gray-200">${item.userName}</td>
-          <td class="px-6 py-3 font-medium text-gray-800 dark:text-gray-200">${item.description}</td>
-          <td class="px-6 py-3"><span class="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full text-[10px] font-bold">${item.channel}</span></td>
-          <td class="px-6 py-3">${item.startTime}</td>
-          <td class="px-6 py-3">${item.endTime}</td>
-          <td class="px-6 py-3 font-bold text-blue-600">${item.durationFormatted}</td>
-          <td class="px-6 py-3"><button onclick="eliminarRegistro(${item.id})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td>
-        `;
-        tbody.appendChild(tr);
-      });
+    function abrirModalClave() { ['clave-actual', 'clave-nueva', 'clave-nueva2'].forEach(id => $(id).value = ''); $('clave-modal').classList.remove('hidden'); }
+    function cerrarModalClave() { $('clave-modal').classList.add('hidden'); }
+    async function cambiarClave() {
+      const actual = $('clave-actual').value, nueva = $('clave-nueva').value;
+      if (nueva.length < 4) return toast('La clave nueva debe tener al menos 4 caracteres.', 'error');
+      if (nueva !== $('clave-nueva2').value) return toast('Las claves nuevas no coinciden.', 'error');
+      $('clave-btn').disabled = true;
+      try { await api('cambiarClave', { actual, nueva }); toast('Clave actualizada.', 'ok'); cerrarModalClave(); }
+      catch (e) { toast(e.message, 'error'); }
+      finally { $('clave-btn').disabled = false; }
+    }
 
-      const contractHours = parseFloat(currentUser.contrato) || 6.0;
+    /* ==============================================================
+     * NAVEGACIÓN / TEMA
+     * ============================================================== */
+    function switchTab(tab) {
+      const tabs = { 'tracker': 'tab-tracker-content', 'reports': 'tab-reports-content', 'admin-users': 'tab-admin-users-content', 'admin-settings': 'tab-admin-settings-content' };
+      if (!esAdmin() && tab.startsWith('admin')) tab = 'tracker';
+      Object.entries(tabs).forEach(([k, id]) => $(id).classList.toggle('hidden', k !== tab));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('activo', b.id === 'nav-' + tab));
+      if (tab === 'reports') cargarReportes();
+      else if (tab === 'admin-users') cargarUsuarios();
+      else if (tab === 'admin-settings') prepararAjustes();
+    }
+
+    function toggleDarkMode() {
+      const dark = document.documentElement.classList.toggle('dark');
+      try { localStorage.setItem(LS.tema, dark ? 'dark' : 'light'); } catch (e) {}
+      pintarTema();
+    }
+    function pintarTema() {
+      const dark = document.documentElement.classList.contains('dark');
+      $('theme-toggle-icon').className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+      $('theme-toggle-text').textContent = dark ? 'Modo Claro' : 'Modo Oscuro';
+    }
+    function abrirGoogleDrive() { window.open(driveFolderUrl, '_blank'); }
+
+    /* ==============================================================
+     * TIMER DEL ASESOR (persistente: sobrevive a recargas y cierres)
+     * ============================================================== */
+    function guardarTimer() { if (sesion) lsSet(LS.timer(sesion.user.id), timer); }
+
+    function restaurarTimer() {
+      const t = lsGet(LS.timer(sesion.user.id), null);
+      timer = null;
+      if (!t || !t.inicio) return;
+      const horas = (Date.now() - t.inicio) / 3600000;
+      if (horas > 12) {
+        const desde = new Date(t.inicio);
+        const registrar = confirm(`Quedó abierta una gestión de ${t.canal} desde el ${desde.toLocaleDateString('es-AR')} a las ${horaHMS(desde)} (${horas.toFixed(1)} hs).\n\nAceptar = registrarla hasta ahora\nCancelar = descartarla (tu coordinador puede cargar un ajuste)`);
+        timer = t;
+        if (registrar) detenerGestion(); else { timer = null; guardarTimer(); notificarEstado(false); }
+        return;
+      }
+      timer = t;
+      $('channel-select').value = t.canal;
+      $('task-description').value = t.desc || '';
+      toast(`Se recuperó tu gestión en curso (${t.canal}).`, 'info');
+      notificarEstado(true);
+    }
+
+    function toggleTimer() { timer ? detenerGestion() : iniciarGestion(); }
+
+    function iniciarGestion(canal) {
+      timer = { inicio: Date.now(), canal: canal || $('channel-select').value, desc: $('task-description').value.trim() };
+      guardarTimer();
+      pintarBotonTimer();
+      notificarEstado(true);
+      tick();
+    }
+
+    function detenerGestion({ limpiarDescripcion = true, notificar = true } = {}) {
+      if (!timer) return;
+      const fin = Date.now();
+      timer.desc = $('task-description').value.trim() || timer.desc;
+      const regs = generarRegistros(timer, fin);
+      timer = null;
+      guardarTimer();
+      pintarBotonTimer();
+      $('timer-display').innerText = '00:00:00';
+      if (limpiarDescripcion) $('task-description').value = '';
+      if (regs.length) encolar(regs);
+      if (notificar) notificarEstado(false);
+      renderMisRegistros();
+      sincronizarPendientes();
+    }
+
+    // Cambio de canal con el timer en marcha: se cierra la gestión y arranca otra en el canal nuevo
+    function cambioDeCanal() {
+      if (!timer) return;
+      const nuevo = $('channel-select').value;
+      if (nuevo === timer.canal) return;
+      detenerGestion({ limpiarDescripcion: false, notificar: false });
+      iniciarGestion(nuevo);
+      toast(`Cambio de canal registrado: ahora en ${nuevo}.`, 'info');
+    }
+
+    // Arma los registros; si la gestión cruza la medianoche se parte en un registro por día
+    function generarRegistros(t, finMs) {
+      const regs = [];
+      let ini = new Date(t.inicio);
+      const fin = new Date(finMs);
+      while (ini < fin) {
+        const medianoche = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate() + 1);
+        const tramoFin = fin < medianoche ? fin : medianoche;
+        const secs = Math.round((tramoFin - ini) / 1000);
+        if (secs >= 1) {
+          const iso = fechaISO(ini);
+          regs.push({
+            id: uuid(), tipo: 'GESTION', dateIso: iso, date: isoADMY(iso),
+            user: sesion.user.id, userName: sesion.user.name,
+            channel: t.canal, description: t.desc || 'Gestión Operativa',
+            startTime: horaHMS(ini), endTime: tramoFin === medianoche ? '23:59:59' : horaHMS(tramoFin),
+            durationSeconds: secs, durationFormatted: formatSeconds(secs)
+          });
+        }
+        ini = tramoFin;
+      }
+      return regs;
+    }
+
+    function pintarBotonTimer() {
+      const btn = $('timer-btn');
+      btn.classList.toggle('bg-blue-600', !timer); btn.classList.toggle('hover:bg-blue-700', !timer);
+      btn.classList.toggle('bg-red-600', !!timer); btn.classList.toggle('hover:bg-red-700', !!timer);
+      btn.innerHTML = timer ? '<i class="fa-solid fa-stop"></i><span>DETENER</span>' : '<i class="fa-solid fa-play"></i><span>INICIAR</span>';
+      $('timer-hint').classList.toggle('hidden', !timer);
+    }
+
+    function notificarEstado(activo) {
+      if (!sesion || esAdmin()) return;
+      api('estado', activo && timer ? { activo: true, canal: timer.canal, inicio: timer.inicio, desc: timer.desc } : { activo: false }).catch(() => {});
+    }
+
+    function tick() {
+      if (!sesion) return;
+      if (esAdmin()) { tickMonitor(); return; }
+      if (timer) $('timer-display').innerText = formatSeconds((Date.now() - timer.inicio) / 1000);
+      renderKPIsAsesor();
+    }
+
+    /* ==============================================================
+     * COLA DE ENVÍO A GOOGLE SHEETS (con confirmación y reintento)
+     * ============================================================== */
+    const leerOutbox = () => lsGet(LS.outbox, []);
+    const pendientesPropios = () => sesion ? leerOutbox().filter(r => r.user === sesion.user.id) : [];
+    function encolar(regs) { const o = leerOutbox(); o.push(...regs); lsSet(LS.outbox, o); actualizarEstadoSync(); }
+    function quitarDeOutbox(id) { lsSet(LS.outbox, leerOutbox().filter(r => r.id !== id)); }
+
+    async function sincronizarPendientes(manual = false) {
+      if (enviando || !sesion) return;
+      const propios = pendientesPropios();
+      if (!propios.length) {
+        ultimoErrorSync = null;
+        actualizarEstadoSync();
+        if (manual) { esAdmin() ? cargarMonitor(true) : cargarMisRegistros(true); }
+        return;
+      }
+      enviando = true;
+      actualizarEstadoSync();
+      let enviados = 0;
+      ultimoErrorSync = null;
+      for (const r of propios) {
+        try {
+          await api('registrar', { record: r });
+          quitarDeOutbox(r.id);
+          enviados++;
+        } catch (e) {
+          if (e.code === 'VALIDACION') {
+            quitarDeOutbox(r.id);
+            const rech = lsGet(LS.rechazados, []); rech.push({ ...r, motivo: e.message }); lsSet(LS.rechazados, rech);
+            toast(`Una gestión fue rechazada por la planilla: ${e.message}`, 'error');
+          } else { ultimoErrorSync = e; break; }
+        }
+      }
+      enviando = false;
+      actualizarEstadoSync();
+      if (ultimoErrorSync && manual) toast(ultimoErrorSync.message + ' Se reintenta automáticamente.', 'warn');
+      if (enviados && !esAdmin()) cargarMisRegistros();
+    }
+
+    function actualizarEstadoSync() {
+      const el = $('sync-status');
+      const n = pendientesPropios().length;
+      let cls, html;
+      if (enviando) {
+        cls = 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
+        html = '<i class="fa-solid fa-spinner fa-spin"></i><span>Enviando a Drive…</span>';
+      } else if (n && ultimoErrorSync) {
+        cls = 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800';
+        html = `<i class="fa-solid fa-triangle-exclamation"></i><span>Sin conexión · ${n} pendiente${n > 1 ? 's' : ''}</span>`;
+      } else if (n) {
+        cls = 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
+        html = `<i class="fa-solid fa-clock-rotate-left"></i><span>${n} pendiente${n > 1 ? 's' : ''} de envío</span>`;
+      } else {
+        cls = 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/60';
+        html = '<i class="fa-solid fa-cloud-arrow-up"></i><span>Drive sincronizado</span>';
+      }
+      el.className = 'flex items-center gap-2 text-xs px-3 py-2 rounded-xl border font-medium transition cursor-pointer ' + cls;
+      el.innerHTML = html;
+    }
+
+    /* ==============================================================
+     * VISTA ASESOR: historial y KPIs
+     * ============================================================== */
+    async function cargarMisRegistros(mostrarError = false) {
+      if (!sesion || esAdmin()) return;
+      if (!misRegistros.length) filaMensaje('history-table-body', 7, cargando);
+      try {
+        misRegistros = await obtenerDatosRemotos({ desde: sumarDias(fechaISO(), -30) });
+        renderMisRegistros();
+      } catch (e) {
+        if (e.code === 'SESION') return;
+        if (mostrarError) toast(e.message, 'error');
+        renderMisRegistros();
+      }
+    }
+
+    function registrosCombinados() {
+      const enServidor = new Set(misRegistros.map(r => r.id));
+      const pend = pendientesPropios().filter(r => !enServidor.has(r.id)).map(r => ({ ...r, pendiente: true }));
+      return [...pend, ...misRegistros].sort((a, b) => (b.dateIso + b.startTime).localeCompare(a.dateIso + a.startTime));
+    }
+
+    const chipCanal = c => `<span class="chip bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">${esc(c)}</span>`;
+
+    function renderMisRegistros() {
+      if (!sesion || esAdmin()) return;
+      const regs = registrosCombinados();
+      if (!regs.length) { filaMensaje('history-table-body', 7, 'Todavía no hay gestiones registradas.'); renderKPIsAsesor(); return; }
+      $('history-table-body').innerHTML = regs.slice(0, 60).map(r => {
+        const estado = r.pendiente ? '<span class="chip bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">Pendiente de envío</span>'
+          : r.tipo === 'AJUSTE' ? '<span class="chip bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200">Ajuste</span>'
+          : '<span class="chip bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200">Guardado</span>';
+        return `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+          <td class="px-6 py-3 font-semibold text-gray-500">${esc(r.date)}</td>
+          <td class="px-6 py-3 font-medium text-gray-800 dark:text-gray-200">${esc(r.description)}</td>
+          <td class="px-6 py-3">${chipCanal(r.channel)}</td>
+          <td class="px-6 py-3">${esc(r.startTime)}</td>
+          <td class="px-6 py-3">${esc(r.endTime)}</td>
+          <td class="px-6 py-3 font-bold ${r.durationSeconds < 0 ? 'text-red-600' : 'text-blue-600'}">${formatSeconds(r.durationSeconds)}</td>
+          <td class="px-6 py-3">${estado}</td></tr>`;
+      }).join('');
+      renderKPIsAsesor();
+    }
+
+    // Cantidad de veces que cambió de canal en el día (ordenado por hora de inicio)
+    function contarCambios(regs, canalActual) {
+      const seq = regs.filter(r => r.tipo !== 'AJUSTE').sort((a, b) => String(a.startTime).localeCompare(String(b.startTime))).map(r => r.channel);
+      if (canalActual) seq.push(canalActual);
+      let n = 0;
+      for (let i = 1; i < seq.length; i++) if (seq[i] !== seq[i - 1]) n++;
+      return n;
+    }
+
+    function renderKPIsAsesor() {
+      if (!sesion || esAdmin()) return;
+      const hoy = fechaISO();
+      const deHoy = registrosCombinados().filter(r => r.dateIso === hoy);
+      let total = deHoy.reduce((s, r) => s + (r.durationSeconds || 0), 0);
+      if (timer) total += Math.max(0, (Date.now() - Math.max(timer.inicio, inicioDelDia())) / 1000);
+
+      const contractHours = parseFloat(sesion.user.contrato) || 0;
       const contractSeconds = contractHours * 3600;
+      const faltante = contractSeconds - total;
 
-      document.getElementById('kpi-contract-hours').innerText = `${contractHours} hs`;
-      document.getElementById('kpi-total-time').innerText = formatSeconds(totalSecsToday);
-      document.getElementById('kpi-channel-switches').innerText = userTodayHistory.length;
+      $('kpi-contract-hours').innerText = contractHours ? `${String(contractHours).replace('.', ',')} hs` : 'Sin cargar';
+      $('kpi-total-time').innerText = formatSeconds(total);
+      $('kpi-channel-switches').innerText = contarCambios(deHoy, timer ? timer.canal : null);
 
-      const diffSeconds = contractSeconds - totalSecsToday;
-      document.getElementById('kpi-remaining-time').innerText = diffSeconds > 0 ? formatSeconds(diffSeconds) : "00:00:00 (Cumplido)";
+      const cumplido = contractSeconds > 0 && faltante <= 0;
+      $('kpi-remaining-time').innerText = !contractSeconds ? '--' : cumplido ? '00:00:00 (Cumplido)' : formatSeconds(faltante);
+      $('kpi-contract-box').className = `bg-white dark:bg-slate-800 p-4 rounded-2xl border shadow-sm flex items-center gap-4 ${cumplido ? 'border-emerald-200 dark:border-emerald-800/60' : 'border-amber-200 dark:border-amber-800/60'}`;
+      $('kpi-contract-icon').className = `w-12 h-12 rounded-xl flex items-center justify-center text-lg ${cumplido ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400'}`;
+      $('kpi-contract-icon').innerHTML = cumplido ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-hourglass-half"></i>';
+      $('kpi-contract-status-title').className = `text-[10px] font-bold uppercase tracking-wider ${cumplido ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`;
+      $('kpi-contract-status-title').innerText = cumplido ? 'Contrato cumplido' : 'Hs faltantes / compensar';
+      $('kpi-remaining-time').className = `text-lg font-black ${cumplido ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}`;
+    }
+
+    /* ==============================================================
+     * VISTA ADMINISTRADOR: monitor en vivo
+     * ============================================================== */
+    async function cargarMonitor(mostrarError = false) {
+      if (!esAdmin()) return;
+      if (!monitorData) { filaMensaje('monitor-table-body', 8, cargando); filaMensaje('admin-history-body', 7, cargando); }
+      try {
+        monitorData = await api('monitor', {}, { timeout: 40000 });
+        usuariosCache = monitorData.usuarios || [];
+        $('monitor-actualizado').textContent = 'última actualización ' + horaHMS(new Date());
+        renderMonitor();
+      } catch (e) {
+        if (e.code === 'SESION') return;
+        if (!monitorData) { filaMensaje('monitor-table-body', 8, esc(e.message)); filaMensaje('admin-history-body', 7, ''); }
+        else if (mostrarError) toast(e.message, 'error');
+        $('monitor-actualizado').textContent = 'error al actualizar: ' + e.message;
+      }
+    }
+
+    function filasMonitor() {
+      if (!monitorData) return [];
+      const { rows, vivos, usuarios } = monitorData;
+      const porNombre = {};
+      rows.forEach(r => { (porNombre[norm(r.userName)] ||= []).push(r); });
+      const lista = usuarios.filter(u => u.role !== 'ADMINISTRADOR' && u.state === 'ACTIVO');
+      // Asesores con registros hoy que no están en la nómina activa
+      Object.keys(porNombre).forEach(k => {
+        if (!lista.some(u => norm(u.name) === k)) lista.push({ name: porNombre[k][0].userName, turno: '-', contrato: 0, externo: true });
+      });
+      return lista.map(u => {
+        const regs = porNombre[norm(u.name)] || [];
+        const vivo = Object.values(vivos || {}).find(v => norm(v.name) === norm(u.name)) || null;
+        return {
+          u, regs, vivo,
+          base: regs.reduce((s, r) => s + r.durationSeconds, 0),
+          cambios: contarCambios(regs, vivo ? vivo.canal : null),
+          gestiones: regs.filter(r => r.tipo !== 'AJUSTE').length,
+          contratoSecs: (Number(u.contrato) || 0) * 3600
+        };
+      });
+    }
+
+    const segundosVivo = vivo => vivo ? Math.max(0, (Date.now() - Math.max(vivo.inicio, inicioDelDia())) / 1000) : 0;
+
+    function renderMonitor() {
+      if (!monitorData) return;
+      const filtro = norm($('monitor-buscar').value);
+      let filas = filasMonitor();
+      if (filtro) filas = filas.filter(f => norm(f.u.name).includes(filtro));
+      filas.sort((a, b) => (!!b.vivo - !!a.vivo) || ((b.contratoSecs - b.base) - (a.contratoSecs - a.base)) || a.u.name.localeCompare(b.u.name));
+
+      $('monitor-table-body').innerHTML = filas.length ? filas.map(f => {
+        const ahora = f.vivo
+          ? `<span class="chip bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"><i class="fa-solid fa-circle text-[6px] align-middle animate-pulse"></i> ${esc(f.vivo.canal)} desde ${horaHMS(new Date(f.vivo.inicio)).slice(0, 5)}</span>`
+          : f.regs.length ? '<span class="chip bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300">Inactivo</span>'
+          : '<span class="chip bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">Sin actividad</span>';
+        return `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+          <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">${esc(f.u.name)}${f.u.externo ? ' <span class="chip bg-red-100 text-red-700">No está en la nómina</span>' : ''}</td>
+          <td class="px-4 py-3">${esc(f.u.turno || '-')}</td>
+          <td class="px-4 py-3">${ahora}</td>
+          <td class="px-4 py-3">${f.contratoSecs ? String(f.u.contrato).replace('.', ',') + ' hs' : '-'}</td>
+          <td class="px-4 py-3 font-bold text-blue-600" data-live="total" data-base="${f.base}" data-inicio="${f.vivo ? f.vivo.inicio : ''}">${formatSeconds(f.base + segundosVivo(f.vivo))}</td>
+          <td class="px-4 py-3 font-bold" data-live="faltante" data-base="${f.base}" data-inicio="${f.vivo ? f.vivo.inicio : ''}" data-contrato="${f.contratoSecs}"></td>
+          <td class="px-4 py-3">${f.cambios}</td>
+          <td class="px-4 py-3">${f.gestiones}</td></tr>`;
+      }).join('') : '<tr><td colspan="8" class="px-6 py-6 text-center text-gray-400">No hay asesores para mostrar.</td></tr>';
+
+      const regsHoy = [...monitorData.rows].sort((a, b) => (b.startTime || '').localeCompare(a.startTime || ''));
+      $('admin-history-body').innerHTML = regsHoy.length ? regsHoy.map(r => `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+          <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">${esc(r.userName)}</td>
+          <td class="px-4 py-3">${esc(r.description)}</td>
+          <td class="px-4 py-3">${chipCanal(r.channel)}</td>
+          <td class="px-4 py-3">${esc(r.startTime)}</td><td class="px-4 py-3">${esc(r.endTime)}</td>
+          <td class="px-4 py-3 font-bold ${r.durationSeconds < 0 ? 'text-red-600' : 'text-blue-600'}">${formatSeconds(r.durationSeconds)}</td>
+          <td class="px-4 py-3"><button onclick="eliminarRegistro('${esc(r.id)}')" class="text-red-500 hover:text-red-700" title="Eliminar de la planilla"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
+        : '<tr><td colspan="7" class="px-6 py-6 text-center text-gray-400">Todavía no hay gestiones hoy.</td></tr>';
+      tickMonitor();
+    }
+
+    function tickMonitor() {
+      if (!monitorData) return;
+      document.querySelectorAll('[data-live]').forEach(el => {
+        const total = Number(el.dataset.base) + segundosVivo(el.dataset.inicio ? { inicio: Number(el.dataset.inicio) } : null);
+        if (el.dataset.live === 'total') { el.textContent = formatSeconds(total); return; }
+        const c = Number(el.dataset.contrato);
+        if (!c) { el.textContent = '-'; el.className = 'px-4 py-3 text-gray-400'; return; }
+        const falt = c - total;
+        el.textContent = falt <= 0 ? 'Cumplido' : formatSeconds(falt);
+        el.className = 'px-4 py-3 font-bold ' + (falt <= 0 ? 'text-emerald-600' : 'text-amber-600');
+      });
+      const filas = filasMonitor();
+      const totales = filas.map(f => f.base + segundosVivo(f.vivo));
+      $('mon-kpi-activos').textContent = filas.filter(f => f.vivo).length;
+      $('mon-kpi-horas').textContent = formatSeconds(totales.reduce((a, b) => a + b, 0));
+      $('mon-kpi-cumplidos').textContent = filas.filter((f, i) => f.contratoSecs && totales[i] >= f.contratoSecs).length;
+      $('mon-kpi-sin').textContent = filas.filter(f => !f.regs.length && !f.vivo).length;
+    }
+
+    async function eliminarRegistro(id) {
+      if (!esAdmin()) return;
+      if (!confirm('¿Eliminar este registro de la planilla? No se puede deshacer.')) return;
+      try { await api('eliminar', { id }); toast('Registro eliminado.', 'ok'); cargarMonitor(); if (!$('tab-admin-settings-content').classList.contains('hidden')) cargarAjustes(); }
+      catch (e) { toast(e.message, 'error'); }
+    }
+
+    /* ==============================================================
+     * REPORTES
+     * ============================================================== */
+    function setQuickDateFilter(tipo) {
+      const hoy = fechaISO();
+      let desde = hoy, hasta = hoy;
+      if (tipo === 'yesterday') desde = hasta = sumarDias(hoy, -1);
+      else if (tipo === 'week') { const dow = (new Date().getDay() + 6) % 7; desde = sumarDias(hoy, -dow); } // lunes de esta semana
+      else if (tipo === 'month') desde = hoy.slice(0, 8) + '01';
+      $('filter-date-from').value = desde;
+      $('filter-date-to').value = hasta;
+      cargarReportes();
+    }
+    function filtrarReportesPorFecha() { cargarReportes(); }
+    function restablecerFiltrosFechas() { $('filter-date-from').value = ''; $('filter-date-to').value = ''; $('filter-asesor').value = ''; cargarReportes(); }
+
+    function contratoDe(nombre) {
+      if (!esAdmin()) return Number(sesion.user.contrato) || 0;
+      const u = usuariosCache.find(x => norm(x.name) === norm(nombre));
+      return u ? Number(u.contrato) || 0 : 0;
     }
 
     async function cargarReportes() {
-      let history = (historyGlobal.length > 0) ? historyGlobal : JSON.parse(localStorage.getItem('timetracker_history') || '[]');
-      
-      if (currentUser && currentUser.role === 'ADMINISTRADOR') {
-        history = await obtenerDatosRemotos();
-      }
-
-      let filtered = history.filter(h => h.user === currentUser.id || currentUser.role === 'ADMINISTRADOR');
-
-      const fromVal = document.getElementById('filter-date-from').value;
-      const toVal = document.getElementById('filter-date-to').value;
-
-      if (fromVal) filtered = filtered.filter(item => item.dateIso >= fromVal);
-      if (toVal) filtered = filtered.filter(item => item.dateIso <= toVal);
-
-      registrosFiltradosCache = filtered;
-      const tbody = document.getElementById('reports-table-body');
-      tbody.innerHTML = '';
-
-      const grouped = {};
-      filtered.forEach(item => {
-        const key = `${item.userName || item.user}_${item.date}`;
-        if (!grouped[key]) {
-          grouped[key] = { userName: item.userName || item.user, date: item.date, contract: 6.0, WhatsApp: 0, Discador: 0, 'Gestión Mail': 0, Bootmaker: 0, total: 0 };
+      if (!reportesIniciados) { reportesIniciados = true; setQuickDateFilter('month'); return; }
+      const desde = $('filter-date-from').value, hasta = $('filter-date-to').value;
+      if (desde && hasta && desde > hasta) return toast('La fecha "Desde" es posterior a "Hasta".', 'error');
+      filaMensaje('reports-table-body', 12, cargando);
+      $('reports-summary').textContent = '';
+      try {
+        let rows = await obtenerDatosRemotos({ desde, hasta });
+        if (esAdmin() && !usuariosCache.length) usuariosCache = (await api('usuarios')).usuarios;
+        if (!esAdmin()) {
+          const ids = new Set(rows.map(r => r.id));
+          rows = rows.concat(pendientesPropios().filter(r => !ids.has(r.id) && (!desde || r.dateIso >= desde) && (!hasta || r.dateIso <= hasta)));
         }
-        grouped[key][item.channel] = (grouped[key][item.channel] || 0) + item.durationSeconds;
-        grouped[key].total += item.durationSeconds;
+        reporteRegistros = rows;
+        renderReportes();
+      } catch (e) {
+        if (e.code !== 'SESION') filaMensaje('reports-table-body', 12, esc(e.message));
+      }
+    }
+
+    function agruparPorAsesorYDia(regs) {
+      const g = {};
+      regs.forEach(r => {
+        const k = norm(r.userName) + '|' + r.dateIso;
+        if (!g[k]) g[k] = { userName: r.userName, dateIso: r.dateIso, date: r.date || isoADMY(r.dateIso), contrato: contratoDe(r.userName),
+          canales: Object.fromEntries(CANALES.map(c => [c, 0])), ajustes: 0, total: 0, gestiones: 0, regs: [] };
+        const x = g[k];
+        if (r.tipo === 'AJUSTE') x.ajustes += r.durationSeconds;
+        else { x.canales[r.channel] = (x.canales[r.channel] || 0) + r.durationSeconds; x.gestiones++; x.regs.push(r); }
+        x.total += r.durationSeconds;
       });
-
-      for (const g of Object.values(grouped)) {
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50 border-b";
-        tr.innerHTML = `
-          <td class="px-4 py-3 font-bold">${g.userName}</td>
-          <td class="px-4 py-3">${g.date}</td>
-          <td class="px-4 py-3">${g.contract} hs</td>
-          <td class="px-4 py-3">${formatSeconds(g.WhatsApp)}</td>
-          <td class="px-4 py-3">${formatSeconds(g.Discador)}</td>
-          <td class="px-4 py-3">${formatSeconds(g['Gestión Mail'])}</td>
-          <td class="px-4 py-3">${formatSeconds(g.Bootmaker)}</td>
-          <td class="px-4 py-3 font-bold text-blue-600">${formatSeconds(g.total)}</td>
-          <td class="px-4 py-3 font-bold">${g.total >= g.contract * 3600 ? 'Cumplido' : 'Pendiente'}</td>
-        `;
-        tbody.appendChild(tr);
-      }
+      return Object.values(g).map(x => {
+        const contratoSecs = x.contrato * 3600;
+        const faltante = contratoSecs - x.total;
+        return { ...x, cambios: contarCambios(x.regs), contratoSecs, faltante,
+          estado: !contratoSecs ? 'Sin contrato' : faltante <= 0 ? 'Cumplido' : 'Pendiente' };
+      }).sort((a, b) => b.dateIso.localeCompare(a.dateIso) || a.userName.localeCompare(b.userName));
     }
 
-    function eliminarRegistro(id) {
-      if (confirm('¿Eliminar registro?')) {
-        let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
-        history = history.filter(h => h.id !== id);
-        localStorage.setItem('timetracker_history', JSON.stringify(history));
-        cargarHistorial();
-      }
+    function renderReportes() {
+      if (!reportesIniciados) return;
+      const filtro = norm($('filter-asesor').value);
+      reporteFilas = agruparPorAsesorYDia(reporteRegistros).filter(f => !filtro || norm(f.userName).includes(filtro));
+      if (!reporteFilas.length) { filaMensaje('reports-table-body', 12, 'No hay registros en el período seleccionado.'); $('reports-summary').textContent = ''; return; }
+
+      const asesores = new Set(reporteFilas.map(f => norm(f.userName))).size;
+      const totalSecs = reporteFilas.reduce((s, f) => s + f.total, 0);
+      const pend = reporteFilas.filter(f => f.estado === 'Pendiente').length;
+      $('reports-summary').textContent = `${reporteFilas.length} jornadas · ${asesores} asesor${asesores > 1 ? 'es' : ''} · ${formatSeconds(totalSecs)} hs trabajadas · ${pend} jornada${pend === 1 ? '' : 's'} con horas pendientes`;
+
+      const chipEstado = e => e === 'Cumplido' ? '<span class="chip bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200">Cumplido</span>'
+        : e === 'Pendiente' ? '<span class="chip bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">Pendiente</span>'
+        : '<span class="chip bg-gray-100 text-gray-600">Sin contrato</span>';
+      $('reports-table-body').innerHTML = reporteFilas.map(g => `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+          <td class="px-3 py-3 font-bold text-gray-800 dark:text-gray-200">${esc(g.userName)}</td>
+          <td class="px-3 py-3">${esc(g.date)}</td>
+          <td class="px-3 py-3">${g.contrato ? String(g.contrato).replace('.', ',') + ' hs' : '-'}</td>
+          ${CANALES.map(c => `<td class="px-3 py-3">${formatSeconds(g.canales[c])}</td>`).join('')}
+          <td class="px-3 py-3 ${g.ajustes < 0 ? 'text-red-600' : g.ajustes > 0 ? 'text-purple-600' : ''}">${g.ajustes ? formatSeconds(g.ajustes) : '-'}</td>
+          <td class="px-3 py-3 font-bold text-blue-600">${formatSeconds(g.total)}</td>
+          <td class="px-3 py-3">${!g.contratoSecs ? '-' : g.faltante > 0 ? formatSeconds(g.faltante) : '00:00:00'}</td>
+          <td class="px-3 py-3">${g.cambios}</td>
+          <td class="px-3 py-3">${chipEstado(g.estado)}</td></tr>`).join('');
     }
 
-    function setQuickDateFilter(type) {
-      const now = new Date();
-      let fromDate = new Date();
-      if (type === 'yesterday') fromDate.setDate(now.getDate() - 1);
-      else if (type === 'week') fromDate.setDate(now.getDate() - 7);
-      else if (type === 'month') fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
-
-      document.getElementById('filter-date-from').value = fromDate.toISOString().slice(0, 10);
-      document.getElementById('filter-date-to').value = now.toISOString().slice(0, 10);
-      cargarReportes();
+    /* ==============================================================
+     * EXPORTACIÓN EXCEL
+     * ============================================================== */
+    const horasDecimal = s => Math.round((s / 3600) * 100) / 100;
+    function nombreArchivo(base) {
+      const d = $('filter-date-from').value, h = $('filter-date-to').value;
+      return `${base}_${d || 'inicio'}_a_${h || fechaISO()}.xlsx`;
     }
-
-    function filtrarReportesPorFecha() { cargarReportes(); }
-    function restablecerFiltrosFechas() {
-      document.getElementById('filter-date-from').value = '';
-      document.getElementById('filter-date-to').value = '';
-      cargarReportes();
-    }
-
-    // ==========================================
-    // EXPORTACIÓN EXCEL CONSOLIDADA Y DETALLADA
-    // ==========================================
 
     function exportarExcelDetallado() {
-      const dataToExport = registrosFiltradosCache.length > 0 ? registrosFiltradosCache : JSON.parse(localStorage.getItem('timetracker_history') || '[]');
-      if (dataToExport.length === 0) return alert('No hay registros disponibles para exportar.');
-      
-      const ws = XLSX.utils.json_to_sheet(dataToExport.map(r => ({
-        'Fecha': r.date,
-        'Asesor': r.userName || r.user,
-        'Descripción': r.description,
-        'Canal': r.channel,
-        'Hora Inicio': r.startTime,
-        'Hora Fin': r.endTime,
-        'Duración': r.durationFormatted
+      if (!reporteFilas.length) return toast('Primero generá un reporte con datos (pestaña Informes).', 'warn');
+      const filtro = norm($('filter-asesor').value);
+      const regs = reporteRegistros.filter(r => !filtro || norm(r.userName).includes(filtro))
+        .sort((a, b) => a.dateIso.localeCompare(b.dateIso) || a.userName.localeCompare(b.userName) || String(a.startTime).localeCompare(String(b.startTime)));
+      const ws = XLSX.utils.json_to_sheet(regs.map(r => ({
+        'Fecha': r.date || isoADMY(r.dateIso), 'Asesor': r.userName, 'Tipo': r.tipo === 'AJUSTE' ? 'Ajuste' : 'Gestión',
+        'Canal': r.channel, 'Descripción': r.description, 'Hora Inicio': r.startTime, 'Hora Fin': r.endTime,
+        'Duración': formatSeconds(r.durationSeconds), 'Horas (decimal)': horasDecimal(r.durationSeconds)
       })));
-
+      ws['!cols'] = [{ wch: 11 }, { wch: 34 }, { wch: 9 }, { wch: 13 }, { wch: 40 }, { wch: 11 }, { wch: 11 }, { wch: 10 }, { wch: 14 }];
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Detalle de Gestiones");
-      XLSX.writeFile(wb, `Reporte_Detallado_${new Date().toISOString().slice(0,10)}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, 'Detalle de Gestiones');
+      XLSX.writeFile(wb, nombreArchivo('Reporte_Detallado'));
     }
 
     function exportarExcelResumido() {
-      const dataToExport = registrosFiltradosCache.length > 0 ? registrosFiltradosCache : JSON.parse(localStorage.getItem('timetracker_history') || '[]');
-      const users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
-
-      if (dataToExport.length === 0) return alert('No hay registros disponibles para exportar.');
-
-      const summaryMap = {};
-
-      dataToExport.forEach(rec => {
-        const key = `${rec.userName || rec.user}_${rec.dateIso || rec.date}`;
-        if (!summaryMap[key]) {
-          const userObj = users.find(u => u.name === (rec.userName || rec.user)) || {};
-          summaryMap[key] = {
-            Fecha: rec.date,
-            Asesor: rec.userName || rec.user,
-            HorasContrato: parseFloat(userObj.contrato) || 6.0,
-            TotalSegundos: 0,
-            CantidadGestiones: 0
-          };
-        }
-        summaryMap[key].TotalSegundos += (rec.durationSeconds || 0);
-        summaryMap[key].CantidadGestiones += 1;
-      });
-
-      const rows = Object.values(summaryMap).map(item => {
-        const contratoSegundos = item.HorasContrato * 3600;
-        const faltantesSegundos = contratoSegundos - item.TotalSegundos;
-
-        return {
-          'Fecha': item.Fecha,
-          'Asesor': item.Asesor,
-          'Horas Contrato': `${item.HorasContrato} hs`,
-          'Total Trabajado': formatSeconds(item.TotalSegundos),
-          'Horas Faltantes / Compensar': faltantesSegundos > 0 ? formatSeconds(faltantesSegundos) : '00:00:00',
-          'Estado Contrato': faltantesSegundos <= 0 ? 'CUMPLIDO' : 'PENDIENTE',
-          'Total Gestiones': item.CantidadGestiones
-        };
-      });
-
+      if (!reporteFilas.length) return toast('Primero generá un reporte con datos (pestaña Informes).', 'warn');
+      const rows = [...reporteFilas].sort((a, b) => a.dateIso.localeCompare(b.dateIso) || a.userName.localeCompare(b.userName)).map(g => ({
+        'Fecha': g.date, 'Asesor': g.userName, 'Horas Contrato': g.contrato || '',
+        'WhatsApp': formatSeconds(g.canales['WhatsApp']), 'Discador': formatSeconds(g.canales['Discador']),
+        'Gestión Mail': formatSeconds(g.canales['Gestión Mail']), 'Bootmaker': formatSeconds(g.canales['Bootmaker']),
+        'Ajustes': g.ajustes ? formatSeconds(g.ajustes) : '',
+        'Total Trabajado': formatSeconds(g.total), 'Total (hs decimal)': horasDecimal(g.total),
+        'Horas Faltantes / Compensar': !g.contratoSecs ? '' : g.faltante > 0 ? formatSeconds(g.faltante) : '00:00:00',
+        'Estado Contrato': g.estado.toUpperCase(), 'Cambios de Canal': g.cambios, 'Total Gestiones': g.gestiones
+      }));
       const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [{ wch: 11 }, { wch: 34 }, { wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 11 }, { wch: 10 }, { wch: 15 }, { wch: 16 }, { wch: 26 }, { wch: 15 }, { wch: 16 }, { wch: 15 }];
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Resumen Consolidado");
-      XLSX.writeFile(wb, `Reporte_Consolidado_Asesores_${new Date().toISOString().slice(0,10)}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, 'Resumen Consolidado');
+      XLSX.writeFile(wb, nombreArchivo('Reporte_Consolidado_Asesores'));
     }
 
-    function cargarUsuarios() {
-      const users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
-      const tbody = document.getElementById('users-table-body');
-      tbody.innerHTML = '';
-
-      users.forEach(u => {
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50 border-b";
-        tr.innerHTML = `
-          <td class="px-4 py-3 font-bold">${u.name}</td>
-          <td class="px-4 py-3">${u.turno || '-'}</td>
-          <td class="px-4 py-3">${u.contrato ? u.contrato + ' hs' : '-'}</td>
-          <td class="px-4 py-3">${u.horario || '-'}</td>
-          <td class="px-4 py-3">${u.role}</td>
-          <td class="px-4 py-3"><span class="${u.state === 'ACTIVO' ? 'text-green-600' : 'text-red-600'} font-bold">${u.state}</span></td>
-          <td class="px-4 py-3"><button onclick="toggleEstadoUsuario('${u.id}')" class="text-blue-600 font-bold">${u.state === 'ACTIVO' ? 'Dar de baja' : 'Activar'}</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
+    /* ==============================================================
+     * NÓMINA DE USUARIOS
+     * ============================================================== */
+    async function cargarUsuarios() {
+      if (!usuariosCache.length) filaMensaje('users-table-body', 8, cargando);
+      try { usuariosCache = (await api('usuarios')).usuarios; renderUsuarios(); }
+      catch (e) { if (e.code !== 'SESION') filaMensaje('users-table-body', 8, esc(e.message)); }
     }
 
-    function toggleEstadoUsuario(id) {
-      let users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
-      users = users.map(u => u.id === id ? { ...u, state: u.state === 'ACTIVO' ? 'BAJA' : 'ACTIVO' } : u);
-      localStorage.setItem('timetracker_users', JSON.stringify(users));
-      cargarUsuarios();
+    function renderUsuarios() {
+      const filtro = norm($('users-buscar').value);
+      const lista = usuariosCache.map((u, i) => ({ u, i })).filter(x => !filtro || norm(x.u.name).includes(filtro))
+        .sort((a, b) => (a.u.state === b.u.state ? 0 : a.u.state === 'ACTIVO' ? -1 : 1) || a.u.name.localeCompare(b.u.name));
+      if (!lista.length) return filaMensaje('users-table-body', 8, 'Sin resultados.');
+      $('users-table-body').innerHTML = lista.map(({ u, i }) => `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 ${u.state !== 'ACTIVO' ? 'opacity-60' : ''}">
+          <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">${esc(u.name)}</td>
+          <td class="px-4 py-3">${esc(u.turno || '-')}</td>
+          <td class="px-4 py-3">${u.contrato ? String(u.contrato).replace('.', ',') + ' hs' : '-'}</td>
+          <td class="px-4 py-3">${esc(u.horario || '-')}</td>
+          <td class="px-4 py-3">${esc(u.role)}</td>
+          <td class="px-4 py-3">${u.tieneClave ? '<span class="text-green-600 font-semibold">Configurada</span>' : '<span class="text-amber-600 font-semibold">Pendiente</span>'}</td>
+          <td class="px-4 py-3"><span class="${u.state === 'ACTIVO' ? 'text-green-600' : 'text-red-600'} font-bold">${esc(u.state)}</span></td>
+          <td class="px-4 py-3 whitespace-nowrap space-x-3">
+            <button onclick="abrirModalCrearUsuario(${i})" class="text-blue-600 font-bold" title="Editar"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="toggleEstadoUsuario(${i})" class="${u.state === 'ACTIVO' ? 'text-red-600' : 'text-green-600'} font-bold">${u.state === 'ACTIVO' ? 'Dar de baja' : 'Activar'}</button>
+            ${u.tieneClave ? `<button onclick="resetClave(${i})" class="text-amber-600 font-bold" title="El operador elige una clave nueva en su próximo ingreso"><i class="fa-solid fa-key"></i> Restablecer</button>` : ''}
+          </td></tr>`).join('');
     }
 
-    function abrirModalCrearUsuario() { document.getElementById('create-user-modal').classList.remove('hidden'); }
-    function cerrarModalCrearUsuario() { document.getElementById('create-user-modal').classList.add('hidden'); }
+    function abrirModalCrearUsuario(i) {
+      const u = typeof i === 'number' ? usuariosCache[i] : null;
+      $('user-modal-title').textContent = u ? 'Editar operador' : 'Nuevo operador';
+      $('edit-user-id').value = u ? u.id : '';
+      $('new-user-name').value = u ? u.name : '';
+      $('new-user-name').readOnly = !!u;
+      $('new-user-name').classList.toggle('opacity-60', !!u);
+      $('name-lock-hint').classList.toggle('hidden', !u);
+      $('new-user-turno').value = u && ['Mañana', 'Tarde', '-'].includes(u.turno) ? u.turno : 'Mañana';
+      $('new-user-contrato').value = u ? u.contrato : '';
+      $('new-user-horario').value = u ? u.horario : '';
+      $('new-user-role').value = u ? u.role : 'ASESOR';
+      $('new-user-state').value = u ? u.state : 'ACTIVO';
+      $('create-user-modal').classList.remove('hidden');
+    }
+    function cerrarModalCrearUsuario() { $('create-user-modal').classList.add('hidden'); }
 
-    function guardarNuevoUsuario() {
-      const name = document.getElementById('new-user-name').value.trim();
-      if (!name) return alert('Ingrese nombre');
-      let users = JSON.parse(localStorage.getItem('timetracker_users') || '[]');
-      users.push({ id: name, name: name, turno: document.getElementById('new-user-turno').value, contrato: document.getElementById('new-user-contrato').value, horario: document.getElementById('new-user-horario').value, role: document.getElementById('new-user-role').value, state: 'ACTIVO' });
-      localStorage.setItem('timetracker_users', JSON.stringify(users));
-      cerrarModalCrearUsuario();
-      cargarUsuarios();
+    async function guardarUsuario(usuario, mensajeOk) {
+      const r = await api('guardarUsuario', { usuario });
+      const idx = usuariosCache.findIndex(x => x.id === r.usuario.id);
+      if (idx >= 0) usuariosCache[idx] = r.usuario; else usuariosCache.push(r.usuario);
+      renderUsuarios();
+      toast(mensajeOk, 'ok');
     }
 
-    function guardarTiempoManual() {
-      const userId = document.getElementById('manual-user-id').value.trim();
-      const mins = parseInt(document.getElementById('manual-duration-mins').value || '0');
-      if (!userId || mins <= 0) return alert('Complete los campos');
-      alert('Ajuste aplicado correctamente');
+    async function guardarNuevoUsuario() {
+      const name = $('new-user-name').value.trim();
+      const contrato = parseFloat(String($('new-user-contrato').value).replace(',', '.'));
+      if (!name) return toast('Ingresá el nombre.', 'error');
+      if (!(contrato >= 0 && contrato <= 12)) return toast('El contrato debe ser un número de horas entre 0 y 12.', 'error');
+      const id = $('edit-user-id').value;
+      if (!id && usuariosCache.some(u => norm(u.name) === norm(name))) return toast('Ya existe un operador con ese nombre.', 'error');
+      $('user-save-btn').disabled = true;
+      try {
+        await guardarUsuario({ id: id || undefined, name, contrato, turno: $('new-user-turno').value, horario: $('new-user-horario').value.trim(),
+          role: $('new-user-role').value, state: $('new-user-state').value }, id ? 'Operador actualizado.' : 'Operador creado. Define su clave en el primer ingreso.');
+        cerrarModalCrearUsuario();
+      } catch (e) { toast(e.message, 'error'); }
+      finally { $('user-save-btn').disabled = false; }
     }
 
-    function limpiarHistorial() {
-      if (confirm('¿Limpiar historial local?')) {
-        localStorage.removeItem('timetracker_history');
-        cargarHistorial();
-      }
+    async function toggleEstadoUsuario(i) {
+      const u = usuariosCache[i];
+      const nuevo = u.state === 'ACTIVO' ? 'BAJA' : 'ACTIVO';
+      if (!confirm(`¿${nuevo === 'BAJA' ? 'Dar de baja' : 'Activar'} a ${u.name}?`)) return;
+      try { await guardarUsuario({ ...u, state: nuevo }, nuevo === 'BAJA' ? 'Operador dado de baja.' : 'Operador activado.'); }
+      catch (e) { toast(e.message, 'error'); }
     }
 
-    function formatSeconds(secs) {
-      const absSecs = Math.abs(secs);
-      const hrs = Math.floor(absSecs / 3600);
-      const mins = Math.floor((absSecs % 3600) / 60);
-      const seconds = absSecs % 60;
-      return `${secs < 0 ? '-' : ''}${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    async function resetClave(i) {
+      const u = usuariosCache[i];
+      if (!confirm(`¿Restablecer la clave de ${u.name}? La clave que escriba en su próximo ingreso va a quedar como nueva.`)) return;
+      try { await api('resetClave', { id: u.id }); u.tieneClave = false; renderUsuarios(); toast('Clave restablecida. Avisale que ingrese con una clave nueva.', 'ok'); }
+      catch (e) { toast(e.message, 'error'); }
     }
 
-    function abrirModalAdmin() { document.getElementById('admin-modal').classList.remove('hidden'); }
-    function cerrarModalAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
-    function procesarExcelNomina() { alert('Procesado con éxito'); cerrarModalAdmin(); }
+    function abrirModalAdmin() { $('excel-file-input').value = ''; $('import-progress').classList.add('hidden'); $('admin-modal').classList.remove('hidden'); }
+    function cerrarModalAdmin() { $('admin-modal').classList.add('hidden'); }
+
+    async function procesarExcelNomina() {
+      const file = $('excel-file-input').files[0];
+      if (!file) return toast('Elegí un archivo.', 'error');
+      const btn = $('import-btn'), prog = $('import-progress');
+      btn.disabled = true;
+      try {
+        const wb = XLSX.read(new Uint8Array(await file.arrayBuffer()), { type: 'array' });
+        const filas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+        const tomar = (obj, claves) => { for (const k of Object.keys(obj)) if (claves.includes(norm(k))) return String(obj[k]).trim(); return ''; };
+        const usuarios = filas.map(f => {
+          const name = tomar(f, ['nombre', 'nombre y apellido', 'apellido y nombre', 'operador', 'asesor', 'nombre completo']);
+          const contratoTxt = tomar(f, ['contrato', 'contrato (hs)', 'horas contrato', 'contrato hs', 'hs contrato']).replace(',', '.');
+          const existente = usuariosCache.find(u => norm(u.name) === norm(name));
+          const role = tomar(f, ['rol']).toUpperCase();
+          const state = tomar(f, ['estado']).toUpperCase();
+          return {
+            id: existente ? existente.id : undefined, name,
+            turno: tomar(f, ['turno']) || (existente ? existente.turno : ''),
+            contrato: contratoTxt !== '' ? parseFloat(contratoTxt) : (existente ? existente.contrato : 0),
+            horario: tomar(f, ['horario']) || (existente ? existente.horario : ''),
+            role: role.startsWith('ADMIN') ? 'ADMINISTRADOR' : role ? 'ASESOR' : (existente ? existente.role : 'ASESOR'),
+            state: state.startsWith('BAJA') || state.startsWith('INACT') ? 'BAJA' : state ? 'ACTIVO' : (existente ? existente.state : 'ACTIVO')
+          };
+        }).filter(u => u.name);
+        if (!usuarios.length) throw new Error('No encontré una columna "Nombre" (u "Operador"/"Asesor") con datos en la primera hoja.');
+
+        let creados = 0, actualizados = 0; const errores = [];
+        prog.classList.remove('hidden');
+        for (let i = 0; i < usuarios.length; i += 8) {
+          prog.textContent = `Importando ${Math.min(i + 8, usuarios.length)} de ${usuarios.length}…`;
+          const r = await api('importarUsuarios', { usuarios: usuarios.slice(i, i + 8) });
+          creados += r.creados; actualizados += r.actualizados; errores.push(...r.errores);
+        }
+        toast(`Importación lista: ${creados} creados, ${actualizados} actualizados${errores.length ? `, ${errores.length} con error` : ''}.`, errores.length ? 'warn' : 'ok');
+        errores.forEach(e => toast(e, 'error'));
+        cerrarModalAdmin();
+        usuariosCache = [];
+        cargarUsuarios();
+      } catch (e) { toast(e.message, 'error'); }
+      finally { btn.disabled = false; prog.classList.add('hidden'); }
+    }
+
+    /* ==============================================================
+     * AJUSTE MANUAL DE TIEMPOS
+     * ============================================================== */
+    async function prepararAjustes() {
+      if (!$('manual-date').value) $('manual-date').value = fechaISO();
+      if (!usuariosCache.length) { try { usuariosCache = (await api('usuarios')).usuarios; } catch (e) { return; } }
+      const sel = $('manual-user-id'), previo = sel.value;
+      sel.innerHTML = '<option value="">Elegí un operador…</option>' + usuariosCache
+        .filter(u => u.role !== 'ADMINISTRADOR' && u.state === 'ACTIVO').sort((a, b) => a.name.localeCompare(b.name))
+        .map(u => `<option value="${esc(u.name)}">${esc(u.name)}</option>`).join('');
+      sel.value = previo;
+      cargarAjustes();
+    }
+
+    async function cargarAjustes() {
+      filaMensaje('ajustes-table-body', 6, cargando);
+      try {
+        const rows = (await obtenerDatosRemotos({ desde: sumarDias(fechaISO(), -60), tipo: 'AJUSTE' }))
+          .sort((a, b) => b.dateIso.localeCompare(a.dateIso));
+        $('ajustes-table-body').innerHTML = rows.length ? rows.map(r => `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+            <td class="px-4 py-3">${esc(r.date)}</td><td class="px-4 py-3 font-bold">${esc(r.userName)}</td><td class="px-4 py-3">${chipCanal(r.channel)}</td>
+            <td class="px-4 py-3 font-bold ${r.durationSeconds < 0 ? 'text-red-600' : 'text-emerald-600'}">${r.durationSeconds > 0 ? '+' : ''}${formatSeconds(r.durationSeconds)}</td>
+            <td class="px-4 py-3">${esc(String(r.description).replace(/^AJUSTE:\s*/, ''))}</td>
+            <td class="px-4 py-3"><button onclick="eliminarRegistro('${esc(r.id)}')" class="text-red-500 hover:text-red-700" title="Eliminar ajuste"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
+          : '<tr><td colspan="6" class="px-6 py-6 text-center text-gray-400">No hay ajustes en los últimos 60 días.</td></tr>';
+      } catch (e) { if (e.code !== 'SESION') filaMensaje('ajustes-table-body', 6, esc(e.message)); }
+    }
+
+    async function guardarTiempoManual() {
+      const userName = $('manual-user-id').value;
+      const minutos = parseInt($('manual-duration-mins').value || '0', 10);
+      const motivo = $('manual-desc').value.trim();
+      const dateIso = $('manual-date').value;
+      if (!userName) return toast('Elegí un operador.', 'error');
+      if (!dateIso) return toast('Elegí la fecha.', 'error');
+      if (!(minutos >= 1 && minutos <= 720)) return toast('Los minutos deben estar entre 1 y 720.', 'error');
+      if (!motivo) return toast('El motivo es obligatorio.', 'error');
+      const tipo = $('manual-action-type').value;
+      if (!confirm(`${tipo === 'ADD' ? 'Agregar' : 'Descontar'} ${minutos} min a ${userName} el ${isoADMY(dateIso)} en ${$('manual-channel').value}?`)) return;
+      $('manual-btn').disabled = true;
+      try {
+        await api('ajuste', { ajuste: { userName, dateIso, channel: $('manual-channel').value, tipo, minutos, motivo } });
+        toast('Ajuste guardado en la planilla.', 'ok');
+        $('manual-duration-mins').value = ''; $('manual-desc').value = '';
+        cargarAjustes();
+      } catch (e) { toast(e.message, 'error'); }
+      finally { $('manual-btn').disabled = false; }
+    }
   </script>
 </body>
 </html>
