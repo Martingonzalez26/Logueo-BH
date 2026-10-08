@@ -419,6 +419,7 @@
     let elapsedTime = 0;
     let isRunning = false;
     let registrosFiltradosCache = [];
+    let historyGlobal = [];
 
     // RUTA EXACTA DE TU CARPETA GOOGLE DRIVE Y WEBHOOK CONECTOR
     const driveFolderUrl = "https://drive.google.com/drive/folders/1kT4ZWWfMdYnGc5pOJZhikzG89pjoEnGQ";
@@ -614,38 +615,44 @@
       cargarHistorial();
     }
 
+    async function obtenerDatosRemotos() {
+      try {
+        const remoteData = await new Promise((resolve, reject) => {
+          const callbackName = 'googleSheetsCallback_' + Math.round(100000 * Math.random());
+          window[callbackName] = function(data) {
+            delete window[callbackName];
+            if (script.parentNode) document.body.removeChild(script);
+            resolve(data);
+          };
+
+          const script = document.createElement('script');
+          script.src = scriptDriveUrl + (scriptDriveUrl.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+          script.onerror = function(err) {
+            delete window[callbackName];
+            if (script.parentNode) document.body.removeChild(script);
+            reject(err);
+          };
+          document.body.appendChild(script);
+        });
+
+        if (Array.isArray(remoteData) && remoteData.length > 0) {
+          return remoteData.reverse();
+        }
+      } catch (err) {
+        console.error("Error al cargar historial desde la nube:", err);
+      }
+      return JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+    }
+
     async function cargarHistorial() {
       let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
       const todayISO = new Date().toISOString().slice(0, 10);
 
-      // Si es ADMINISTRADOR, obtiene el historial unificado de la nube vía JSONP
       if (currentUser && currentUser.role === 'ADMINISTRADOR') {
-        try {
-          const remoteData = await new Promise((resolve, reject) => {
-            const callbackName = 'googleSheetsCallback_' + Math.round(100000 * Math.random());
-            window[callbackName] = function(data) {
-              delete window[callbackName];
-              if (script.parentNode) document.body.removeChild(script);
-              resolve(data);
-            };
-
-            const script = document.createElement('script');
-            script.src = scriptDriveUrl + (scriptDriveUrl.includes('?') ? '&' : '?') + 'callback=' + callbackName;
-            script.onerror = function(err) {
-              delete window[callbackName];
-              if (script.parentNode) document.body.removeChild(script);
-              reject(err);
-            };
-            document.body.appendChild(script);
-          });
-
-          if (Array.isArray(remoteData) && remoteData.length > 0) {
-            history = remoteData.reverse(); // Muestra primero lo más reciente
-          }
-        } catch (err) {
-          console.error("Error al cargar historial desde la nube:", err);
-        }
+        history = await obtenerDatosRemotos();
       }
+
+      historyGlobal = history;
 
       const userTodayHistory = history.filter(h => (h.user === currentUser.id || currentUser.role === 'ADMINISTRADOR') && (h.dateIso === todayISO || h.date === new Date().toLocaleDateString('es-AR')));
       const userAllHistory = history.filter(h => h.user === currentUser.id || currentUser.role === 'ADMINISTRADOR');
@@ -656,7 +663,6 @@
       let totalSecsToday = 0;
       userTodayHistory.forEach(item => totalSecsToday += item.durationSeconds);
 
-      // Renderiza máximo 30 registros
       userAllHistory.slice(0, 30).forEach(item => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700";
@@ -684,29 +690,13 @@
       document.getElementById('kpi-remaining-time').innerText = diffSeconds > 0 ? formatSeconds(diffSeconds) : "00:00:00 (Cumplido)";
     }
 
-    function eliminarRegistro(id) {
-      if (confirm('¿Eliminar registro?')) {
-        let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
-        history = history.filter(h => h.id !== id);
-        localStorage.setItem('timetracker_history', JSON.stringify(history));
-        cargarHistorial();
+    async function cargarReportes() {
+      let history = (historyGlobal.length > 0) ? historyGlobal : JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+      
+      if (currentUser && currentUser.role === 'ADMINISTRADOR') {
+        history = await obtenerDatosRemotos();
       }
-    }
 
-    function setQuickDateFilter(type) {
-      const now = new Date();
-      let fromDate = new Date();
-      if (type === 'yesterday') fromDate.setDate(now.getDate() - 1);
-      else if (type === 'week') fromDate.setDate(now.getDate() - 7);
-      else if (type === 'month') fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
-
-      document.getElementById('filter-date-from').value = fromDate.toISOString().slice(0, 10);
-      document.getElementById('filter-date-to').value = now.toISOString().slice(0, 10);
-      cargarReportes();
-    }
-
-    function cargarReportes() {
-      const history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
       let filtered = history.filter(h => h.user === currentUser.id || currentUser.role === 'ADMINISTRADOR');
 
       const fromVal = document.getElementById('filter-date-from').value;
@@ -721,9 +711,9 @@
 
       const grouped = {};
       filtered.forEach(item => {
-        const key = `${item.user}_${item.date}`;
+        const key = `${item.userName || item.user}_${item.date}`;
         if (!grouped[key]) {
-          grouped[key] = { userName: item.userName, date: item.date, contract: 6.0, WhatsApp: 0, Discador: 0, 'Gestión Mail': 0, Bootmaker: 0, total: 0 };
+          grouped[key] = { userName: item.userName || item.user, date: item.date, contract: 6.0, WhatsApp: 0, Discador: 0, 'Gestión Mail': 0, Bootmaker: 0, total: 0 };
         }
         grouped[key][item.channel] = (grouped[key][item.channel] || 0) + item.durationSeconds;
         grouped[key].total += item.durationSeconds;
@@ -745,6 +735,27 @@
         `;
         tbody.appendChild(tr);
       }
+    }
+
+    function eliminarRegistro(id) {
+      if (confirm('¿Eliminar registro?')) {
+        let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+        history = history.filter(h => h.id !== id);
+        localStorage.setItem('timetracker_history', JSON.stringify(history));
+        cargarHistorial();
+      }
+    }
+
+    function setQuickDateFilter(type) {
+      const now = new Date();
+      let fromDate = new Date();
+      if (type === 'yesterday') fromDate.setDate(now.getDate() - 1);
+      else if (type === 'week') fromDate.setDate(now.getDate() - 7);
+      else if (type === 'month') fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      document.getElementById('filter-date-from').value = fromDate.toISOString().slice(0, 10);
+      document.getElementById('filter-date-to').value = now.toISOString().slice(0, 10);
+      cargarReportes();
     }
 
     function filtrarReportesPorFecha() { cargarReportes(); }
@@ -783,7 +794,6 @@
 
       if (dataToExport.length === 0) return alert('No hay registros disponibles para exportar.');
 
-      // Agrupar tiempo acumulado por Asesor y Fecha
       const summaryMap = {};
 
       dataToExport.forEach(rec => {
@@ -802,7 +812,6 @@
         summaryMap[key].CantidadGestiones += 1;
       });
 
-      // Mapear los acumulados a filas estructuradas con cálculo de contrato
       const rows = Object.values(summaryMap).map(item => {
         const contratoSegundos = item.HorasContrato * 3600;
         const faltantesSegundos = contratoSegundos - item.TotalSegundos;
