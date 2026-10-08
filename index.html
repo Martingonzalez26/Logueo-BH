@@ -230,6 +230,7 @@
             <div class="flex flex-wrap gap-2">
               <button onclick="exportarExcelDetallado()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-2"><i class="fa-solid fa-list-check"></i><span>Excel Detallado</span></button>
               <button onclick="exportarExcelResumido()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-2"><i class="fa-solid fa-file-excel"></i><span>Excel Consolidado</span></button>
+              <button onclick="exportarExcelF043()" title="Total de horas por asesor y día + detalle por canal" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-2"><i class="fa-solid fa-table-cells"></i><span>Excel F043</span></button>
             </div>
           </div>
 
@@ -1106,6 +1107,83 @@
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Resumen Consolidado');
       XLSX.writeFile(wb, nombreArchivo('Reporte_Consolidado_Asesores'));
+    }
+
+    // Excel para completar el F043: hoja 1 = matriz asesor × día con el total de horas;
+    // hoja 2 = detalle por asesor y día con las horas de cada canal.
+    // Las horas se guardan como horas reales de Excel (formato [h]:mm), así se pueden sumar y copiar.
+    function exportarExcelF043() {
+      if (!reporteFilas.length) return toast('Primero generá un reporte con datos (pestaña Informes).', 'warn');
+      const FMT = '[h]:mm';
+      const aExcel = secs => Math.max(0, secs) / 86400;
+      const DIAS_SEM = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'];
+      const filas = reporteFilas;
+
+      // Período: el del filtro, o el rango de fechas que tengan datos
+      const fechas = filas.map(f => f.dateIso).sort();
+      const desde = $('filter-date-from').value || fechas[0];
+      const hasta = $('filter-date-to').value || fechas[fechas.length - 1];
+      const dias = [];
+      for (let d = desde; d <= hasta && dias.length < 370; d = sumarDias(d, 1)) dias.push(d);
+
+      // Asesores: toda la nómina activa (para que aparezcan también los días sin horas) + quien tenga registros
+      const filtro = norm($('filter-asesor').value);
+      const nombres = new Map();
+      if (esAdmin()) usuariosCache.filter(u => u.role !== 'ADMINISTRADOR' && u.state === 'ACTIVO' && (!filtro || norm(u.name).includes(filtro)))
+        .forEach(u => nombres.set(norm(u.name), u.name));
+      filas.forEach(f => { if (!nombres.has(norm(f.userName))) nombres.set(norm(f.userName), f.userName); });
+      const asesores = [...nombres.values()].sort((a, b) => a.localeCompare(b, 'es'));
+      const indice = {};
+      filas.forEach(f => { indice[norm(f.userName) + '|' + f.dateIso] = f; });
+
+      const darFormato = (ws, celdas) => celdas.forEach(([r, c]) => { const ref = XLSX.utils.encode_cell({ r, c }); if (ws[ref] && ws[ref].t === 'n') ws[ref].z = FMT; });
+
+      // ---------- Hoja 1: Total por día ----------
+      const encabezado = ['Asesor', 'Contrato (hs/día)', ...dias.map(d => { const [y, m, dd] = d.split('-').map(Number); return `${DIAS_SEM[new Date(y, m - 1, dd).getDay()]} ${pad(dd)}/${pad(m)}`; }), 'Total período'];
+      const aoa1 = [encabezado];
+      const celdasHora1 = [];
+      const totalesDia = dias.map(() => 0);
+      asesores.forEach((nombre, i) => {
+        const fila = [nombre, contratoDe(nombre) || ''];
+        let total = 0;
+        dias.forEach((d, j) => {
+          const g = indice[norm(nombre) + '|' + d];
+          if (g) { fila.push(aExcel(g.total)); total += g.total; totalesDia[j] += g.total; celdasHora1.push([i + 1, j + 2]); }
+          else fila.push('');
+        });
+        fila.push(aExcel(total)); celdasHora1.push([i + 1, dias.length + 2]);
+        aoa1.push(fila);
+      });
+      const filaTot = aoa1.length;
+      aoa1.push(['TOTAL', '', ...totalesDia.map(s => aExcel(s)), aExcel(totalesDia.reduce((a, b) => a + b, 0))]);
+      for (let c = 2; c <= dias.length + 2; c++) celdasHora1.push([filaTot, c]);
+      const ws1 = XLSX.utils.aoa_to_sheet(aoa1);
+      darFormato(ws1, celdasHora1);
+      ws1['!cols'] = [{ wch: 36 }, { wch: 10 }, ...dias.map(() => ({ wch: 9 })), { wch: 12 }];
+
+      // ---------- Hoja 2: Detalle por canal ----------
+      const aoa2 = [['Fecha', 'Asesor', 'Contrato (hs)', ...CANALES, 'Ajustes', 'Total día', 'Faltante', 'Estado', 'Cambios de canal', 'Gestiones']];
+      const celdasHora2 = [];
+      [...filas].sort((a, b) => a.dateIso.localeCompare(b.dateIso) || a.userName.localeCompare(b.userName, 'es')).forEach((g, i) => {
+        const r = i + 1;
+        aoa2.push([
+          g.date, g.userName, g.contrato || '',
+          ...CANALES.map(c => aExcel(g.canales[c] || 0)),
+          g.ajustes ? (g.ajustes > 0 ? '+' : '') + formatSeconds(g.ajustes).slice(0, -3) : '',
+          aExcel(g.total),
+          g.contratoSecs ? aExcel(g.faltante) : '',
+          g.estado, g.cambios, g.gestiones
+        ]);
+        [3, 4, 5, 6, 8, 9].forEach(c => celdasHora2.push([r, c]));
+      });
+      const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
+      darFormato(ws2, celdasHora2);
+      ws2['!cols'] = [{ wch: 11 }, { wch: 36 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 11 }, { wch: 9 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 16 }, { wch: 10 }];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws1, 'Total por día');
+      XLSX.utils.book_append_sheet(wb, ws2, 'Detalle por canal');
+      XLSX.writeFile(wb, `F043_Horas_${desde}_a_${hasta}.xlsx`);
     }
 
     /* ==============================================================
