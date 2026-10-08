@@ -422,7 +422,7 @@
 
     // RUTA EXACTA DE TU CARPETA GOOGLE DRIVE Y WEBHOOK CONECTOR
     const driveFolderUrl = "https://drive.google.com/drive/folders/1kT4ZWWfMdYnGc5pOJZhikzG89pjoEnGQ";
-    const scriptDriveUrl = "https://script.google.com/macros/s/AKfycbzOdJKiCItmh_MCpHXG8TpdiiX10DQiMzVKa9QLXqxKtCuoGrmh_iN2E1xysnC9Q-ag/exec";
+    const scriptDriveUrl = "https://script.google.com/macros/s/AKfycbxnKVNoIWLrpivUWu-tJGv9lJDpK458L5ORmIBpXofZK8Hx-ML4J6oQ5Xe2RAU7dObS/exec";
 
     const nominaCompleta = [
       { id: 'Palacio Karin Natali', name: 'Palacio Karin Natali', turno: 'Tarde', contrato: 7, horario: '14:00 - 21:00', role: 'ASESOR', state: 'ACTIVO' },
@@ -614,11 +614,24 @@
       cargarHistorial();
     }
 
-    function cargarHistorial() {
-      const history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+    async function cargarHistorial() {
+      let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
       const todayISO = new Date().toISOString().slice(0, 10);
 
-      const userTodayHistory = history.filter(h => (h.user === currentUser.id || currentUser.role === 'ADMINISTRADOR') && h.dateIso === todayISO);
+      // Si es ADMINISTRADOR, obtiene todo el historial acumulado desde Google Sheets
+      if (currentUser && currentUser.role === 'ADMINISTRADOR') {
+        try {
+          const response = await fetch(scriptDriveUrl);
+          const remoteData = await response.json();
+          if (Array.isArray(remoteData) && remoteData.length > 0) {
+            history = remoteData.reverse(); // Mostrar los más recientes primero
+          }
+        } catch (err) {
+          console.error("Error al cargar historial desde la nube:", err);
+        }
+      }
+
+      const userTodayHistory = history.filter(h => (h.user === currentUser.id || currentUser.role === 'ADMINISTRADOR') && (h.dateIso === todayISO || h.date === new Date().toLocaleDateString('es-AR')));
       const userAllHistory = history.filter(h => h.user === currentUser.id || currentUser.role === 'ADMINISTRADOR');
 
       const tbody = document.getElementById('history-table-body');
@@ -627,6 +640,7 @@
       let totalSecsToday = 0;
       userTodayHistory.forEach(item => totalSecsToday += item.durationSeconds);
 
+      // Renderizar máximo 30 registros
       userAllHistory.slice(0, 30).forEach(item => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700";
