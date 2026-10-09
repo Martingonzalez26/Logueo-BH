@@ -36,10 +36,10 @@
 
       <form id="login-form" onsubmit="event.preventDefault(); iniciarSesion();" class="space-y-5">
         <div>
-          <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-2">Nombre y apellido</label>
+          <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-2">Legajo o nombre y apellido</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa-solid fa-user"></i></span>
-            <input type="text" id="login-user" autocomplete="username" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition text-sm" placeholder="Ej: Rojas Carla" required>
+            <input type="text" id="login-user" autocomplete="username" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition text-sm" placeholder="Ej: 2048 o Rojas Carla" required>
           </div>
         </div>
         <div>
@@ -285,11 +285,11 @@
               <button onclick="abrirModalCrearUsuario()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow flex items-center gap-2"><i class="fa-solid fa-user-plus"></i><span>Nuevo Usuario</span></button>
             </div>
           </div>
-          <input id="users-buscar" oninput="renderUsuarios()" class="inp !w-64" placeholder="Buscar operador…">
+          <input id="users-buscar" oninput="renderUsuarios()" class="inp !w-64" placeholder="Buscar por nombre o legajo…">
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
               <thead class="bg-gray-50 dark:bg-slate-700 uppercase text-[10px] font-bold">
-                <tr><th class="px-4 py-3">Operador</th><th class="px-4 py-3">Turno</th><th class="px-4 py-3">Contrato</th><th class="px-4 py-3">Horario</th><th class="px-4 py-3">Rol</th><th class="px-4 py-3">Clave</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">Acciones</th></tr>
+                <tr><th class="px-4 py-3">Legajo</th><th class="px-4 py-3">Operador</th><th class="px-4 py-3">Turno</th><th class="px-4 py-3">Contrato</th><th class="px-4 py-3">Horario</th><th class="px-4 py-3">Rol</th><th class="px-4 py-3">Clave</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">Acciones</th></tr>
               </thead>
               <tbody id="users-table-body" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
             </table>
@@ -343,7 +343,13 @@
       </div>
       <input type="hidden" id="edit-user-id">
       <div class="space-y-3">
-        <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Nombre y apellido</label><input type="text" id="new-user-name" class="inp"><p id="name-lock-hint" class="hidden text-[10px] text-gray-400 mt-1">El nombre no se puede cambiar porque identifica sus registros.</p></div>
+        <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Nombre y apellido</label><input type="text" id="new-user-name" class="inp"><p id="name-lock-hint" class="hidden text-[10px] text-gray-400 mt-1">Si cambiás el nombre, se actualiza también en todos sus registros y reportes.</p></div>
+        <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Legajo</label><input type="text" id="new-user-legajo" class="inp" placeholder="Ej: 2048"></div>
+        <div class="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/20 p-3 space-y-2">
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300">Clave</label>
+          <input type="text" id="new-user-clave" class="inp" autocomplete="off" placeholder="Nueva clave (mínimo 4). Dejala vacía para no cambiarla">
+          <p class="text-[10px] text-gray-500 dark:text-gray-400">Si la cargás, el operador entra con esa clave. Si la dejás vacía, mantiene la actual (o la elige él en su primer ingreso).</p>
+        </div>
         <div class="grid grid-cols-2 gap-3">
           <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Turno</label><select id="new-user-turno" class="inp"><option>Mañana</option><option>Tarde</option><option>-</option></select></div>
           <div><label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Contrato (hs/día)</label><input type="number" step="0.5" min="0" max="12" id="new-user-contrato" class="inp" placeholder="Ej: 6"></div>
@@ -368,7 +374,7 @@
         <h3 class="font-bold text-gray-800 dark:text-white text-sm">Importar nómina desde Excel</h3>
         <button onclick="cerrarModalAdmin()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Primera hoja del archivo, con encabezados en la fila 1. Columnas reconocidas: <b>Nombre</b> (u Operador / Asesor), <b>Turno</b>, <b>Contrato</b>, <b>Horario</b>, <b>Rol</b> y <b>Estado</b>. Si el operador ya existe se actualiza; si no, se crea.</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Primera hoja del archivo, con encabezados en la fila 1. Columnas reconocidas: <b>Nombre</b> (u Operador / Asesor), <b>Legajo</b>, <b>Turno</b>, <b>Contrato</b>, <b>Horario</b>, <b>Rol</b> y <b>Estado</b>. Si el operador ya existe se actualiza; si no, se crea.</p>
       <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" class="block w-full text-xs text-gray-500">
       <div id="import-progress" class="hidden text-xs font-semibold text-blue-600"></div>
       <div class="pt-4 flex justify-end gap-2">
@@ -490,6 +496,8 @@
     // Lectura centralizada desde la planilla (el servidor filtra: el asesor solo recibe lo suyo)
     async function obtenerDatosRemotos(filtros = {}) {
       const r = await api('listar', filtros, { timeout: 40000 });
+      // El asesor recibe sus datos actuales: si el admin cambió su contrato, legajo o nombre, se aplica sin volver a ingresar
+      if (r.yo && sesion && !esAdmin()) { sesion.user = { ...sesion.user, ...r.yo }; lsSet(LS.sesion, sesion); $('user-display-name').innerText = sesion.user.name; }
       return r.rows || [];
     }
 
@@ -995,6 +1003,12 @@
     function filtrarReportesPorFecha() { cargarReportes(); }
     function restablecerFiltrosFechas() { $('filter-date-from').value = ''; $('filter-date-to').value = ''; $('filter-asesor').value = ''; cargarReportes(); }
 
+    function legajoDe(nombre) {
+      if (!esAdmin()) return sesion.user.legajo || '';
+      const u = usuariosCache.find(x => norm(x.name) === norm(nombre));
+      return u ? (u.legajo || '') : '';
+    }
+
     function contratoDe(nombre) {
       if (!esAdmin()) return Number(sesion.user.contrato) || 0;
       const u = usuariosCache.find(x => norm(x.name) === norm(nombre));
@@ -1081,11 +1095,11 @@
       const regs = reporteRegistros.filter(r => !filtro || norm(r.userName).includes(filtro))
         .sort((a, b) => a.dateIso.localeCompare(b.dateIso) || a.userName.localeCompare(b.userName) || String(a.startTime).localeCompare(String(b.startTime)));
       const ws = XLSX.utils.json_to_sheet(regs.map(r => ({
-        'Fecha': r.date || isoADMY(r.dateIso), 'Asesor': r.userName, 'Tipo': r.tipo === 'AJUSTE' ? 'Ajuste' : 'Gestión',
+        'Fecha': r.date || isoADMY(r.dateIso), 'Legajo': legajoDe(r.userName), 'Asesor': r.userName, 'Tipo': r.tipo === 'AJUSTE' ? 'Ajuste' : 'Gestión',
         'Canal': r.channel, 'Descripción': r.description, 'Hora Inicio': r.startTime, 'Hora Fin': r.endTime,
         'Duración': formatSeconds(r.durationSeconds), 'Horas (decimal)': horasDecimal(r.durationSeconds)
       })));
-      ws['!cols'] = [{ wch: 11 }, { wch: 34 }, { wch: 9 }, { wch: 13 }, { wch: 40 }, { wch: 11 }, { wch: 11 }, { wch: 10 }, { wch: 14 }];
+      ws['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 34 }, { wch: 9 }, { wch: 13 }, { wch: 40 }, { wch: 11 }, { wch: 11 }, { wch: 10 }, { wch: 14 }];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Detalle de Gestiones');
       XLSX.writeFile(wb, nombreArchivo('Reporte_Detallado'));
@@ -1094,7 +1108,7 @@
     function exportarExcelResumido() {
       if (!reporteFilas.length) return toast('Primero generá un reporte con datos (pestaña Informes).', 'warn');
       const rows = [...reporteFilas].sort((a, b) => a.dateIso.localeCompare(b.dateIso) || a.userName.localeCompare(b.userName)).map(g => ({
-        'Fecha': g.date, 'Asesor': g.userName, 'Horas Contrato': g.contrato || '',
+        'Fecha': g.date, 'Legajo': legajoDe(g.userName), 'Asesor': g.userName, 'Horas Contrato': g.contrato || '',
         'WhatsApp': formatSeconds(g.canales['WhatsApp']), 'Discador': formatSeconds(g.canales['Discador']),
         'Gestión Mail': formatSeconds(g.canales['Gestión Mail']), 'Bootmaker': formatSeconds(g.canales['Bootmaker']),
         'Ajustes': g.ajustes ? formatSeconds(g.ajustes) : '',
@@ -1103,7 +1117,7 @@
         'Estado Contrato': g.estado.toUpperCase(), 'Cambios de Canal': g.cambios, 'Total Gestiones': g.gestiones
       }));
       const ws = XLSX.utils.json_to_sheet(rows);
-      ws['!cols'] = [{ wch: 11 }, { wch: 34 }, { wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 11 }, { wch: 10 }, { wch: 15 }, { wch: 16 }, { wch: 26 }, { wch: 15 }, { wch: 16 }, { wch: 15 }];
+      ws['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 34 }, { wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 11 }, { wch: 10 }, { wch: 15 }, { wch: 16 }, { wch: 26 }, { wch: 15 }, { wch: 16 }, { wch: 15 }];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Resumen Consolidado');
       XLSX.writeFile(wb, nombreArchivo('Reporte_Consolidado_Asesores'));
@@ -1139,46 +1153,46 @@
       const darFormato = (ws, celdas) => celdas.forEach(([r, c]) => { const ref = XLSX.utils.encode_cell({ r, c }); if (ws[ref] && ws[ref].t === 'n') ws[ref].z = FMT; });
 
       // ---------- Hoja 1: Total por día ----------
-      const encabezado = ['Asesor', 'Contrato (hs/día)', ...dias.map(d => { const [y, m, dd] = d.split('-').map(Number); return `${DIAS_SEM[new Date(y, m - 1, dd).getDay()]} ${pad(dd)}/${pad(m)}`; }), 'Total período'];
+      const encabezado = ['Legajo', 'Asesor', 'Contrato (hs/día)', ...dias.map(d => { const [y, m, dd] = d.split('-').map(Number); return `${DIAS_SEM[new Date(y, m - 1, dd).getDay()]} ${pad(dd)}/${pad(m)}`; }), 'Total período'];
       const aoa1 = [encabezado];
       const celdasHora1 = [];
       const totalesDia = dias.map(() => 0);
       asesores.forEach((nombre, i) => {
-        const fila = [nombre, contratoDe(nombre) || ''];
+        const fila = [legajoDe(nombre), nombre, contratoDe(nombre) || ''];
         let total = 0;
         dias.forEach((d, j) => {
           const g = indice[norm(nombre) + '|' + d];
-          if (g) { fila.push(aExcel(g.total)); total += g.total; totalesDia[j] += g.total; celdasHora1.push([i + 1, j + 2]); }
+          if (g) { fila.push(aExcel(g.total)); total += g.total; totalesDia[j] += g.total; celdasHora1.push([i + 1, j + 3]); }
           else fila.push('');
         });
-        fila.push(aExcel(total)); celdasHora1.push([i + 1, dias.length + 2]);
+        fila.push(aExcel(total)); celdasHora1.push([i + 1, dias.length + 3]);
         aoa1.push(fila);
       });
       const filaTot = aoa1.length;
-      aoa1.push(['TOTAL', '', ...totalesDia.map(s => aExcel(s)), aExcel(totalesDia.reduce((a, b) => a + b, 0))]);
-      for (let c = 2; c <= dias.length + 2; c++) celdasHora1.push([filaTot, c]);
+      aoa1.push(['', 'TOTAL', '', ...totalesDia.map(s => aExcel(s)), aExcel(totalesDia.reduce((a, b) => a + b, 0))]);
+      for (let c = 3; c <= dias.length + 3; c++) celdasHora1.push([filaTot, c]);
       const ws1 = XLSX.utils.aoa_to_sheet(aoa1);
       darFormato(ws1, celdasHora1);
-      ws1['!cols'] = [{ wch: 36 }, { wch: 10 }, ...dias.map(() => ({ wch: 9 })), { wch: 12 }];
+      ws1['!cols'] = [{ wch: 9 }, { wch: 36 }, { wch: 10 }, ...dias.map(() => ({ wch: 9 })), { wch: 12 }];
 
       // ---------- Hoja 2: Detalle por canal ----------
-      const aoa2 = [['Fecha', 'Asesor', 'Contrato (hs)', ...CANALES, 'Ajustes', 'Total día', 'Faltante', 'Estado', 'Cambios de canal', 'Gestiones']];
+      const aoa2 = [['Fecha', 'Legajo', 'Asesor', 'Contrato (hs)', ...CANALES, 'Ajustes', 'Total día', 'Faltante', 'Estado', 'Cambios de canal', 'Gestiones']];
       const celdasHora2 = [];
       [...filas].sort((a, b) => a.dateIso.localeCompare(b.dateIso) || a.userName.localeCompare(b.userName, 'es')).forEach((g, i) => {
         const r = i + 1;
         aoa2.push([
-          g.date, g.userName, g.contrato || '',
+          g.date, legajoDe(g.userName), g.userName, g.contrato || '',
           ...CANALES.map(c => aExcel(g.canales[c] || 0)),
           g.ajustes ? (g.ajustes > 0 ? '+' : '') + formatSeconds(g.ajustes).slice(0, -3) : '',
           aExcel(g.total),
           g.contratoSecs ? aExcel(g.faltante) : '',
           g.estado, g.cambios, g.gestiones
         ]);
-        [3, 4, 5, 6, 8, 9].forEach(c => celdasHora2.push([r, c]));
+        [4, 5, 6, 7, 9, 10].forEach(c => celdasHora2.push([r, c]));
       });
       const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
       darFormato(ws2, celdasHora2);
-      ws2['!cols'] = [{ wch: 11 }, { wch: 36 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 11 }, { wch: 9 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 16 }, { wch: 10 }];
+      ws2['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 36 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 11 }, { wch: 9 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 16 }, { wch: 10 }];
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws1, 'Total por día');
@@ -1190,17 +1204,18 @@
      * NÓMINA DE USUARIOS
      * ============================================================== */
     async function cargarUsuarios() {
-      if (!usuariosCache.length) filaMensaje('users-table-body', 8, cargando);
+      if (!usuariosCache.length) filaMensaje('users-table-body', 9, cargando);
       try { usuariosCache = (await api('usuarios')).usuarios; renderUsuarios(); }
-      catch (e) { if (e.code !== 'SESION') filaMensaje('users-table-body', 8, esc(e.message)); }
+      catch (e) { if (e.code !== 'SESION') filaMensaje('users-table-body', 9, esc(e.message)); }
     }
 
     function renderUsuarios() {
       const filtro = norm($('users-buscar').value);
-      const lista = usuariosCache.map((u, i) => ({ u, i })).filter(x => !filtro || norm(x.u.name).includes(filtro))
+      const lista = usuariosCache.map((u, i) => ({ u, i })).filter(x => !filtro || norm(x.u.name).includes(filtro) || String(x.u.legajo || '').includes(filtro))
         .sort((a, b) => (a.u.state === b.u.state ? 0 : a.u.state === 'ACTIVO' ? -1 : 1) || a.u.name.localeCompare(b.u.name));
-      if (!lista.length) return filaMensaje('users-table-body', 8, 'Sin resultados.');
+      if (!lista.length) return filaMensaje('users-table-body', 9, 'Sin resultados.');
       $('users-table-body').innerHTML = lista.map(({ u, i }) => `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 ${u.state !== 'ACTIVO' ? 'opacity-60' : ''}">
+          <td class="px-4 py-3 font-mono">${u.legajo ? esc(u.legajo) : '<span class="text-amber-600 font-sans font-semibold">Falta</span>'}</td>
           <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">${esc(u.name)}</td>
           <td class="px-4 py-3">${esc(u.turno || '-')}</td>
           <td class="px-4 py-3">${u.contrato ? String(u.contrato).replace('.', ',') + ' hs' : '-'}</td>
@@ -1209,7 +1224,7 @@
           <td class="px-4 py-3">${u.tieneClave ? '<span class="text-green-600 font-semibold">Configurada</span>' : '<span class="text-amber-600 font-semibold">Pendiente</span>'}</td>
           <td class="px-4 py-3"><span class="${u.state === 'ACTIVO' ? 'text-green-600' : 'text-red-600'} font-bold">${esc(u.state)}</span></td>
           <td class="px-4 py-3 whitespace-nowrap space-x-3">
-            <button onclick="abrirModalCrearUsuario(${i})" class="text-blue-600 font-bold" title="Editar"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="abrirModalCrearUsuario(${i})" class="text-blue-600 font-bold" title="Editar datos o asignar clave"><i class="fa-solid fa-pen"></i> Editar</button>
             <button onclick="toggleEstadoUsuario(${i})" class="${u.state === 'ACTIVO' ? 'text-red-600' : 'text-green-600'} font-bold">${u.state === 'ACTIVO' ? 'Dar de baja' : 'Activar'}</button>
             ${u.tieneClave ? `<button onclick="resetClave(${i})" class="text-amber-600 font-bold" title="El operador elige una clave nueva en su próximo ingreso"><i class="fa-solid fa-key"></i> Restablecer</button>` : ''}
           </td></tr>`).join('');
@@ -1220,12 +1235,12 @@
       $('user-modal-title').textContent = u ? 'Editar operador' : 'Nuevo operador';
       $('edit-user-id').value = u ? u.id : '';
       $('new-user-name').value = u ? u.name : '';
-      $('new-user-name').readOnly = !!u;
-      $('new-user-name').classList.toggle('opacity-60', !!u);
       $('name-lock-hint').classList.toggle('hidden', !u);
       $('new-user-turno').value = u && ['Mañana', 'Tarde', '-'].includes(u.turno) ? u.turno : 'Mañana';
       $('new-user-contrato').value = u ? u.contrato : '';
       $('new-user-horario').value = u ? u.horario : '';
+      $('new-user-legajo').value = u ? (u.legajo || '') : '';
+      $('new-user-clave').value = '';
       $('new-user-role').value = u ? u.role : 'ASESOR';
       $('new-user-state').value = u ? u.state : 'ACTIVO';
       $('create-user-modal').classList.remove('hidden');
@@ -1236,8 +1251,13 @@
       const r = await api('guardarUsuario', { usuario });
       const idx = usuariosCache.findIndex(x => x.id === r.usuario.id);
       if (idx >= 0) usuariosCache[idx] = r.usuario; else usuariosCache.push(r.usuario);
+      // Si el admin se editó a sí mismo, actualizamos su sesión
+      if (sesion && r.usuario.id === sesion.user.id) { sesion.user = { ...sesion.user, ...r.usuario }; lsSet(LS.sesion, sesion); $('user-display-name').innerText = sesion.user.name; }
+      // Los reportes y el monitor ya cargados quedaron con datos viejos: se recargan la próxima vez que se abran
+      reporteRegistros = []; reporteFilas = []; monitorData = null;
       renderUsuarios();
-      toast(mensajeOk, 'ok');
+      toast(mensajeOk + (r.renombrados ? ` Se actualizó el nombre en ${r.renombrados} registro${r.renombrados > 1 ? 's' : ''}.` : ''), 'ok');
+      return r.usuario;
     }
 
     async function guardarNuevoUsuario() {
@@ -1246,11 +1266,22 @@
       if (!name) return toast('Ingresá el nombre.', 'error');
       if (!(contrato >= 0 && contrato <= 12)) return toast('El contrato debe ser un número de horas entre 0 y 12.', 'error');
       const id = $('edit-user-id').value;
-      if (!id && usuariosCache.some(u => norm(u.name) === norm(name))) return toast('Ya existe un operador con ese nombre.', 'error');
+      if (usuariosCache.some(u => u.id !== id && norm(u.name) === norm(name))) return toast('Ya existe otro operador con ese nombre.', 'error');
+      const clave = $('new-user-clave').value;
+      if (clave && clave.length < 4) return toast('La clave debe tener al menos 4 caracteres.', 'error');
+      const anterior = id ? usuariosCache.find(u => u.id === id) : null;
+      if (anterior && anterior.name !== name && !confirm(`Vas a cambiar el nombre "${anterior.name}" por "${name}".\n\nSe actualiza en la nómina y en todos sus registros de horas. Si está conectado, va a tener que volver a ingresar. ¿Continuar?`)) return;
       $('user-save-btn').disabled = true;
       try {
-        await guardarUsuario({ id: id || undefined, name, contrato, turno: $('new-user-turno').value, horario: $('new-user-horario').value.trim(),
-          role: $('new-user-role').value, state: $('new-user-state').value }, id ? 'Operador actualizado.' : 'Operador creado. Define su clave en el primer ingreso.');
+        const guardado = await guardarUsuario({ id: id || undefined, name, contrato, turno: $('new-user-turno').value, horario: $('new-user-horario').value.trim(),
+          role: $('new-user-role').value, state: $('new-user-state').value, legajo: $('new-user-legajo').value.trim() },
+          id ? 'Operador actualizado.' : clave ? 'Operador creado.' : 'Operador creado. Define su clave en el primer ingreso.');
+        if (clave) {
+          await api('asignarClave', { id: guardado.id, clave });
+          guardado.tieneClave = true;
+          renderUsuarios();
+          toast(`Clave asignada a ${guardado.name}.`, 'ok');
+        }
         cerrarModalCrearUsuario();
       } catch (e) { toast(e.message, 'error'); }
       finally { $('user-save-btn').disabled = false; }
@@ -1291,6 +1322,7 @@
           const state = tomar(f, ['estado']).toUpperCase();
           return {
             id: existente ? existente.id : undefined, name,
+            legajo: tomar(f, ['legajo', 'nro legajo', 'n legajo', 'numero de legajo']) || undefined,
             turno: tomar(f, ['turno']) || (existente ? existente.turno : ''),
             contrato: contratoTxt !== '' ? parseFloat(contratoTxt) : (existente ? existente.contrato : 0),
             horario: tomar(f, ['horario']) || (existente ? existente.horario : ''),
