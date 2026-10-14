@@ -130,12 +130,7 @@
               <input type="text" id="task-description" maxlength="200" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-xs dark:text-white focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="¿En qué gestión estás trabajando?">
             </div>
             <div class="flex items-center justify-between w-full md:w-auto gap-4">
-              <select id="channel-select" onchange="cambioDeCanal()" class="px-3 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 dark:text-white rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500" title="Si cambiás de canal con el timer en marcha, se cierra la gestión actual y empieza otra en el canal nuevo">
-                <option value="WhatsApp">📱 WhatsApp</option>
-                <option value="Discador">📞 Discador / Llamada</option>
-                <option value="Gestión Mail">✉️ Gestión Mail</option>
-                <option value="Bootmaker">🤖 Bootmaker</option>
-              </select>
+              <select id="channel-select" onchange="cambioDeCanal()" class="px-3 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 dark:text-white rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500" title="Si cambiás de canal con el timer en marcha, se cierra la gestión actual y empieza otra en el canal nuevo"></select>
               <div id="timer-display" class="font-mono text-xl font-bold text-gray-800 dark:text-white min-w-[90px] text-center">00:00:00</div>
               <button id="timer-btn" onclick="toggleTimer()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 transition flex items-center gap-2 text-xs"></button>
             </div>
@@ -265,11 +260,7 @@
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
               <thead class="bg-gray-50 dark:bg-slate-700 uppercase text-[10px] font-bold">
-                <tr>
-                  <th class="px-3 py-3">Asesor</th><th class="px-3 py-3">Fecha</th><th class="px-3 py-3">Contrato</th>
-                  <th class="px-3 py-3">WhatsApp</th><th class="px-3 py-3">Discador</th><th class="px-3 py-3">Mail</th><th class="px-3 py-3">Bootmaker</th>
-                  <th class="px-3 py-3">Ajustes</th><th class="px-3 py-3">Total día</th><th class="px-3 py-3">Faltante</th><th class="px-3 py-3">Cambios</th><th class="px-3 py-3">Estado</th>
-                </tr>
+                <tr id="reports-head"></tr>
               </thead>
               <tbody id="reports-table-body" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
             </table>
@@ -304,6 +295,17 @@
 
       <!-- ============ TAB 4: AJUSTES ============ -->
       <main id="tab-admin-settings-content" class="hidden flex-1 p-4 md:p-6 space-y-6 max-w-6xl mx-auto w-full">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm space-y-5">
+          <div class="border-b dark:border-slate-700 pb-4">
+            <h2 class="text-lg font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-tower-cell text-blue-600"></i> Canales de la cuenta <span id="canales-cuenta" class="text-blue-600"></span></h2>
+            <p class="text-xs text-gray-500">Son los canales que eligen los asesores. Al eliminar uno, desaparece del selector, pero sus horas se conservan en los reportes y se puede restaurar.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <input id="canal-nuevo" maxlength="30" class="inp !w-72" placeholder="Nombre del canal nuevo (ej: SMS)" onkeydown="if(event.key==='Enter'){event.preventDefault();agregarCanal();}">
+            <button id="canal-btn" onclick="agregarCanal()" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow"><i class="fa-solid fa-plus"></i> Agregar canal</button>
+          </div>
+          <div id="canales-lista" class="flex flex-wrap gap-2"></div>
+        </div>
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm space-y-6">
           <div class="border-b dark:border-slate-700 pb-4">
             <h2 class="text-lg font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-sliders text-purple-600"></i> Ajuste Manual de Tiempos</h2>
@@ -316,7 +318,7 @@
               <div><label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Operador</label><select id="manual-user-id" class="inp"></select></div>
               <div><label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Fecha</label><input type="date" id="manual-date" class="inp"></div>
               <div><label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Canal</label>
-                <select id="manual-channel" class="inp"><option>WhatsApp</option><option>Discador</option><option>Gestión Mail</option><option>Bootmaker</option></select></div>
+                <select id="manual-channel" class="inp"></select></div>
               <div><label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Duración (minutos)</label><input type="number" min="1" max="720" id="manual-duration-mins" class="inp" placeholder="Minutos"></div>
             </div>
             <div><label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Motivo / justificación</label><input type="text" maxlength="200" id="manual-desc" class="inp" placeholder="Ej: Se olvidó de iniciar el timer de 14:00 a 14:30"></div>
@@ -430,7 +432,7 @@
       }
     };
     const CUENTA_POR_DEFECTO = 'bh';
-    const CANALES = ['WhatsApp', 'Discador', 'Gestión Mail', 'Bootmaker'];
+    const CANALES_INICIALES = ['WhatsApp', 'Discador', 'Gestión Mail', 'Bootmaker'];
     // Cuenta activa: la del link (?cuenta=) o, si no viene, la última elegida en esta PC
     const paramCuenta = (new URLSearchParams(location.search).get('cuenta') || '').trim().toLowerCase();
     const cuentaFija = Object.prototype.hasOwnProperty.call(CUENTAS, paramCuenta);
@@ -446,11 +448,13 @@
       get sesion() { return 'tt_sesion' + sufijo(); },
       get outbox() { return 'tt_outbox' + sufijo(); },
       get rechazados() { return 'tt_rechazados' + sufijo(); },
+      get canales() { return 'tt_canales' + sufijo(); },
       tema: 'tt_tema',
       timer: id => 'tt_timer' + sufijo() + '_' + id
     };
 
     let sesion = null;          // { token, user: {id, name, role, contrato, ...} }
+    let canales = null;         // [{ nombre, activo }] de la cuenta; se actualiza con cada respuesta del servidor
     let timer = null;           // { inicio (ms), canal, desc }
     let intervalos = [];
     let enviando = false;
@@ -458,7 +462,7 @@
     let misRegistros = [];      // registros del asesor que ya están en la planilla
     let monitorData = null;
     let usuariosCache = [];
-    let reporteRegistros = [], reporteFilas = [];
+    let reporteRegistros = [], reporteFilas = [], reporteCanales = [];
     let reportesIniciados = false;
 
     /* ==============================================================
@@ -497,6 +501,69 @@
       $('toasts').appendChild(el);
       setTimeout(() => el.remove(), tipo === 'error' ? 7000 : 4000);
     }
+    /* ---------- Canales de la cuenta ---------- */
+    const ICONOS_CANAL = { 'whatsapp': '📱', 'discador': '📞', 'gestion mail': '✉️', 'bootmaker': '🤖', 'sms': '💬', 'mail': '✉️', 'llamada': '📞', 'chat': '💬' };
+    function listaCanales() {
+      if (!canales) canales = lsGet(LS.canales, null) || CANALES_INICIALES.map(n => ({ nombre: n, activo: true }));
+      return canales;
+    }
+    const canalesActivos = () => listaCanales().filter(c => c.activo).map(c => c.nombre);
+    // Canales para columnas de reportes: los activos + cualquiera que aparezca en los registros (incluso eliminados)
+    function canalesDeReporte(regs) {
+      const orden = listaCanales().map(c => c.nombre);
+      const set = new Set(canalesActivos());
+      regs.forEach(r => { if (r.channel && r.channel !== '-') set.add(r.channel); });
+      return [...set].sort((a, b) => {
+        const ia = orden.indexOf(a), ib = orden.indexOf(b);
+        return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib) || a.localeCompare(b);
+      });
+    }
+    function actualizarCanales(lista) {
+      if (!Array.isArray(lista) || !lista.length) return;
+      canales = lista;
+      lsSet(LS.canales, lista);
+      pintarCanales();
+    }
+    function pintarCanales() {
+      const activos = canalesActivos();
+      const sel = $('channel-select');
+      if (sel) {
+        const actual = (timer && timer.canal) || sel.value;
+        const opciones = [...activos];
+        if (actual && !opciones.includes(actual)) opciones.push(actual);   // reloj en marcha en un canal recién eliminado
+        sel.innerHTML = opciones.map(c => `<option value="${esc(c)}">${ICONOS_CANAL[norm(c)] || '•'} ${esc(c)}</option>`).join('');
+        sel.value = opciones.includes(actual) ? actual : opciones[0];
+      }
+      const man = $('manual-channel');
+      if (man) { const v = man.value; man.innerHTML = activos.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join(''); if (activos.includes(v)) man.value = v; }
+      if ($('canales-lista')) renderCanalesAdmin();
+    }
+    function renderCanalesAdmin() {
+      $('canales-cuenta').textContent = cuenta().corto;
+      $('canales-lista').innerHTML = listaCanales().map(c => c.activo
+        ? `<span class="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800 rounded-full pl-3 pr-1 py-1 text-xs font-semibold">${ICONOS_CANAL[norm(c.nombre)] || '•'} ${esc(c.nombre)}
+             <button onclick="eliminarCanal(this.dataset.c)" data-c="${esc(c.nombre)}" class="w-6 h-6 rounded-full hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600" title="Eliminar canal"><i class="fa-solid fa-xmark"></i></button></span>`
+        : `<span class="inline-flex items-center gap-2 bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-slate-500 rounded-full pl-3 pr-1 py-1 text-xs font-semibold line-through decoration-1">${esc(c.nombre)}
+             <button onclick="restaurarCanal(this.dataset.c)" data-c="${esc(c.nombre)}" class="no-underline px-2 h-6 rounded-full hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300" style="text-decoration:none" title="Restaurar canal"><i class="fa-solid fa-rotate-left"></i> Restaurar</button></span>`).join('');
+    }
+    async function agregarCanal() {
+      const nombre = $('canal-nuevo').value.trim();
+      if (!nombre) return toast('Escribí el nombre del canal.', 'error');
+      $('canal-btn').disabled = true;
+      try { actualizarCanales((await api('agregarCanal', { nombre })).canales); $('canal-nuevo').value = ''; toast(`Canal "${nombre}" disponible para los asesores.`, 'ok'); }
+      catch (e) { toast(e.message, 'error'); }
+      finally { $('canal-btn').disabled = false; }
+    }
+    async function eliminarCanal(nombre) {
+      if (!confirm(`¿Eliminar el canal "${nombre}"?\n\nLos asesores ya no lo van a ver. Las horas registradas en ese canal se conservan en los reportes y lo podés restaurar cuando quieras.`)) return;
+      try { actualizarCanales((await api('eliminarCanal', { nombre })).canales); toast(`Canal "${nombre}" eliminado.`, 'ok'); }
+      catch (e) { toast(e.message, 'error'); }
+    }
+    async function restaurarCanal(nombre) {
+      try { actualizarCanales((await api('restaurarCanal', { nombre })).canales); toast(`Canal "${nombre}" restaurado.`, 'ok'); }
+      catch (e) { toast(e.message, 'error'); }
+    }
+
     function filaMensaje(tbodyId, cols, html) { $(tbodyId).innerHTML = `<tr><td colspan="${cols}" class="px-6 py-6 text-center text-gray-400">${html}</td></tr>`; }
     const cargando = '<i class="fa-solid fa-spinner fa-spin"></i> Cargando…';
 
@@ -534,6 +601,7 @@
     // Lectura centralizada desde la planilla (el servidor filtra: el asesor solo recibe lo suyo)
     async function obtenerDatosRemotos(filtros = {}) {
       const r = await api('listar', filtros, { timeout: 40000 });
+      actualizarCanales(r.canales);
       // El asesor recibe sus datos actuales: si el admin cambió su contrato, legajo o nombre, se aplica sin volver a ingresar
       if (r.yo && sesion && !esAdmin()) { sesion.user = { ...sesion.user, ...r.yo }; lsSet(LS.sesion, sesion); $('user-display-name').innerText = sesion.user.name; }
       return r.rows || [];
@@ -570,6 +638,7 @@
     function cambiarCuenta(id) {
       if (!CUENTAS[id] || sesion) return;
       cuentaId = id;
+      canales = null;
       try { localStorage.setItem('tt_cuenta', id); } catch (e) {}
       $('login-error').classList.add('hidden');
       pintarCuenta();
@@ -590,6 +659,7 @@
           throw new Error(`La URL configurada para ${cuenta().corto} corresponde a la planilla de ${r.cuenta}. Revisá la URL en la lista de cuentas.`);
         }
         sesion = { token: r.token, user: r.user };
+        actualizarCanales(r.canales);
         lsSet(LS.sesion, sesion);
         $('login-pass').value = '';
         if (r.primerIngreso) toast('Listo: esa clave quedó guardada como tu clave personal.', 'ok');
@@ -610,6 +680,7 @@
       $('user-avatar').innerText = u.name.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
       $('login-screen').classList.add('hidden');
       $('app-content').classList.remove('hidden');
+      pintarCanales();
 
       const admin = esAdmin();
       const conDrive = admin && !!cuenta().drive;
@@ -724,7 +795,7 @@
         return;
       }
       timer = t;
-      $('channel-select').value = t.canal;
+      pintarCanales();   // incluye el canal del reloj aunque lo hayan eliminado
       $('task-description').value = t.desc || '';
       toast(`Se recuperó tu gestión en curso (${t.canal}).`, 'info');
       notificarEstado(true);
@@ -957,6 +1028,7 @@
       if (!monitorData) { filaMensaje('monitor-table-body', 8, cargando); filaMensaje('admin-history-body', 7, cargando); }
       try {
         monitorData = await api('monitor', {}, { timeout: 40000 });
+        actualizarCanales(monitorData.canales);
         usuariosCache = monitorData.usuarios || [];
         $('monitor-actualizado').textContent = 'última actualización ' + horaHMS(new Date());
         renderMonitor();
@@ -1086,7 +1158,7 @@
       if (!reportesIniciados) { reportesIniciados = true; setQuickDateFilter('month'); return; }
       const desde = $('filter-date-from').value, hasta = $('filter-date-to').value;
       if (desde && hasta && desde > hasta) return toast('La fecha "Desde" es posterior a "Hasta".', 'error');
-      filaMensaje('reports-table-body', 12, cargando);
+      reporteCanales = canalesDeReporte([]); pintarEncabezadoReportes(); filaMensaje('reports-table-body', columnasReporte(), cargando);
       $('reports-summary').textContent = '';
       try {
         let rows = await obtenerDatosRemotos({ desde, hasta });
@@ -1098,7 +1170,7 @@
         reporteRegistros = rows;
         renderReportes();
       } catch (e) {
-        if (e.code !== 'SESION') filaMensaje('reports-table-body', 12, esc(e.message));
+        if (e.code !== 'SESION') filaMensaje('reports-table-body', columnasReporte(), esc(e.message));
       }
     }
 
@@ -1107,7 +1179,7 @@
       regs.forEach(r => {
         const k = norm(r.userName) + '|' + r.dateIso;
         if (!g[k]) g[k] = { userName: r.userName, dateIso: r.dateIso, date: r.date || isoADMY(r.dateIso), contrato: contratoDe(r.userName),
-          canales: Object.fromEntries(CANALES.map(c => [c, 0])), ajustes: 0, total: 0, gestiones: 0, regs: [] };
+          canales: Object.fromEntries(reporteCanales.map(c => [c, 0])), ajustes: 0, total: 0, gestiones: 0, regs: [] };
         const x = g[k];
         if (r.tipo === 'AJUSTE') x.ajustes += r.durationSeconds;
         else { x.canales[r.channel] = (x.canales[r.channel] || 0) + r.durationSeconds; x.gestiones++; x.regs.push(r); }
@@ -1121,11 +1193,19 @@
       }).sort((a, b) => b.dateIso.localeCompare(a.dateIso) || a.userName.localeCompare(b.userName));
     }
 
+    const columnasReporte = () => 8 + reporteCanales.length;
+    function pintarEncabezadoReportes() {
+      const th = t => `<th class="px-3 py-3">${esc(t)}</th>`;
+      $('reports-head').innerHTML = ['Asesor', 'Fecha', 'Contrato', ...reporteCanales, 'Ajustes', 'Total día', 'Faltante', 'Cambios', 'Estado'].map(th).join('');
+    }
+
     function renderReportes() {
       if (!reportesIniciados) return;
       const filtro = norm($('filter-asesor').value);
+      reporteCanales = canalesDeReporte(reporteRegistros);
+      pintarEncabezadoReportes();
       reporteFilas = agruparPorAsesorYDia(reporteRegistros).filter(f => !filtro || norm(f.userName).includes(filtro));
-      if (!reporteFilas.length) { filaMensaje('reports-table-body', 12, 'No hay registros en el período seleccionado.'); $('reports-summary').textContent = ''; return; }
+      if (!reporteFilas.length) { filaMensaje('reports-table-body', columnasReporte(), 'No hay registros en el período seleccionado.'); $('reports-summary').textContent = ''; return; }
 
       const asesores = new Set(reporteFilas.map(f => norm(f.userName))).size;
       const totalSecs = reporteFilas.reduce((s, f) => s + f.total, 0);
@@ -1139,7 +1219,7 @@
           <td class="px-3 py-3 font-bold text-gray-800 dark:text-gray-200">${esc(g.userName)}</td>
           <td class="px-3 py-3">${esc(g.date)}</td>
           <td class="px-3 py-3">${g.contrato ? String(g.contrato).replace('.', ',') + ' hs' : '-'}</td>
-          ${CANALES.map(c => `<td class="px-3 py-3">${formatSeconds(g.canales[c])}</td>`).join('')}
+          ${reporteCanales.map(c => `<td class="px-3 py-3">${formatSeconds(g.canales[c] || 0)}</td>`).join('')}
           <td class="px-3 py-3 ${g.ajustes < 0 ? 'text-red-600' : g.ajustes > 0 ? 'text-purple-600' : ''}">${g.ajustes ? formatSeconds(g.ajustes) : '-'}</td>
           <td class="px-3 py-3 font-bold text-blue-600">${formatSeconds(g.total)}</td>
           <td class="px-3 py-3">${!g.contratoSecs ? '-' : g.faltante > 0 ? formatSeconds(g.faltante) : '00:00:00'}</td>
@@ -1176,15 +1256,14 @@
       if (!reporteFilas.length) return toast('Primero generá un reporte con datos (pestaña Informes).', 'warn');
       const rows = [...reporteFilas].sort((a, b) => a.dateIso.localeCompare(b.dateIso) || a.userName.localeCompare(b.userName)).map(g => ({
         'Fecha': g.date, 'Legajo': legajoDe(g.userName), 'Asesor': g.userName, 'Horas Contrato': g.contrato || '',
-        'WhatsApp': formatSeconds(g.canales['WhatsApp']), 'Discador': formatSeconds(g.canales['Discador']),
-        'Gestión Mail': formatSeconds(g.canales['Gestión Mail']), 'Bootmaker': formatSeconds(g.canales['Bootmaker']),
+        ...Object.fromEntries(reporteCanales.map(c => [c, formatSeconds(g.canales[c] || 0)])),
         'Ajustes': g.ajustes ? formatSeconds(g.ajustes) : '',
         'Total Trabajado': formatSeconds(g.total), 'Total (hs decimal)': horasDecimal(g.total),
         'Horas Faltantes / Compensar': !g.contratoSecs ? '' : g.faltante > 0 ? formatSeconds(g.faltante) : '00:00:00',
         'Estado Contrato': g.estado.toUpperCase(), 'Cambios de Canal': g.cambios, 'Total Gestiones': g.gestiones
       }));
       const ws = XLSX.utils.json_to_sheet(rows);
-      ws['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 34 }, { wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 11 }, { wch: 10 }, { wch: 15 }, { wch: 16 }, { wch: 26 }, { wch: 15 }, { wch: 16 }, { wch: 15 }];
+      ws['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 34 }, { wch: 14 }, ...reporteCanales.map(c => ({ wch: Math.max(10, c.length + 2) })), { wch: 10 }, { wch: 15 }, { wch: 16 }, { wch: 26 }, { wch: 15 }, { wch: 16 }, { wch: 15 }];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Resumen Consolidado');
       XLSX.writeFile(wb, nombreArchivo('Reporte_Consolidado_Asesores'));
@@ -1243,23 +1322,25 @@
       ws1['!cols'] = [{ wch: 9 }, { wch: 36 }, { wch: 10 }, ...dias.map(() => ({ wch: 9 })), { wch: 12 }];
 
       // ---------- Hoja 2: Detalle por canal ----------
-      const aoa2 = [['Fecha', 'Legajo', 'Asesor', 'Contrato (hs)', ...CANALES, 'Ajustes', 'Total día', 'Faltante', 'Estado', 'Cambios de canal', 'Gestiones']];
+      const nC = reporteCanales.length;
+      const aoa2 = [['Fecha', 'Legajo', 'Asesor', 'Contrato (hs)', ...reporteCanales, 'Ajustes', 'Total día', 'Faltante', 'Estado', 'Cambios de canal', 'Gestiones']];
       const celdasHora2 = [];
       [...filas].sort((a, b) => a.dateIso.localeCompare(b.dateIso) || a.userName.localeCompare(b.userName, 'es')).forEach((g, i) => {
         const r = i + 1;
         aoa2.push([
           g.date, legajoDe(g.userName), g.userName, g.contrato || '',
-          ...CANALES.map(c => aExcel(g.canales[c] || 0)),
+          ...reporteCanales.map(c => aExcel(g.canales[c] || 0)),
           g.ajustes ? (g.ajustes > 0 ? '+' : '') + formatSeconds(g.ajustes).slice(0, -3) : '',
           aExcel(g.total),
           g.contratoSecs ? aExcel(g.faltante) : '',
           g.estado, g.cambios, g.gestiones
         ]);
-        [4, 5, 6, 7, 9, 10].forEach(c => celdasHora2.push([r, c]));
+        // columnas con horas: los canales (desde la 4), el total (4+nC+1) y el faltante (4+nC+2)
+        [...reporteCanales.map((_, k) => 4 + k), 5 + nC, 6 + nC].forEach(c => celdasHora2.push([r, c]));
       });
       const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
       darFormato(ws2, celdasHora2);
-      ws2['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 36 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 11 }, { wch: 9 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 16 }, { wch: 10 }];
+      ws2['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 36 }, { wch: 12 }, ...reporteCanales.map(c => ({ wch: Math.max(10, c.length + 2) })), { wch: 9 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 16 }, { wch: 10 }];
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws1, 'Total por día');
@@ -1419,6 +1500,7 @@
      * AJUSTE MANUAL DE TIEMPOS
      * ============================================================== */
     async function prepararAjustes() {
+      api('canales').then(r => actualizarCanales(r.canales)).catch(() => {});
       if (!$('manual-date').value) $('manual-date').value = fechaISO();
       if (!usuariosCache.length) { try { usuariosCache = (await api('usuarios')).usuarios; } catch (e) { return; } }
       const sel = $('manual-user-id'), previo = sel.value;
