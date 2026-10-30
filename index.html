@@ -136,6 +136,7 @@
             </div>
           </div>
           <p id="timer-hint" class="hidden -mt-4 text-[11px] text-gray-500 dark:text-gray-400 px-1"><i class="fa-solid fa-circle-info"></i> Gestión en curso. Si cambiás el canal, se registra el cambio y el tiempo sigue contando en el canal nuevo.</p>
+          <p id="corte-hint" class="-mt-4 text-[11px] text-gray-500 dark:text-gray-400 px-1"><i class="fa-regular fa-clock"></i> El registro de tiempo se corta todos los días a las <b id="corte-hora">21:15</b>.</p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
@@ -196,7 +197,7 @@
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
                 <thead class="bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-gray-300 uppercase text-[10px] font-bold">
-                  <tr><th class="px-4 py-3">Asesor</th><th class="px-4 py-3">Turno</th><th class="px-4 py-3">Ahora</th><th class="px-4 py-3">Contrato</th><th class="px-4 py-3">Trabajado hoy</th><th class="px-4 py-3">Faltante</th><th class="px-4 py-3">Cambios canal</th><th class="px-4 py-3">Gestiones</th></tr>
+                  <tr><th class="px-4 py-3">Asesor</th><th class="px-4 py-3">Turno</th><th class="px-4 py-3">Ahora</th><th class="px-4 py-3">Contrato</th><th class="px-4 py-3">Trabajado hoy</th><th class="px-4 py-3">Faltante</th><th class="px-4 py-3">Cambios canal</th><th class="px-4 py-3">Gestiones</th><th class="px-4 py-3">Sesión</th></tr>
                 </thead>
                 <tbody id="monitor-table-body" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
               </table>
@@ -455,6 +456,7 @@
 
     let sesion = null;          // { token, user: {id, name, role, contrato, ...} }
     let canales = null;         // [{ nombre, activo }] de la cuenta; se actualiza con cada respuesta del servidor
+    let horaCorte = '21:15:00'; // después de esta hora no se registra tiempo (la define el script de cada cuenta)
     let timer = null;           // { inicio (ms), canal, desc }
     let intervalos = [];
     let enviando = false;
@@ -501,6 +503,29 @@
       $('toasts').appendChild(el);
       setTimeout(() => el.remove(), tipo === 'error' ? 7000 : 4000);
     }
+    /* ---------- Hora de corte diaria ---------- */
+    // Momento de corte del día de "ms" (por defecto hoy), en hora local
+    function corteDelDia(ms = Date.now()) {
+      const d = new Date(ms);
+      const [h, m, sg] = horaCorte.split(':').map(Number);
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m, sg || 0).getTime();
+    }
+    const pasadoElCorte = (ms = Date.now()) => ms >= corteDelDia(ms);
+    function setHoraCorte(h) {
+      if (!/^\d{2}:\d{2}:\d{2}$/.test(h || '')) return;
+      horaCorte = h;
+      if (sesion) { sesion.horaCorte = h; lsSet(LS.sesion, sesion); }
+      if ($('corte-hora')) $('corte-hora').textContent = h.slice(0, 5);
+    }
+    // Hasta cuándo puede contar un reloj iniciado en "inicio": la hora de corte de ese día
+    // o el momento en que un administrador cerró la sesión, lo que ocurra primero.
+    function limiteDelReloj(inicio) {
+      let lim = corteDelDia(inicio);
+      const forzado = sesion && Number(sesion.corteForzado);
+      if (forzado && forzado > inicio) lim = Math.min(lim, forzado);
+      return lim;
+    }
+
     /* ---------- Canales de la cuenta ---------- */
     const ICONOS_CANAL = { 'whatsapp': '📱', 'discador': '📞', 'gestion mail': '✉️', 'bootmaker': '🤖', 'sms': '💬', 'mail': '✉️', 'llamada': '📞', 'chat': '💬' };
     function listaCanales() {
@@ -589,6 +614,7 @@
           if (data && data.ok) return resolve(data);
           const err = Object.assign(new Error((data && data.error) || 'Respuesta inválida del servidor.'), { code: (data && data.code) || 'ERROR' });
           if (err.code === 'SESION') sesionExpirada(err.message);
+          if (err.code === 'DESLOGUEADO') { err.code = 'SESION'; deslogueoForzado(err.message, data && data.corte); }
           reject(err);
         };
         script.onerror = () => { if (!terminado) { fin(); reject(Object.assign(new Error('Sin conexión con Google Sheets.'), { code: 'RED' })); } };
@@ -602,6 +628,7 @@
     async function obtenerDatosRemotos(filtros = {}) {
       const r = await api('listar', filtros, { timeout: 40000 });
       actualizarCanales(r.canales);
+      setHoraCorte(r.horaCorte);
       // El asesor recibe sus datos actuales: si el admin cambió su contrato, legajo o nombre, se aplica sin volver a ingresar
       if (r.yo && sesion && !esAdmin()) { sesion.user = { ...sesion.user, ...r.yo }; lsSet(LS.sesion, sesion); $('user-display-name').innerText = sesion.user.name; }
       return r.rows || [];
@@ -658,8 +685,9 @@
         if (r.cuenta && r.cuenta.toLowerCase() !== cuentaId) {
           throw new Error(`La URL configurada para ${cuenta().corto} corresponde a la planilla de ${r.cuenta}. Revisá la URL en la lista de cuentas.`);
         }
-        sesion = { token: r.token, user: r.user };
+        sesion = { token: r.token, user: r.user, corteForzado: Number(r.corteForzado) || 0 };
         actualizarCanales(r.canales);
+        setHoraCorte(r.horaCorte);
         lsSet(LS.sesion, sesion);
         $('login-pass').value = '';
         if (r.primerIngreso) toast('Listo: esa clave quedó guardada como tu clave personal.', 'ok');
@@ -680,6 +708,7 @@
       $('user-avatar').innerText = u.name.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
       $('login-screen').classList.add('hidden');
       $('app-content').classList.remove('hidden');
+      if (sesion.horaCorte) setHoraCorte(sesion.horaCorte);
       pintarCanales();
 
       const admin = esAdmin();
@@ -708,6 +737,8 @@
         renderMisRegistros();
         cargarMisRegistros();
         intervalos.push(setInterval(() => cargarMisRegistros(), 180000));
+        // Con el reloj en marcha, cada minuto se confirma que la sesión siga abierta (por si un administrador la cerró)
+        intervalos.push(setInterval(() => { if (timer) api('pulso').then(r => setHoraCorte(r.horaCorte)).catch(() => {}); }, 60000));
       }
       sincronizarPendientes();
     }
@@ -732,6 +763,16 @@
       $('app-content').classList.add('hidden');
       $('login-screen').classList.remove('hidden');
       if (mensaje) { $('login-error').textContent = mensaje; $('login-error').classList.remove('hidden'); }
+    }
+
+    // Un administrador cerró la sesión: el reloj se cierra a la hora del deslogueo (no a la hora en que esta PC se enteró)
+    function deslogueoForzado(msg, corte) {
+      if (!sesion) return;
+      if (timer && !esAdmin()) {
+        sesion.corteForzado = Number(corte) || Date.now();
+        detenerGestion({ fin: Math.min(Date.now(), sesion.corteForzado), notificar: false, sincronizar: false });
+      }
+      salir(msg || 'Un administrador cerró tu sesión.');
     }
 
     function sesionExpirada(msg) {
@@ -786,12 +827,21 @@
       const t = lsGet(LS.timer(sesion.user.id), null);
       timer = null;
       if (!t || !t.inicio) return;
-      const horas = (Date.now() - t.inicio) / 3600000;
+      const limite = limiteDelReloj(t.inicio);
+      const fin = Math.min(Date.now(), limite);
+      const horas = (fin - t.inicio) / 3600000;
+      const desde = new Date(t.inicio);
       if (horas > 12) {
-        const desde = new Date(t.inicio);
-        const registrar = confirm(`Quedó abierta una gestión de ${t.canal} desde el ${desde.toLocaleDateString('es-AR')} a las ${horaHMS(desde)} (${horas.toFixed(1)} hs).\n\nAceptar = registrarla hasta ahora\nCancelar = descartarla (tu coordinador puede cargar un ajuste)`);
+        const registrar = confirm(`Quedó abierta una gestión de ${t.canal} desde el ${desde.toLocaleDateString('es-AR')} a las ${horaHMS(desde)} (${horas.toFixed(1)} hs).\n\nAceptar = registrarla hasta las ${horaHMS(new Date(fin)).slice(0, 5)}\nCancelar = descartarla (tu coordinador puede cargar un ajuste)`);
         timer = t;
-        if (registrar) detenerGestion(); else { timer = null; guardarTimer(); notificarEstado(false); }
+        if (registrar) detenerGestion({ fin }); else { timer = null; guardarTimer(); notificarEstado(false); }
+        return;
+      }
+      if (Date.now() >= limite) {
+        // El reloj quedó abierto pero ya pasó la hora de corte (o un administrador cerró la sesión): se registra hasta ese momento
+        timer = t;
+        detenerGestion({ fin });
+        toast(`Tu gestión de ${t.canal} quedó registrada hasta las ${horaHMS(new Date(fin)).slice(0, 5)}.`, 'warn');
         return;
       }
       timer = t;
@@ -804,6 +854,11 @@
     function toggleTimer() { timer ? detenerGestion() : iniciarGestion(); }
 
     function iniciarGestion(canal) {
+      if (pasadoElCorte()) {
+        toast(`Después de las ${horaCorte.slice(0, 5)} no se puede registrar tiempo.`, 'error');
+        pintarBotonTimer();
+        return;
+      }
       timer = { inicio: Date.now(), canal: canal || $('channel-select').value, desc: $('task-description').value.trim() };
       guardarTimer();
       pintarBotonTimer();
@@ -811,9 +866,9 @@
       tick();
     }
 
-    function detenerGestion({ limpiarDescripcion = true, notificar = true } = {}) {
+    function detenerGestion({ limpiarDescripcion = true, notificar = true, sincronizar = true, fin = Date.now() } = {}) {
       if (!timer) return;
-      const fin = Date.now();
+      fin = Math.min(fin, limiteDelReloj(timer.inicio));   // nunca cuenta tiempo después del corte
       timer.desc = $('task-description').value.trim() || timer.desc;
       const regs = generarRegistros(timer, fin);
       timer = null;
@@ -824,7 +879,7 @@
       if (regs.length) encolar(regs);
       if (notificar) notificarEstado(false);
       renderMisRegistros();
-      sincronizarPendientes();
+      if (sincronizar) sincronizarPendientes();
     }
 
     // Cambio de canal con el timer en marcha: se cierra la gestión y arranca otra en el canal nuevo
@@ -833,6 +888,7 @@
       const nuevo = $('channel-select').value;
       if (nuevo === timer.canal) return;
       detenerGestion({ limpiarDescripcion: false, notificar: false });
+      if (pasadoElCorte()) { pintarCanales(); return iniciarGestion(nuevo); }   // muestra el aviso de corte
       iniciarGestion(nuevo);
       toast(`Cambio de canal registrado: ahora en ${nuevo}.`, 'info');
     }
@@ -877,6 +933,10 @@
     function tick() {
       if (!sesion) return;
       if (esAdmin()) { tickMonitor(); return; }
+      if (timer && Date.now() >= limiteDelReloj(timer.inicio)) {
+        detenerGestion();
+        toast(`Son las ${horaCorte.slice(0, 5)}: se cortó el tiempo y tu gestión quedó registrada hasta esa hora.`, 'warn');
+      }
       if (timer) $('timer-display').innerText = formatSeconds((Date.now() - timer.inicio) / 1000);
       renderKPIsAsesor();
     }
@@ -1000,7 +1060,7 @@
       const hoy = fechaISO();
       const deHoy = registrosCombinados().filter(r => r.dateIso === hoy);
       let total = deHoy.reduce((s, r) => s + (r.durationSeconds || 0), 0);
-      if (timer) total += Math.max(0, (Date.now() - Math.max(timer.inicio, inicioDelDia())) / 1000);
+      if (timer) total += Math.max(0, (Math.min(Date.now(), limiteDelReloj(timer.inicio)) - Math.max(timer.inicio, inicioDelDia())) / 1000);
 
       const contractHours = parseFloat(sesion.user.contrato) || 0;
       const contractSeconds = contractHours * 3600;
@@ -1025,16 +1085,17 @@
      * ============================================================== */
     async function cargarMonitor(mostrarError = false) {
       if (!esAdmin()) return;
-      if (!monitorData) { filaMensaje('monitor-table-body', 8, cargando); filaMensaje('admin-history-body', 7, cargando); }
+      if (!monitorData) { filaMensaje('monitor-table-body', 9, cargando); filaMensaje('admin-history-body', 7, cargando); }
       try {
         monitorData = await api('monitor', {}, { timeout: 40000 });
         actualizarCanales(monitorData.canales);
+        setHoraCorte(monitorData.horaCorte);
         usuariosCache = monitorData.usuarios || [];
         $('monitor-actualizado').textContent = 'última actualización ' + horaHMS(new Date());
         renderMonitor();
       } catch (e) {
         if (e.code === 'SESION') return;
-        if (!monitorData) { filaMensaje('monitor-table-body', 8, esc(e.message)); filaMensaje('admin-history-body', 7, ''); }
+        if (!monitorData) { filaMensaje('monitor-table-body', 9, esc(e.message)); filaMensaje('admin-history-body', 7, ''); }
         else if (mostrarError) toast(e.message, 'error');
         $('monitor-actualizado').textContent = 'error al actualizar: ' + e.message;
       }
@@ -1043,6 +1104,7 @@
     function filasMonitor() {
       if (!monitorData) return [];
       const { rows, vivos, usuarios } = monitorData;
+      const conectados = new Set(monitorData.conectados || []);
       const porNombre = {};
       rows.forEach(r => { (porNombre[norm(r.userName)] ||= []).push(r); });
       const lista = usuarios.filter(u => u.role !== 'ADMINISTRADOR' && u.state === 'ACTIVO');
@@ -1052,9 +1114,10 @@
       });
       return lista.map(u => {
         const regs = porNombre[norm(u.name)] || [];
-        const vivo = Object.values(vivos || {}).find(v => norm(v.name) === norm(u.name)) || null;
+        let vivo = Object.values(vivos || {}).find(v => norm(v.name) === norm(u.name)) || null;
+        if (vivo && Date.now() >= corteDelDia(vivo.inicio)) vivo = null;   // pasada la hora de corte ya no cuenta
         return {
-          u, regs, vivo,
+          u, regs, vivo, conectado: !!(u.id && conectados.has(u.id)),
           base: regs.reduce((s, r) => s + r.durationSeconds, 0),
           cambios: contarCambios(regs, vivo ? vivo.canal : null),
           gestiones: regs.filter(r => r.tipo !== 'AJUSTE').length,
@@ -1063,7 +1126,7 @@
       });
     }
 
-    const segundosVivo = vivo => vivo ? Math.max(0, (Date.now() - Math.max(vivo.inicio, inicioDelDia())) / 1000) : 0;
+    const segundosVivo = vivo => vivo ? Math.max(0, (Math.min(Date.now(), corteDelDia(vivo.inicio)) - Math.max(vivo.inicio, inicioDelDia())) / 1000) : 0;
 
     function renderMonitor() {
       if (!monitorData) return;
@@ -1085,8 +1148,12 @@
           <td class="px-4 py-3 font-bold text-blue-600" data-live="total" data-base="${f.base}" data-inicio="${f.vivo ? f.vivo.inicio : ''}">${formatSeconds(f.base + segundosVivo(f.vivo))}</td>
           <td class="px-4 py-3 font-bold" data-live="faltante" data-base="${f.base}" data-inicio="${f.vivo ? f.vivo.inicio : ''}" data-contrato="${f.contratoSecs}"></td>
           <td class="px-4 py-3">${f.cambios}</td>
-          <td class="px-4 py-3">${f.gestiones}</td></tr>`;
-      }).join('') : '<tr><td colspan="8" class="px-6 py-6 text-center text-gray-400">No hay asesores para mostrar.</td></tr>';
+          <td class="px-4 py-3">${f.gestiones}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${(f.conectado || f.vivo) && f.u.id
+            ? `<span class="chip bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">Conectado</span>
+               <button onclick="desloguearAsesor(this.dataset.id, this.dataset.n)" data-id="${esc(f.u.id)}" data-n="${esc(f.u.name)}" class="ml-2 text-red-600 hover:text-red-800 font-bold" title="Cerrar la sesión de este asesor"><i class="fa-solid fa-right-from-bracket"></i> Desloguear</button>`
+            : '<span class="text-gray-400">—</span>'}</td></tr>`;
+      }).join('') : '<tr><td colspan="9" class="px-6 py-6 text-center text-gray-400">No hay asesores para mostrar.</td></tr>';
 
       const regsHoy = [...monitorData.rows].sort((a, b) => (b.startTime || '').localeCompare(a.startTime || ''));
       $('admin-history-body').innerHTML = regsHoy.length ? regsHoy.map(r => `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
@@ -1117,6 +1184,16 @@
       $('mon-kpi-horas').textContent = formatSeconds(totales.reduce((a, b) => a + b, 0));
       $('mon-kpi-cumplidos').textContent = filas.filter((f, i) => f.contratoSecs && totales[i] >= f.contratoSecs).length;
       $('mon-kpi-sin').textContent = filas.filter(f => !f.regs.length && !f.vivo).length;
+    }
+
+    async function desloguearAsesor(id, nombre) {
+      if (!esAdmin()) return;
+      if (!confirm(`¿Desloguear a ${nombre}?\n\nSe cierra su sesión ahora. Si tiene el reloj en marcha, su gestión queda registrada hasta este momento.`)) return;
+      try {
+        const r = await api('desloguear', { id });
+        toast(`${nombre} fue deslogueado${r.teniaReloj ? ': su tiempo se cortó a las ' + horaHMS(new Date(r.corte)).slice(0, 5) : ''}.`, 'ok');
+        cargarMonitor();
+      } catch (e) { toast(e.message, 'error'); }
     }
 
     async function eliminarRegistro(id) {
@@ -1500,7 +1577,7 @@
      * AJUSTE MANUAL DE TIEMPOS
      * ============================================================== */
     async function prepararAjustes() {
-      api('canales').then(r => actualizarCanales(r.canales)).catch(() => {});
+      api('canales').then(r => { actualizarCanales(r.canales); setHoraCorte(r.horaCorte); }).catch(() => {});
       if (!$('manual-date').value) $('manual-date').value = fechaISO();
       if (!usuariosCache.length) { try { usuariosCache = (await api('usuarios')).usuarios; } catch (e) { return; } }
       const sel = $('manual-user-id'), previo = sel.value;
