@@ -372,7 +372,8 @@
             <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 space-y-2">
               <label class="block text-[10px] font-bold uppercase text-gray-500">Desconexión (minutos sin señal)</label>
               <input type="number" min="2" max="60" id="regla-desconexion" class="inp">
-              <p class="text-[10px] text-gray-500">Si la PC no da señal por más de este tiempo, el reloj se corta en la última señal y queda una incidencia.</p>
+              <p class="text-[10px] text-gray-500">Si la PC no da señal por más de este tiempo, el monitor la marca "sin señal". El tiempo sigue contando.</p>
+              <label class="flex items-start gap-2 text-[11px] text-gray-600 dark:text-gray-300"><input type="checkbox" id="regla-desconexion-corta" class="mt-0.5 accent-red-600"> Cortar el reloj en la última señal y generar incidencia (no recomendado: Chrome pausa las pestañas en segundo plano y se pueden perder horas)</label>
             </div>
             <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 space-y-2">
               <label class="flex items-center gap-2 text-[10px] font-bold uppercase text-gray-500"><input type="checkbox" id="regla-inac-activa"> Control de inactividad</label>
@@ -693,7 +694,7 @@
 
     /* ---------- Pausas y reglas de la cuenta ---------- */
     const REGLAS_POR_DEFECTO = {
-      horaCorte: '21:15:00', desconexionMin: 5,
+      horaCorte: '21:15:00', desconexionMin: 5, desconexionCorta: false,
       inactividad: { activa: true, minutos: 20, respuestaMin: 2, canales: ['WhatsApp', 'Gestión Mail'] },
       pausas: [
         { nombre: 'Break', cuenta: true, cupo: 5, incidencia: false, activo: true },
@@ -1177,9 +1178,10 @@
     }
 
     /* ---------- Desconexión ---------- */
-    // Sin señal por más de "desconexionMin": el reloj se corta en la última señal y queda una incidencia
+    // Sin señal por más de "desconexionMin": SOLO si la cuenta lo activó, el reloj se corta en la última señal
+    // y queda una incidencia. Por defecto no se corta: el tiempo sigue contando en esta PC.
     function revisarDesconexion() {
-      if (!timer || !timer.ultimoPulso) return false;
+      if (!timer || !timer.ultimoPulso || !reglasActuales().desconexionCorta) return false;
       const lim = (Number(reglasActuales().desconexionMin) || 5) * 60000;
       const ahora = Date.now();
       if (ahora - timer.ultimoPulso <= lim) return false;
@@ -1520,6 +1522,7 @@
         if (vivo) {
           vivo = { ...vivo, tipo: vivo.tipo === 'PAUSA' ? 'PAUSA' : 'GESTION' };
           vivo.sinSenal = !!vivo.ultimoPulso && Date.now() - vivo.ultimoPulso > limSinSenal;
+          vivo.corta = !!reglasActuales().desconexionCorta;   // si no corta, el monitor sigue sumando su tiempo
           vivo.cuenta = vivo.tipo !== 'PAUSA' || pausaCuenta(vivo.canal);
         }
         const pausas = {};
@@ -1538,7 +1541,7 @@
     function segundosVivo(vivo) {
       if (!vivo) return 0;
       let fin = Math.min(Date.now(), corteDelDia(vivo.inicio));
-      if (vivo.sinSenal && vivo.ultimoPulso) fin = Math.min(fin, vivo.ultimoPulso);
+      if (vivo.sinSenal && vivo.corta && vivo.ultimoPulso) fin = Math.min(fin, vivo.ultimoPulso);
       return Math.max(0, (fin - Math.max(vivo.inicio, inicioDelDia())) / 1000);
     }
     const efectivoVivo = vivo => vivo && vivo.cuenta ? segundosVivo(vivo) : 0;
@@ -1566,7 +1569,7 @@
       const filtro = norm($('monitor-buscar').value);
       let filas = filasMonitor();
       if (filtro) filas = filas.filter(f => norm(f.u.name).includes(filtro));
-      const orden = f => !f.vivo ? 0 : f.vivo.sinSenal ? 3 : f.vivo.tipo === 'PAUSA' ? 1 : 2;
+      const orden = f => !f.vivo ? 0 : f.vivo.sinSenal && f.vivo.corta ? 3 : f.vivo.tipo === 'PAUSA' ? 1 : 2;
       filas.sort((a, b) => (orden(b) - orden(a)) || ((b.contratoSecs - b.base) - (a.contratoSecs - a.base)) || a.u.name.localeCompare(b.u.name));
 
       $('monitor-table-body').innerHTML = filas.length ? filas.map(f => {
@@ -1574,10 +1577,11 @@
         const desde = v ? horaHMS(new Date(v.inicio)).slice(0, 5) : '';
         const ahora = !v ? (f.regs.length ? '<span class="chip bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300">Inactivo</span>'
             : '<span class="chip bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">Sin actividad</span>')
-          : v.sinSenal ? `<span class="chip bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-200" title="La PC no da señal: si no vuelve, su reloj se corta en la última señal"><i class="fa-solid fa-plug-circle-xmark"></i> Sin señal desde ${horaHMS(new Date(v.ultimoPulso)).slice(0, 5)}</span>`
+          : v.sinSenal && v.corta ? `<span class="chip bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-200" title="La PC no da señal: su reloj se corta en la última señal"><i class="fa-solid fa-plug-circle-xmark"></i> Sin señal desde ${horaHMS(new Date(v.ultimoPulso)).slice(0, 5)}</span>`
+          : v.sinSenal ? `<span class="chip bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200" title="La PC no responde desde ${horaHMS(new Date(v.ultimoPulso)).slice(0, 5)} (página en segundo plano, PC suspendida o sin internet). El tiempo NO se corta: se sigue contando y se registra cuando detenga el reloj."><i class="fa-solid fa-${v.tipo === 'PAUSA' ? 'mug-hot' : 'circle'} text-[8px] align-middle"></i> ${esc(v.canal)} desde ${desde} · sin señal ${horaHMS(new Date(v.ultimoPulso)).slice(0, 5)}</span>`
           : v.tipo === 'PAUSA' ? `<span class="chip bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">${iconoPausa(v.canal)} ${esc(v.canal)} desde ${desde}</span>`
           : `<span class="chip bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"><i class="fa-solid fa-circle text-[6px] align-middle animate-pulse"></i> ${esc(v.canal)} desde ${desde}</span>`;
-        const live = `data-base="${f.base}" data-inicio="${v && v.cuenta ? v.inicio : ''}" data-tope="${v && v.sinSenal ? v.ultimoPulso : ''}"`;
+        const live = `data-base="${f.base}" data-inicio="${v && v.cuenta ? v.inicio : ''}" data-tope="${v && v.sinSenal && v.corta ? v.ultimoPulso : ''}"`;
         return `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
           <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">${esc(f.u.name)}${f.u.externo ? ' <span class="chip bg-red-100 text-red-700">No está en la nómina</span>' : ''}</td>
           <td class="px-4 py-3">${esc(f.u.turno || '-')}</td>
@@ -1610,7 +1614,7 @@
     function tickMonitor() {
       if (!monitorData) return;
       document.querySelectorAll('[data-live="total"], [data-live="faltante"]').forEach(el => {
-        const vivo = el.dataset.inicio ? { inicio: Number(el.dataset.inicio), sinSenal: !!el.dataset.tope, ultimoPulso: Number(el.dataset.tope) || 0 } : null;
+        const vivo = el.dataset.inicio ? { inicio: Number(el.dataset.inicio), sinSenal: !!el.dataset.tope, corta: !!el.dataset.tope, ultimoPulso: Number(el.dataset.tope) || 0 } : null;
         const total = Number(el.dataset.base) + segundosVivo(vivo);
         if (el.dataset.live === 'total') { el.textContent = formatSeconds(total); return; }
         const c = Number(el.dataset.contrato);
@@ -1627,8 +1631,9 @@
         document.querySelectorAll('[data-live="pausas"]').forEach(el => { const f = porNombre[el.dataset.i]; if (f) el.innerHTML = celdaPausas(f); });
       }
       const totales = filas.map(f => f.base + efectivoVivo(f.vivo));
-      const trabajando = filas.filter(f => f.vivo && !f.vivo.sinSenal && f.vivo.tipo === 'GESTION').length;
-      const enPausaN = filas.filter(f => f.vivo && !f.vivo.sinSenal && f.vivo.tipo === 'PAUSA').length;
+      const cuentaVivo = f => f.vivo && !(f.vivo.sinSenal && f.vivo.corta);
+      const trabajando = filas.filter(f => cuentaVivo(f) && f.vivo.tipo === 'GESTION').length;
+      const enPausaN = filas.filter(f => cuentaVivo(f) && f.vivo.tipo === 'PAUSA').length;
       $('mon-kpi-activos').innerHTML = `${trabajando}${enPausaN ? ` <span class="text-xs font-semibold text-amber-600">+ ${enPausaN} en pausa</span>` : ''}`;
       $('mon-kpi-horas').textContent = formatSeconds(totales.reduce((a, b) => a + b, 0));
       $('mon-kpi-cumplidos').textContent = filas.filter((f, i) => f.contratoSecs && totales[i] >= f.contratoSecs).length;
@@ -2093,6 +2098,7 @@
           <td class="px-3 py-2 text-center">${chk('incidencia', p.incidencia, i)}</td></tr>`).join('');
       $('regla-corte').value = r.horaCorte;
       $('regla-desconexion').value = r.desconexionMin;
+      $('regla-desconexion-corta').checked = !!r.desconexionCorta;
       $('regla-inac-activa').checked = !!r.inactividad.activa;
       $('regla-inac-min').value = r.inactividad.minutos;
       $('regla-inac-resp').value = r.inactividad.respuestaMin;
@@ -2111,6 +2117,7 @@
       if (!conFilasVacias) r.pausas = r.pausas.map(({ _nueva, ...p }) => p);
       r.horaCorte = ($('regla-corte').value || '').length === 5 ? $('regla-corte').value + ':00' : $('regla-corte').value;
       r.desconexionMin = Number($('regla-desconexion').value);
+      r.desconexionCorta = $('regla-desconexion-corta').checked;
       r.inactividad = {
         activa: $('regla-inac-activa').checked, minutos: Number($('regla-inac-min').value), respuestaMin: Number($('regla-inac-resp').value),
         canales: [...document.querySelectorAll('[data-canal-inac]')].filter(x => x.checked).map(x => x.dataset.canalInac)
