@@ -237,7 +237,7 @@
 
           <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
+              <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
                 <thead class="bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-gray-300 uppercase text-[10px] font-bold">
                   <tr><th class="px-4 py-3">Asesor</th><th class="px-4 py-3">Turno</th><th class="px-4 py-3">Ahora</th><th class="px-4 py-3">Contrato</th><th class="px-4 py-3" title="Gestión en canales + pausas que cuentan">Efectivo hoy</th><th class="px-4 py-3">Faltante</th><th class="px-4 py-3">Pausas (usado / cupo)</th><th class="px-4 py-3">Cambios canal</th><th class="px-4 py-3">Incidencias</th><th class="px-4 py-3">Sesión</th></tr>
                 </thead>
@@ -263,7 +263,7 @@
       </main>
 
       <!-- ============ TAB 2: REPORTES ============ -->
-      <main id="tab-reports-content" class="hidden flex-1 p-4 md:p-6 space-y-6 max-w-6xl mx-auto w-full">
+      <main id="tab-reports-content" class="hidden flex-1 p-4 md:p-6 space-y-6 max-w-screen-2xl mx-auto w-full">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm space-y-6">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b dark:border-slate-700 pb-4">
             <div>
@@ -867,6 +867,9 @@
       document.querySelectorAll('[data-cuenta-corto]').forEach(el => el.textContent = cuenta().corto);
 
       const admin = esAdmin();
+      // El monitor del administrador usa todo el ancho de la pantalla; la vista del asesor queda centrada
+      $('tab-tracker-content').classList.toggle('max-w-6xl', !admin);
+      $('tab-tracker-content').classList.toggle('max-w-screen-2xl', admin);
       const conDrive = admin && !!cuenta().drive;
       ['nav-admin-users', 'nav-admin-settings'].forEach(id => $(id).classList.toggle('hidden', !admin));
       $('admin-sidebar-drive-btn').classList.toggle('hidden', !conDrive);
@@ -1583,13 +1586,13 @@
           : `<span class="chip bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"><i class="fa-solid fa-circle text-[6px] align-middle animate-pulse"></i> ${esc(v.canal)} desde ${desde}</span>`;
         const live = `data-base="${f.base}" data-inicio="${v && v.cuenta ? v.inicio : ''}" data-tope="${v && v.sinSenal && v.corta ? v.ultimoPulso : ''}"`;
         return `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
-          <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">${esc(f.u.name)}${f.u.externo ? ' <span class="chip bg-red-100 text-red-700">No está en la nómina</span>' : ''}</td>
+          <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200 min-w-[190px]">${esc(f.u.name)}${f.u.externo ? ' <span class="chip bg-red-100 text-red-700">No está en la nómina</span>' : ''}</td>
           <td class="px-4 py-3">${esc(f.u.turno || '-')}</td>
-          <td class="px-4 py-3">${ahora}</td>
-          <td class="px-4 py-3">${f.contratoSecs ? String(f.u.contrato).replace('.', ',') + ' hs' : '-'}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${ahora}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${f.contratoSecs ? String(f.u.contrato).replace('.', ',') + ' hs' : '-'}</td>
           <td class="px-4 py-3 font-bold text-blue-600" data-live="total" ${live}>${formatSeconds(f.base + efectivoVivo(v))}</td>
           <td class="px-4 py-3 font-bold" data-live="faltante" ${live} data-contrato="${f.contratoSecs}"></td>
-          <td class="px-4 py-3 whitespace-nowrap text-[11px]" data-live="pausas" data-i="${esc(f.u.name)}">${celdaPausas(f)}</td>
+          <td class="px-4 py-3 whitespace-nowrap text-xs" data-live="pausas" data-i="${esc(f.u.name)}">${celdaPausas(f)}</td>
           <td class="px-4 py-3">${f.cambios}</td>
           <td class="px-4 py-3">${celdaIncidencias(f)}</td>
           <td class="px-4 py-3 whitespace-nowrap">${(f.conectado || v) && f.u.id
