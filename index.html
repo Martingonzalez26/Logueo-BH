@@ -167,17 +167,23 @@
           </div>
           <div class="-mt-4 space-y-1">
           <p id="timer-hint" class="hidden text-[11px] text-gray-500 dark:text-gray-400 px-1"><i class="fa-solid fa-circle-info"></i> Gestión en curso. Si cambiás el canal, se registra el cambio y el tiempo sigue contando en el canal nuevo.</p>
+          <p id="pausa-hint" class="hidden text-[11px] text-amber-700 dark:text-amber-300 px-1"><i class="fa-solid fa-mug-hot"></i> Estás en pausa. Para seguir trabajando, elegí el canal y tocá <b>Volver a trabajar</b>.</p>
           <p id="corte-hint" class="text-[11px] text-gray-500 dark:text-gray-400 px-1"><i class="fa-regular fa-clock"></i> El registro de tiempo se corta todos los días a las <b id="corte-hora">21:15</b>.</p>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white dark:bg-slate-800 rounded-2xl px-4 py-3 shadow-sm border border-gray-200 dark:border-slate-700 flex flex-wrap items-center gap-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mr-1"><i class="fa-solid fa-pause"></i> Pausas</span>
+            <div id="pausas-bar" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
               <div class="w-12 h-12 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-file-contract"></i></div>
               <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Contrato diario</p><p id="kpi-contract-hours" class="text-lg font-black text-gray-800 dark:text-white">--</p></div>
             </div>
             <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
               <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-stopwatch"></i></div>
-              <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total multicanal hoy</p><p id="kpi-total-time" class="text-lg font-black text-gray-800 dark:text-white">00:00:00</p></div>
+              <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider" title="Gestión en canales + pausas que cuentan (no incluye almuerzo)">Horas efectivas hoy</p><p id="kpi-total-time" class="text-lg font-black text-gray-800 dark:text-white">00:00:00</p><p class="text-[10px] text-gray-400">Logueado: <span id="kpi-logueado">00:00:00</span></p></div>
             </div>
             <div id="kpi-contract-box" class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-amber-200 dark:border-amber-800/60 shadow-sm flex items-center gap-4">
               <div id="kpi-contract-icon" class="w-12 h-12 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-hourglass-half"></i></div>
@@ -186,6 +192,10 @@
             <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
               <div class="w-12 h-12 bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-right-left"></i></div>
               <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Cambios de canal hoy</p><p id="kpi-channel-switches" class="text-lg font-black text-gray-800 dark:text-white">0</p></div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+              <div class="w-12 h-12 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center text-lg shrink-0"><i class="fa-solid fa-mug-hot"></i></div>
+              <div class="min-w-0"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pausas hoy (usado / cupo)</p><div id="kpi-pausas" class="text-xs font-semibold text-gray-700 dark:text-gray-200 space-y-0.5">—</div></div>
             </div>
           </div>
 
@@ -220,7 +230,7 @@
 
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Trabajando ahora</p><p id="mon-kpi-activos" class="text-2xl font-black text-emerald-600">0</p></div>
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Horas del equipo hoy</p><p id="mon-kpi-horas" class="text-2xl font-black text-gray-800 dark:text-white">00:00:00</p></div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Horas efectivas del equipo hoy</p><p id="mon-kpi-horas" class="text-2xl font-black text-gray-800 dark:text-white">00:00:00</p></div>
             <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Contrato cumplido</p><p id="mon-kpi-cumplidos" class="text-2xl font-black text-blue-600">0</p></div>
             <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Sin actividad hoy</p><p id="mon-kpi-sin" class="text-2xl font-black text-amber-600">0</p></div>
           </div>
@@ -229,7 +239,7 @@
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
                 <thead class="bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-gray-300 uppercase text-[10px] font-bold">
-                  <tr><th class="px-4 py-3">Asesor</th><th class="px-4 py-3">Turno</th><th class="px-4 py-3">Ahora</th><th class="px-4 py-3">Contrato</th><th class="px-4 py-3">Trabajado hoy</th><th class="px-4 py-3">Faltante</th><th class="px-4 py-3">Cambios canal</th><th class="px-4 py-3">Gestiones</th><th class="px-4 py-3">Sesión</th></tr>
+                  <tr><th class="px-4 py-3">Asesor</th><th class="px-4 py-3">Turno</th><th class="px-4 py-3">Ahora</th><th class="px-4 py-3">Contrato</th><th class="px-4 py-3" title="Gestión en canales + pausas que cuentan">Efectivo hoy</th><th class="px-4 py-3">Faltante</th><th class="px-4 py-3">Pausas (usado / cupo)</th><th class="px-4 py-3">Cambios canal</th><th class="px-4 py-3">Incidencias</th><th class="px-4 py-3">Sesión</th></tr>
                 </thead>
                 <tbody id="monitor-table-body" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
               </table>
@@ -339,6 +349,42 @@
           </div>
           <div id="canales-lista" class="flex flex-wrap gap-2"></div>
         </div>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm space-y-5">
+          <div class="border-b dark:border-slate-700 pb-4">
+            <h2 class="text-lg font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-mug-hot text-amber-500"></i> Pausas y reglas de la cuenta <span class="text-blue-600" data-cuenta-corto></span></h2>
+            <p class="text-xs text-gray-500">Se aplican a todos los asesores de la cuenta. Cada cambio queda registrado en la hoja "Auditoría".</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
+              <thead class="bg-gray-50 dark:bg-slate-700 uppercase text-[10px] font-bold">
+                <tr><th class="px-3 py-2">Pausa</th><th class="px-3 py-2 text-center">Activa</th><th class="px-3 py-2 text-center" title="Suma a las horas efectivas del día">Cuenta como trabajo</th><th class="px-3 py-2" title="Minutos por cada hora de contrato (se fracciona por media hora y crece con las medias horas extra trabajadas). 0 = sin cupo">Cupo (min por hora)</th><th class="px-3 py-2 text-center" title="Cada vez que se usa queda una incidencia">Genera incidencia</th></tr>
+              </thead>
+              <tbody id="reglas-pausas" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
+            </table>
+          </div>
+          <button onclick="agregarFilaPausa()" class="text-xs font-bold text-blue-600 dark:text-blue-400"><i class="fa-solid fa-plus"></i> Agregar pausa</button>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 space-y-2">
+              <label class="block text-[10px] font-bold uppercase text-gray-500">Hora de corte diaria</label>
+              <input type="time" step="1" id="regla-corte" class="inp">
+              <p class="text-[10px] text-gray-500">Después de esta hora no se registra tiempo.</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 space-y-2">
+              <label class="block text-[10px] font-bold uppercase text-gray-500">Desconexión (minutos sin señal)</label>
+              <input type="number" min="2" max="60" id="regla-desconexion" class="inp">
+              <p class="text-[10px] text-gray-500">Si la PC no da señal por más de este tiempo, el reloj se corta en la última señal y queda una incidencia.</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 space-y-2">
+              <label class="flex items-center gap-2 text-[10px] font-bold uppercase text-gray-500"><input type="checkbox" id="regla-inac-activa"> Control de inactividad</label>
+              <div class="grid grid-cols-2 gap-2">
+                <div><span class="text-[10px] text-gray-500">Preguntar a los (min)</span><input type="number" min="5" max="120" id="regla-inac-min" class="inp"></div>
+                <div><span class="text-[10px] text-gray-500">Para responder (min)</span><input type="number" min="1" max="10" id="regla-inac-resp" class="inp"></div>
+              </div>
+              <div id="regla-inac-canales" class="flex flex-wrap gap-x-3 gap-y-1 text-xs"></div>
+            </div>
+          </div>
+          <button id="reglas-btn" onclick="guardarReglas()" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow"><i class="fa-solid fa-floppy-disk"></i> Guardar pausas y reglas</button>
+        </div>
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm space-y-6">
           <div class="border-b dark:border-slate-700 pb-4">
             <h2 class="text-lg font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-sliders text-purple-600"></i> Ajuste Manual de Tiempos</h2>
@@ -443,6 +489,16 @@
     </div>
   </div>
 
+  <!-- ============ MODAL AVISO (inactividad / desconexión) ============ -->
+  <div id="aviso-modal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-[55] hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl">
+      <div id="aviso-icono" class="w-14 h-14 mx-auto rounded-full flex items-center justify-center text-2xl"></div>
+      <h3 id="aviso-titulo" class="font-bold text-gray-800 dark:text-white text-base"></h3>
+      <p id="aviso-texto" class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed"></p>
+      <div id="aviso-botones" class="flex justify-center gap-2 pt-2"></div>
+    </div>
+  </div>
+
   <div id="toasts" class="fixed bottom-4 right-4 z-[60] space-y-2 max-w-sm"></div>
 
   <script>
@@ -482,21 +538,24 @@
       get outbox() { return 'tt_outbox' + sufijo(); },
       get rechazados() { return 'tt_rechazados' + sufijo(); },
       get canales() { return 'tt_canales' + sufijo(); },
+      get reglas() { return 'tt_reglas' + sufijo(); },
       tema: 'tt_tema',
       timer: id => 'tt_timer' + sufijo() + '_' + id
     };
 
     let sesion = null;          // { token, user: {id, name, role, contrato, ...} }
     let canales = null;         // [{ nombre, activo }] de la cuenta; se actualiza con cada respuesta del servidor
+    let reglas = null;          // pausas, desconexión e inactividad de la cuenta (las define el script de cada cuenta)
     let horaCorte = '21:15:00'; // después de esta hora no se registra tiempo (la define el script de cada cuenta)
-    let timer = null;           // { inicio (ms), canal, desc }
+    let timer = null;           // { inicio (ms), canal, desc, tipo: GESTION|PAUSA, ultimoPulso (ms), ultimaActividad (ms) }
+    let avisoInactividad = null; // momento en que se preguntó "¿Seguís trabajando?" (null = sin pregunta abierta)
     let intervalos = [];
     let enviando = false;
     let ultimoErrorSync = null;
     let misRegistros = [];      // registros del asesor que ya están en la planilla
     let monitorData = null;
     let usuariosCache = [];
-    let reporteRegistros = [], reporteFilas = [], reporteCanales = [];
+    let reporteRegistros = [], reporteFilas = [], reporteCanales = [], reportePausas = [], reporteIncidencias = [];
     let reportesIniciados = false;
 
     /* ==============================================================
@@ -569,11 +628,21 @@
     function canalesDeReporte(regs) {
       const orden = listaCanales().map(c => c.nombre);
       const set = new Set(canalesActivos());
-      regs.forEach(r => { if (r.channel && r.channel !== '-') set.add(r.channel); });
+      regs.forEach(r => { if (r.channel && r.channel !== '-' && r.tipo !== 'PAUSA') set.add(r.channel); });
       return [...set].sort((a, b) => {
         const ia = orden.indexOf(a), ib = orden.indexOf(b);
         return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib) || a.localeCompare(b);
       });
+    }
+    // Pausas para columnas de reportes: las que aparecen en los registros, en el orden de las reglas
+    function pausasDeReporte(regs) {
+      const orden = reglasActuales().pausas.map(p => norm(p.nombre));
+      const vistas = new Map();
+      regs.filter(r => r.tipo === 'PAUSA').forEach(r => { if (!vistas.has(norm(r.channel))) vistas.set(norm(r.channel), r.channel); });
+      return [...vistas.entries()].sort((a, b) => {
+        const ia = orden.indexOf(a[0]), ib = orden.indexOf(b[0]);
+        return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib) || a[1].localeCompare(b[1]);
+      }).map(x => x[1]);
     }
     function actualizarCanales(lista) {
       if (!Array.isArray(lista) || !lista.length) return;
@@ -585,7 +654,8 @@
       const activos = canalesActivos();
       const sel = $('channel-select');
       if (sel) {
-        const actual = (timer && timer.canal) || sel.value;
+        // En pausa, el selector conserva el canal al que se vuelve (la pausa no es un canal)
+        const actual = (timer && timer.tipo !== 'PAUSA' && timer.canal) || sel.value;
         const opciones = [...activos];
         if (actual && !opciones.includes(actual)) opciones.push(actual);   // reloj en marcha en un canal recién eliminado
         sel.innerHTML = opciones.map(c => `<option value="${esc(c)}">${ICONOS_CANAL[norm(c)] || '•'} ${esc(c)}</option>`).join('');
@@ -620,6 +690,48 @@
       try { actualizarCanales((await api('restaurarCanal', { nombre })).canales); toast(`Canal "${nombre}" restaurado.`, 'ok'); }
       catch (e) { toast(e.message, 'error'); }
     }
+
+    /* ---------- Pausas y reglas de la cuenta ---------- */
+    const REGLAS_POR_DEFECTO = {
+      horaCorte: '21:15:00', desconexionMin: 5,
+      inactividad: { activa: true, minutos: 20, respuestaMin: 2, canales: ['WhatsApp', 'Gestión Mail'] },
+      pausas: [
+        { nombre: 'Break', cuenta: true, cupo: 5, incidencia: false, activo: true },
+        { nombre: 'Baño', cuenta: true, cupo: 2, incidencia: false, activo: true },
+        { nombre: 'Almuerzo', cuenta: false, cupo: 0, incidencia: false, activo: true },
+        { nombre: 'Capacitación / Reunión', cuenta: true, cupo: 0, incidencia: false, activo: true },
+        { nombre: 'Problema técnico', cuenta: true, cupo: 0, incidencia: true, activo: true }
+      ]
+    };
+    const ICONOS_PAUSA = { 'break': '☕', 'bano': '🚻', 'almuerzo': '🍽️', 'capacitacion / reunion': '🎓', 'problema tecnico': '🛠️' };
+    const iconoPausa = n => ICONOS_PAUSA[norm(n)] || '⏸️';
+    function reglasActuales() {
+      if (!reglas) reglas = lsGet(LS.reglas, null) || REGLAS_POR_DEFECTO;
+      return reglas;
+    }
+    function actualizarReglas(r) {
+      if (!r || !Array.isArray(r.pausas)) return;
+      reglas = r;
+      lsSet(LS.reglas, r);
+      setHoraCorte(r.horaCorte);
+      pintarPausas();
+    }
+    const pausaDe = nombre => reglasActuales().pausas.find(p => norm(p.nombre) === norm(nombre)) || null;
+    const pausasActivas = () => reglasActuales().pausas.filter(p => p.activo);
+    // Una pausa que ya no está en las reglas cuenta como trabajo, salvo el almuerzo
+    const pausaCuenta = nombre => { const p = pausaDe(nombre); return p ? p.cuenta : norm(nombre) !== 'almuerzo'; };
+    // ¿El registro suma a las horas efectivas? (gestión, ajustes y pausas que cuentan)
+    const esEfectivo = r => r.tipo === 'PAUSA' ? pausaCuenta(r.channel) : true;
+    const esPausa = r => r.tipo === 'PAUSA';
+    // Cupo de una pausa: "cupo" min por hora de contrato, fraccionado por media hora; crece con cada media hora extra trabajada
+    // (misma cuenta que hace el script de Google)
+    function cupoSegundos(p, contratoHs, efectivoSecs) {
+      const medias = Math.max(Math.floor((Number(contratoHs) || 0) * 2 + 1e-9), Math.floor((efectivoSecs || 0) / 1800));
+      return Math.round(p.cupo * 60 * medias / 2);
+    }
+    // Minutos con media precisión: 1950 s → "32,5 min"
+    const fmtNum = secs => String(Math.round(Math.max(0, secs) / 30) / 2).replace('.', ',');
+    const fmtMin = secs => fmtNum(secs) + ' min';
 
     function filaMensaje(tbodyId, cols, html) { $(tbodyId).innerHTML = `<tr><td colspan="${cols}" class="px-6 py-6 text-center text-gray-400">${html}</td></tr>`; }
     const cargando = '<i class="fa-solid fa-spinner fa-spin"></i> Cargando…';
@@ -657,10 +769,13 @@
     }
 
     // Lectura centralizada desde la planilla (el servidor filtra: el asesor solo recibe lo suyo)
+    let ultimasIncidencias = [];
     async function obtenerDatosRemotos(filtros = {}) {
       const r = await api('listar', filtros, { timeout: 40000 });
       actualizarCanales(r.canales);
+      actualizarReglas(r.reglas);
       setHoraCorte(r.horaCorte);
+      if (r.incidencias) ultimasIncidencias = r.incidencias;
       // El asesor recibe sus datos actuales: si el admin cambió su contrato, legajo o nombre, se aplica sin volver a ingresar
       if (r.yo && sesion && !esAdmin()) { sesion.user = { ...sesion.user, ...r.yo }; lsSet(LS.sesion, sesion); $('user-display-name').innerText = sesion.user.name; }
       return r.rows || [];
@@ -675,7 +790,10 @@
       pintarCuenta();
       const guardada = lsGet(LS.sesion, null);
       if (guardada && guardada.token && guardada.user) { sesion = guardada; entrarApp(); }
-      window.addEventListener('online', () => sincronizarPendientes());
+      window.addEventListener('online', () => { sincronizarPendientes(); enviarPulso(); });
+      // Movimiento en la página: lo usa el control de inactividad
+      ['mousemove', 'mousedown', 'keydown', 'wheel', 'touchstart', 'scroll'].forEach(ev => window.addEventListener(ev, registrarActividad, { passive: true, capture: true }));
+      window.addEventListener('focus', registrarActividad);
       window.addEventListener('beforeunload', e => {
         if (sesion && pendientesPropios().length) { e.preventDefault(); e.returnValue = ''; }
       });
@@ -698,6 +816,7 @@
       if (!CUENTAS[id] || sesion) return;
       cuentaId = id;
       canales = null;
+      reglas = null;
       try { localStorage.setItem('tt_cuenta', id); } catch (e) {}
       $('login-error').classList.add('hidden');
       pintarCuenta();
@@ -719,6 +838,7 @@
         }
         sesion = { token: r.token, user: r.user, corteForzado: Number(r.corteForzado) || 0 };
         actualizarCanales(r.canales);
+        actualizarReglas(r.reglas);
         setHoraCorte(r.horaCorte);
         lsSet(LS.sesion, sesion);
         $('login-pass').value = '';
@@ -742,6 +862,8 @@
       $('app-content').classList.remove('hidden');
       if (sesion.horaCorte) setHoraCorte(sesion.horaCorte);
       pintarCanales();
+      pintarPausas();
+      document.querySelectorAll('[data-cuenta-corto]').forEach(el => el.textContent = cuenta().corto);
 
       const admin = esAdmin();
       const conDrive = admin && !!cuenta().drive;
@@ -769,8 +891,9 @@
         renderMisRegistros();
         cargarMisRegistros();
         intervalos.push(setInterval(() => cargarMisRegistros(), 180000));
-        // Con el reloj en marcha, cada minuto se confirma que la sesión siga abierta (por si un administrador la cerró)
-        intervalos.push(setInterval(() => { if (timer) api('pulso').then(r => setHoraCorte(r.horaCorte)).catch(() => {}); }, 60000));
+        // Con el reloj en marcha, cada minuto la PC da señal de vida (y se confirma que la sesión siga abierta)
+        intervalos.push(setInterval(enviarPulso, 60000));
+        if (timer) enviarPulso();
       }
       sincronizarPendientes();
     }
@@ -797,14 +920,25 @@
       if (mensaje) { $('login-error').textContent = mensaje; $('login-error').classList.remove('hidden'); }
     }
 
-    // Un administrador cerró la sesión: el reloj se cierra a la hora del deslogueo (no a la hora en que esta PC se enteró)
-    function deslogueoForzado(msg, corte) {
-      if (!sesion) return;
-      if (timer && !esAdmin()) {
-        sesion.corteForzado = Number(corte) || Date.now();
-        detenerGestion({ fin: Math.min(Date.now(), sesion.corteForzado), notificar: false, sincronizar: false });
+    // Un administrador cerró la sesión (o el asesor ingresó en otra PC): el reloj se cierra a la hora del cierre,
+    // no a la hora en que esta PC se enteró. Lo pendiente se entrega antes de salir (el servidor lo acepta si es anterior al cierre).
+    let cerrandoSesion = false;
+    async function deslogueoForzado(msg, corte) {
+      if (!sesion || cerrandoSesion) return;
+      cerrandoSesion = true;
+      try {
+        if (!esAdmin()) {
+          sesion.corteForzado = Number(corte) || Date.now();
+          if (timer) detenerGestion({ fin: Math.min(Date.now(), sesion.corteForzado), notificar: false, sincronizar: false });
+          cerrarAvisoInactividad();
+          enviando = false;
+          await sincronizarPendientes();
+        }
+      } catch (e) { /* lo que no se pudo enviar queda en esta PC */ }
+      finally {
+        cerrandoSesion = false;
+        salir(msg || 'Un administrador cerró tu sesión.');
       }
-      salir(msg || 'Un administrador cerró tu sesión.');
     }
 
     function sesionExpirada(msg) {
@@ -854,11 +988,16 @@
      * TIMER DEL ASESOR (persistente: sobrevive a recargas y cierres)
      * ============================================================== */
     function guardarTimer() { if (sesion) lsSet(LS.timer(sesion.user.id), timer); }
+    const enPausa = () => !!timer && timer.tipo === 'PAUSA';
 
     function restaurarTimer() {
       const t = lsGet(LS.timer(sesion.user.id), null);
       timer = null;
       if (!t || !t.inicio) return;
+      t.tipo = t.tipo === 'PAUSA' ? 'PAUSA' : 'GESTION';
+      // Relojes guardados por la versión anterior: no tienen última señal, se toma desde ahora
+      if (!t.ultimoPulso) t.ultimoPulso = Date.now();
+      if (!t.ultimaActividad) t.ultimaActividad = Date.now();
       const limite = limiteDelReloj(t.inicio);
       const fin = Math.min(Date.now(), limite);
       const horas = (fin - t.inicio) / 3600000;
@@ -873,17 +1012,28 @@
         // El reloj quedó abierto pero ya pasó la hora de corte (o un administrador cerró la sesión): se registra hasta ese momento
         timer = t;
         detenerGestion({ fin });
-        toast(`Tu gestión de ${t.canal} quedó registrada hasta las ${horaHMS(new Date(fin)).slice(0, 5)}.`, 'warn');
+        toast(`Tu ${t.tipo === 'PAUSA' ? 'pausa' : 'gestión'} de ${t.canal} quedó registrada hasta las ${horaHMS(new Date(fin)).slice(0, 5)}.`, 'warn');
         return;
       }
       timer = t;
+      // La PC estuvo apagada, suspendida o con la página cerrada más tiempo del permitido
+      if (revisarDesconexion() || revisarInactividad(true)) return;
       pintarCanales();   // incluye el canal del reloj aunque lo hayan eliminado
+      pintarBotonTimer();
       $('task-description').value = t.desc || '';
-      toast(`Se recuperó tu gestión en curso (${t.canal}).`, 'info');
+      toast(`Se recuperó tu ${t.tipo === 'PAUSA' ? 'pausa' : 'gestión'} en curso (${t.canal}).`, 'info');
       notificarEstado(true);
     }
 
-    function toggleTimer() { timer ? detenerGestion() : iniciarGestion(); }
+    function toggleTimer() {
+      if (enPausa()) return volverATrabajar();
+      timer ? detenerGestion() : iniciarGestion();
+    }
+
+    function nuevoReloj(tipo, canal, desc) {
+      const ahora = Date.now();
+      return { inicio: ahora, canal, desc, tipo, ultimoPulso: ahora, ultimaActividad: ahora };
+    }
 
     function iniciarGestion(canal) {
       if (pasadoElCorte()) {
@@ -891,19 +1041,50 @@
         pintarBotonTimer();
         return;
       }
-      timer = { inicio: Date.now(), canal: canal || $('channel-select').value, desc: $('task-description').value.trim() };
+      canal = canal || $('channel-select').value;
+      if (!canal || pausaDe(canal)) canal = canalesActivos()[0];
+      timer = nuevoReloj('GESTION', canal, $('task-description').value.trim());
+      avisoInactividad = null;
+      guardarTimer();
+      pintarBotonTimer();
+      notificarEstado(true);
+      pedirPermisoNotificaciones();
+      tick();
+    }
+
+    function iniciarPausa(nombre) {
+      if (pasadoElCorte()) return toast(`Después de las ${horaCorte.slice(0, 5)} no se puede registrar tiempo.`, 'error');
+      if (enPausa() && norm(timer.canal) === norm(nombre)) return;
+      const p = pausaDe(nombre);
+      let desc = '';
+      if (p && p.incidencia) {
+        desc = prompt(`${nombre}: contá brevemente qué pasó (queda como incidencia para tu coordinador).`, '');
+        if (desc === null) return;   // canceló
+        desc = desc.trim().slice(0, 200);
+      }
+      if (timer) detenerGestion({ limpiarDescripcion: false, notificar: false });
+      timer = nuevoReloj('PAUSA', nombre, desc || nombre);
+      avisoInactividad = null;
       guardarTimer();
       pintarBotonTimer();
       notificarEstado(true);
       tick();
+      toast(`${iconoPausa(nombre)} ${nombre}: el reloj de pausa está corriendo.`, 'info');
+    }
+
+    function volverATrabajar() {
+      if (!enPausa()) return iniciarGestion();
+      detenerGestion({ limpiarDescripcion: true, notificar: false });
+      iniciarGestion();
     }
 
     function detenerGestion({ limpiarDescripcion = true, notificar = true, sincronizar = true, fin = Date.now() } = {}) {
       if (!timer) return;
       fin = Math.min(fin, limiteDelReloj(timer.inicio));   // nunca cuenta tiempo después del corte
-      timer.desc = $('task-description').value.trim() || timer.desc;
+      if (timer.tipo !== 'PAUSA') timer.desc = $('task-description').value.trim() || timer.desc;
       const regs = generarRegistros(timer, fin);
       timer = null;
+      avisoInactividad = null;
       guardarTimer();
       pintarBotonTimer();
       $('timer-display').innerText = '00:00:00';
@@ -916,7 +1097,7 @@
 
     // Cambio de canal con el timer en marcha: se cierra la gestión y arranca otra en el canal nuevo
     function cambioDeCanal() {
-      if (!timer) return;
+      if (!timer || enPausa()) return;   // en pausa, el canal elegido es al que vuelve
       const nuevo = $('channel-select').value;
       if (nuevo === timer.canal) return;
       detenerGestion({ limpiarDescripcion: false, notificar: false });
@@ -930,6 +1111,7 @@
       const regs = [];
       let ini = new Date(t.inicio);
       const fin = new Date(finMs);
+      const tipo = t.tipo === 'PAUSA' ? 'PAUSA' : 'GESTION';
       while (ini < fin) {
         const medianoche = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate() + 1);
         const tramoFin = fin < medianoche ? fin : medianoche;
@@ -937,9 +1119,9 @@
         if (secs >= 1) {
           const iso = fechaISO(ini);
           regs.push({
-            id: uuid(), tipo: 'GESTION', dateIso: iso, date: isoADMY(iso),
+            id: uuid(), tipo, dateIso: iso, date: isoADMY(iso),
             user: sesion.user.id, userName: sesion.user.name,
-            channel: t.canal, description: t.desc || 'Gestión Operativa',
+            channel: t.canal, description: t.desc || (tipo === 'PAUSA' ? t.canal : 'Gestión Operativa'),
             startTime: horaHMS(ini), endTime: tramoFin === medianoche ? '23:59:59' : horaHMS(tramoFin),
             durationSeconds: secs, durationFormatted: formatSeconds(secs)
           });
@@ -951,24 +1133,181 @@
 
     function pintarBotonTimer() {
       const btn = $('timer-btn');
-      btn.classList.toggle('bg-blue-600', !timer); btn.classList.toggle('hover:bg-blue-700', !timer);
-      btn.classList.toggle('bg-red-600', !!timer); btn.classList.toggle('hover:bg-red-700', !!timer);
-      btn.innerHTML = timer ? '<i class="fa-solid fa-stop"></i><span>DETENER</span>' : '<i class="fa-solid fa-play"></i><span>INICIAR</span>';
-      $('timer-hint').classList.toggle('hidden', !timer);
+      const pausa = enPausa();
+      btn.classList.toggle('bg-blue-600', !timer || pausa); btn.classList.toggle('hover:bg-blue-700', !timer || pausa);
+      btn.classList.toggle('bg-red-600', !!timer && !pausa); btn.classList.toggle('hover:bg-red-700', !!timer && !pausa);
+      btn.innerHTML = pausa ? '<i class="fa-solid fa-play"></i><span>VOLVER A TRABAJAR</span>'
+        : timer ? '<i class="fa-solid fa-stop"></i><span>DETENER</span>' : '<i class="fa-solid fa-play"></i><span>INICIAR</span>';
+      $('timer-hint').classList.toggle('hidden', !timer || pausa);
+      $('pausa-hint').classList.toggle('hidden', !pausa);
+      const disp = $('timer-display');
+      disp.classList.toggle('text-amber-600', pausa); disp.classList.toggle('dark:text-amber-400', pausa);
+      disp.title = pausa ? `En pausa: ${timer.canal}` : '';
+      pintarPausas();
+    }
+
+    // Botones de pausa del asesor (los define el administrador en Gestión de Tiempos)
+    function pintarPausas() {
+      const bar = $('pausas-bar');
+      if (!bar || !sesion || esAdmin()) return;
+      const actual = enPausa() ? norm(timer.canal) : '';
+      bar.innerHTML = pausasActivas().map(p => {
+        const on = norm(p.nombre) === actual;
+        return `<button onclick="iniciarPausa(this.dataset.p)" data-p="${esc(p.nombre)}" class="px-3 py-1.5 rounded-full border text-xs font-semibold transition ${on
+          ? 'bg-amber-500 border-amber-500 text-white shadow'
+          : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40'}"
+          title="${p.cuenta ? 'Cuenta como horas trabajadas' : 'No cuenta como horas trabajadas'}${p.cupo ? ` · cupo ${String(p.cupo).replace('.', ',')} min por hora de contrato` : ''}">${iconoPausa(p.nombre)} ${esc(p.nombre)}</button>`;
+      }).join('');
     }
 
     function notificarEstado(activo) {
       if (!sesion || esAdmin()) return;
-      api('estado', activo && timer ? { activo: true, canal: timer.canal, inicio: timer.inicio, desc: timer.desc } : { activo: false }).catch(() => {});
+      api('estado', activo && timer ? { activo: true, tipo: timer.tipo, canal: timer.canal, inicio: timer.inicio, desc: timer.desc } : { activo: false })
+        .then(() => { if (activo && timer) { timer.ultimoPulso = Date.now(); guardarTimer(); } })
+        .catch(() => {});
     }
+
+    // Señal de vida al servidor (cada 60 s con el reloj en marcha). Si responde, queda como "última señal".
+    function enviarPulso() {
+      if (!sesion || esAdmin() || !timer) return;
+      api('pulso').then(r => {
+        setHoraCorte(r.horaCorte);
+        if (timer) { timer.ultimoPulso = Date.now(); guardarTimer(); }
+      }).catch(() => {});
+    }
+
+    /* ---------- Desconexión ---------- */
+    // Sin señal por más de "desconexionMin": el reloj se corta en la última señal y queda una incidencia
+    function revisarDesconexion() {
+      if (!timer || !timer.ultimoPulso) return false;
+      const lim = (Number(reglasActuales().desconexionMin) || 5) * 60000;
+      const ahora = Date.now();
+      if (ahora - timer.ultimoPulso <= lim) return false;
+      const fin = Math.max(timer.inicio, timer.ultimoPulso);
+      const canal = timer.canal, tipo = timer.tipo;
+      const mins = Math.round((ahora - fin) / 60000);
+      cerrarAviso();
+      detenerGestion({ fin, limpiarDescripcion: false });
+      encolarIncidencia('DESCONEXION', fin, mins, `Sin señal desde las ${horaHMS(new Date(fin)).slice(0, 5)} (${mins} min). Se cortó ${tipo === 'PAUSA' ? 'la pausa' : 'la gestión'} de ${canal}.`);
+      mostrarAviso({
+        icono: 'fa-plug-circle-xmark', color: 'bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-300',
+        titulo: 'Se cortó tu reloj por desconexión',
+        texto: `Tu PC no dio señal desde las ${horaHMS(new Date(fin)).slice(0, 5)} (${mins} min: sin internet, PC suspendida o la página cerrada). Tu ${tipo === 'PAUSA' ? 'pausa' : 'gestión'} de ${canal} quedó registrada hasta esa hora y tu coordinador lo va a ver como incidencia.`,
+        botones: tipo === 'GESTION' && !pasadoElCorte()
+          ? [{ texto: `Retomar en ${canal}`, clase: 'bg-blue-600 text-white', accion: () => { cerrarAviso(); iniciarGestion(canal); } }, { texto: 'Cerrar', accion: cerrarAviso }]
+          : [{ texto: 'Entendido', clase: 'bg-blue-600 text-white', accion: cerrarAviso }]
+      });
+      return true;
+    }
+
+    /* ---------- Inactividad ---------- */
+    let ultimoGuardadoActividad = 0;
+    function registrarActividad() {
+      if (!timer || avisoInactividad) return;   // con la pregunta abierta solo vale el botón
+      timer.ultimaActividad = Date.now();
+      if (timer.ultimaActividad - ultimoGuardadoActividad > 15000) { ultimoGuardadoActividad = timer.ultimaActividad; guardarTimer(); }
+    }
+    function controlaInactividad() {
+      const ina = reglasActuales().inactividad || {};
+      return !!timer && timer.tipo === 'GESTION' && ina.activa && (ina.canales || []).some(c => norm(c) === norm(timer.canal));
+    }
+    // Tras "minutos" sin movimiento se pregunta; si no responde en "respuestaMin", se corta en el último movimiento
+    function revisarInactividad(alRestaurar = false) {
+      if (!controlaInactividad()) { if (avisoInactividad) cerrarAvisoInactividad(); return false; }
+      const ina = reglasActuales().inactividad;
+      const ahora = Date.now();
+      const ultimo = Math.max(timer.inicio, timer.ultimaActividad || timer.inicio);
+      const preguntar = ina.minutos * 60000, responder = ina.respuestaMin * 60000;
+      const vencido = avisoInactividad ? ahora - avisoInactividad > responder : ahora - ultimo > preguntar + responder;
+      if (vencido) {
+        const canal = timer.canal;
+        const mins = Math.round((ahora - ultimo) / 60000);
+        cerrarAviso();
+        detenerGestion({ fin: ultimo, limpiarDescripcion: false });
+        encolarIncidencia('INACTIVIDAD', ultimo, mins, `Sin movimiento desde las ${horaHMS(new Date(ultimo)).slice(0, 5)} en ${canal} y no respondió "¿Seguís trabajando?". Reloj cortado en el último movimiento.`);
+        restaurarTitulo();
+        mostrarAviso({
+          icono: 'fa-bed', color: 'bg-amber-100 text-amber-600 dark:bg-amber-950/50 dark:text-amber-300',
+          titulo: 'Se cortó tu reloj por inactividad',
+          texto: `No hubo movimiento desde las ${horaHMS(new Date(ultimo)).slice(0, 5)} y no respondiste a tiempo. Tu gestión de ${canal} quedó registrada hasta esa hora y tu coordinador lo va a ver como incidencia.`,
+          botones: pasadoElCorte()
+            ? [{ texto: 'Entendido', clase: 'bg-blue-600 text-white', accion: cerrarAviso }]
+            : [{ texto: `Retomar en ${canal}`, clase: 'bg-blue-600 text-white', accion: () => { cerrarAviso(); iniciarGestion(canal); } }, { texto: 'Cerrar', accion: cerrarAviso }]
+        });
+        return true;
+      }
+      if (!alRestaurar && !avisoInactividad && ahora - ultimo > preguntar) {
+        avisoInactividad = ahora;
+        mostrarAviso({
+          icono: 'fa-hand', color: 'bg-blue-100 text-blue-600 dark:bg-blue-950/50 dark:text-blue-300',
+          titulo: '¿Seguís trabajando?',
+          texto: `Hace ${ina.minutos} minutos que no hay movimiento en esta página. Si no respondés en ${ina.respuestaMin} min, el reloj se corta a las ${horaHMS(new Date(ultimo)).slice(0, 5)}.`,
+          botones: [{ texto: 'Sí, sigo trabajando', clase: 'bg-blue-600 text-white', accion: confirmarActividad }]
+        });
+        alertarInactividad();
+      }
+      return false;
+    }
+    function confirmarActividad() {
+      avisoInactividad = null;
+      cerrarAviso();
+      restaurarTitulo();
+      if (timer) { timer.ultimaActividad = Date.now(); guardarTimer(); }
+    }
+    function cerrarAvisoInactividad() { avisoInactividad = null; cerrarAviso(); restaurarTitulo(); }
+
+    // Para que la pregunta se vea aunque esté en otra ventana: notificación del sistema, sonido y título que parpadea
+    function pedirPermisoNotificaciones() {
+      try { if (controlaInactividad() && 'Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
+    }
+    let parpadeo = null;
+    function alertarInactividad() {
+      try {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const n = new Notification('TimeTracker: ¿Seguís trabajando?', { body: 'Respondé en la página para que no se corte tu reloj.', requireInteraction: true, tag: 'tt-inactividad' });
+          n.onclick = () => { window.focus(); n.close(); };
+        }
+      } catch (e) {}
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.35].forEach(t => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 880; g.gain.value = 0.15; o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.2); });
+      } catch (e) {}
+      const titulo = document.title;
+      clearInterval(parpadeo);
+      parpadeo = setInterval(() => { document.title = document.title === titulo ? '⚠️ ¿Seguís trabajando?' : titulo; }, 1000);
+      parpadeo.titulo = titulo;
+    }
+    function restaurarTitulo() { if (parpadeo) { clearInterval(parpadeo); document.title = parpadeo.titulo; parpadeo = null; } }
+
+    /* ---------- Modal de aviso ---------- */
+    function mostrarAviso({ icono, color, titulo, texto, botones }) {
+      $('aviso-icono').className = `w-14 h-14 mx-auto rounded-full flex items-center justify-center text-2xl ${color}`;
+      $('aviso-icono').innerHTML = `<i class="fa-solid ${icono}"></i>`;
+      $('aviso-titulo').textContent = titulo;
+      $('aviso-texto').textContent = texto;
+      const cont = $('aviso-botones');
+      cont.innerHTML = '';
+      botones.forEach(b => {
+        const el = document.createElement('button');
+        el.className = `px-4 py-2 text-xs font-semibold rounded-xl ${b.clase || 'bg-gray-100 dark:bg-slate-700'}`;
+        el.textContent = b.texto;
+        el.onclick = b.accion;
+        cont.appendChild(el);
+      });
+      $('aviso-modal').classList.remove('hidden');
+    }
+    function cerrarAviso() { $('aviso-modal').classList.add('hidden'); }
 
     function tick() {
       if (!sesion) return;
       if (esAdmin()) { tickMonitor(); return; }
       if (timer && Date.now() >= limiteDelReloj(timer.inicio)) {
+        cerrarAvisoInactividad();
         detenerGestion();
-        toast(`Son las ${horaCorte.slice(0, 5)}: se cortó el tiempo y tu gestión quedó registrada hasta esa hora.`, 'warn');
+        toast(`Son las ${horaCorte.slice(0, 5)}: se cortó el tiempo y tu registro quedó guardado hasta esa hora.`, 'warn');
       }
+      if (timer) revisarDesconexion();
+      if (timer) revisarInactividad();
       if (timer) $('timer-display').innerText = formatSeconds((Date.now() - timer.inicio) / 1000);
       renderKPIsAsesor();
     }
@@ -979,6 +1318,12 @@
     const leerOutbox = () => lsGet(LS.outbox, []);
     const pendientesPropios = () => sesion ? leerOutbox().filter(r => r.user === sesion.user.id) : [];
     function encolar(regs) { const o = leerOutbox(); o.push(...regs); lsSet(LS.outbox, o); actualizarEstadoSync(); }
+    // Las incidencias detectadas en esta PC (desconexión, inactividad) viajan por la misma cola
+    const esIncidencia = r => r.kind === 'incidencia';
+    function encolarIncidencia(tipo, ms, mins, detalle) {
+      const d = new Date(ms);
+      encolar([{ kind: 'incidencia', id: 'inc-' + uuid(), user: sesion.user.id, tipo, dateIso: fechaISO(d), hora: horaHMS(d), minutos: mins, detalle }]);
+    }
     function quitarDeOutbox(id) { lsSet(LS.outbox, leerOutbox().filter(r => r.id !== id)); }
 
     async function sincronizarPendientes(manual = false) {
@@ -994,16 +1339,19 @@
       actualizarEstadoSync();
       let enviados = 0;
       ultimoErrorSync = null;
-      for (const r of propios) {
+      // Se repite mientras aparezcan pendientes nuevos (p. ej. una incidencia encolada durante el envío)
+      for (let vuelta = 0, lote = propios; lote.length && !ultimoErrorSync && vuelta < 5; vuelta++, lote = pendientesPropios())
+      for (const r of lote) {
         try {
-          await api('registrar', { record: r });
+          if (esIncidencia(r)) await api('incidencia', { incidencia: r });
+          else await api('registrar', { record: r });
           quitarDeOutbox(r.id);
           enviados++;
         } catch (e) {
           if (e.code === 'VALIDACION') {
             quitarDeOutbox(r.id);
             const rech = lsGet(LS.rechazados, []); rech.push({ ...r, motivo: e.message }); lsSet(LS.rechazados, rech);
-            toast(`Una gestión fue rechazada por la planilla: ${e.message}`, 'error');
+            if (!esIncidencia(r)) toast(`Una gestión fue rechazada por la planilla: ${e.message}`, 'error');
           } else { ultimoErrorSync = e; break; }
         }
       }
@@ -1052,11 +1400,13 @@
 
     function registrosCombinados() {
       const enServidor = new Set(misRegistros.map(r => r.id));
-      const pend = pendientesPropios().filter(r => !enServidor.has(r.id)).map(r => ({ ...r, pendiente: true }));
+      const pend = pendientesPropios().filter(r => !esIncidencia(r) && !enServidor.has(r.id)).map(r => ({ ...r, pendiente: true }));
       return [...pend, ...misRegistros].sort((a, b) => (b.dateIso + b.startTime).localeCompare(a.dateIso + a.startTime));
     }
 
     const chipCanal = c => `<span class="chip bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">${esc(c)}</span>`;
+    const chipPausa = c => `<span class="chip bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">${iconoPausa(c)} ${esc(c)}</span>`;
+    const chipDe = r => esPausa(r) ? chipPausa(r.channel) : chipCanal(r.channel);
 
     function renderMisRegistros() {
       if (!sesion || esAdmin()) return;
@@ -1069,10 +1419,10 @@
         return `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
           <td class="px-6 py-3 font-semibold text-gray-500">${esc(r.date)}</td>
           <td class="px-6 py-3 font-medium text-gray-800 dark:text-gray-200">${esc(r.description)}</td>
-          <td class="px-6 py-3">${chipCanal(r.channel)}</td>
+          <td class="px-6 py-3">${chipDe(r)}</td>
           <td class="px-6 py-3">${esc(r.startTime)}</td>
           <td class="px-6 py-3">${esc(r.endTime)}</td>
-          <td class="px-6 py-3 font-bold ${r.durationSeconds < 0 ? 'text-red-600' : 'text-blue-600'}">${formatSeconds(r.durationSeconds)}</td>
+          <td class="px-6 py-3 font-bold ${r.durationSeconds < 0 ? 'text-red-600' : !esEfectivo(r) ? 'text-gray-400' : esPausa(r) ? 'text-amber-600' : 'text-blue-600'}" ${!esEfectivo(r) ? 'title="No cuenta como horas trabajadas"' : ''}>${formatSeconds(r.durationSeconds)}</td>
           <td class="px-6 py-3">${estado}</td></tr>`;
       }).join('');
       renderKPIsAsesor();
@@ -1080,7 +1430,7 @@
 
     // Cantidad de veces que cambió de canal en el día (ordenado por hora de inicio)
     function contarCambios(regs, canalActual) {
-      const seq = regs.filter(r => r.tipo !== 'AJUSTE').sort((a, b) => String(a.startTime).localeCompare(String(b.startTime))).map(r => r.channel);
+      const seq = regs.filter(r => r.tipo !== 'AJUSTE' && r.tipo !== 'PAUSA').sort((a, b) => String(a.startTime).localeCompare(String(b.startTime))).map(r => r.channel);
       if (canalActual) seq.push(canalActual);
       let n = 0;
       for (let i = 1; i < seq.length; i++) if (seq[i] !== seq[i - 1]) n++;
@@ -1091,16 +1441,32 @@
       if (!sesion || esAdmin()) return;
       const hoy = fechaISO();
       const deHoy = registrosCombinados().filter(r => r.dateIso === hoy);
-      let total = deHoy.reduce((s, r) => s + (r.durationSeconds || 0), 0);
-      if (timer) total += Math.max(0, (Math.min(Date.now(), limiteDelReloj(timer.inicio)) - Math.max(timer.inicio, inicioDelDia())) / 1000);
+      const enVivo = timer ? Math.max(0, (Math.min(Date.now(), limiteDelReloj(timer.inicio)) - Math.max(timer.inicio, inicioDelDia())) / 1000) : 0;
+      const vivoCuenta = timer && (timer.tipo !== 'PAUSA' || pausaCuenta(timer.canal));
+      // Efectivas: gestión + ajustes + pausas que cuentan. Logueado: todo el tiempo con el reloj en marcha (incluye almuerzo).
+      let total = deHoy.filter(esEfectivo).reduce((s, r) => s + (r.durationSeconds || 0), 0) + (vivoCuenta ? enVivo : 0);
+      const logueado = deHoy.filter(r => r.tipo !== 'AJUSTE').reduce((s, r) => s + (r.durationSeconds || 0), 0) + enVivo;
+      $('kpi-logueado').innerText = formatSeconds(logueado);
 
       const contractHours = parseFloat(sesion.user.contrato) || 0;
+      // Pausas del día contra su cupo
+      const usoPausa = {};
+      deHoy.filter(esPausa).forEach(r => { usoPausa[norm(r.channel)] = (usoPausa[norm(r.channel)] || 0) + r.durationSeconds; });
+      if (enPausa()) usoPausa[norm(timer.canal)] = (usoPausa[norm(timer.canal)] || 0) + enVivo;
+      const lineas = reglasActuales().pausas.filter(p => p.cupo > 0 || usoPausa[norm(p.nombre)]).map(p => {
+        const usado = usoPausa[norm(p.nombre)] || 0;
+        if (!p.cupo) return `<div class="text-gray-500 dark:text-gray-400">${iconoPausa(p.nombre)} ${esc(p.nombre)} ${fmtMin(usado)}</div>`;
+        const cupo = cupoSegundos(p, contractHours, total);
+        const pasado = usado > cupo;
+        return `<div class="${pasado ? 'text-red-600 dark:text-red-400' : ''}" title="${pasado ? 'Te pasaste del cupo: queda como incidencia' : 'Te quedan ' + fmtMin(cupo - usado)}">${iconoPausa(p.nombre)} ${esc(p.nombre)} ${fmtNum(usado)} / ${fmtMin(cupo)}${pasado ? ' <i class="fa-solid fa-triangle-exclamation"></i>' : ''}</div>`;
+      });
+      $('kpi-pausas').innerHTML = lineas.join('') || '—';
       const contractSeconds = contractHours * 3600;
       const faltante = contractSeconds - total;
 
       $('kpi-contract-hours').innerText = contractHours ? `${String(contractHours).replace('.', ',')} hs` : 'Sin cargar';
       $('kpi-total-time').innerText = formatSeconds(total);
-      $('kpi-channel-switches').innerText = contarCambios(deHoy, timer ? timer.canal : null);
+      $('kpi-channel-switches').innerText = contarCambios(deHoy, timer && !enPausa() ? timer.canal : null);
 
       const cumplido = contractSeconds > 0 && faltante <= 0;
       $('kpi-remaining-time').innerText = !contractSeconds ? '--' : cumplido ? '00:00:00 (Cumplido)' : formatSeconds(faltante);
@@ -1117,17 +1483,18 @@
      * ============================================================== */
     async function cargarMonitor(mostrarError = false) {
       if (!esAdmin()) return;
-      if (!monitorData) { filaMensaje('monitor-table-body', 9, cargando); filaMensaje('admin-history-body', 7, cargando); }
+      if (!monitorData) { filaMensaje('monitor-table-body', 10, cargando); filaMensaje('admin-history-body', 7, cargando); }
       try {
         monitorData = await api('monitor', {}, { timeout: 40000 });
         actualizarCanales(monitorData.canales);
+        actualizarReglas(monitorData.reglas);
         setHoraCorte(monitorData.horaCorte);
         usuariosCache = monitorData.usuarios || [];
         $('monitor-actualizado').textContent = 'última actualización ' + horaHMS(new Date());
         renderMonitor();
       } catch (e) {
         if (e.code === 'SESION') return;
-        if (!monitorData) { filaMensaje('monitor-table-body', 9, esc(e.message)); filaMensaje('admin-history-body', 7, ''); }
+        if (!monitorData) { filaMensaje('monitor-table-body', 10, esc(e.message)); filaMensaje('admin-history-body', 7, ''); }
         else if (mostrarError) toast(e.message, 'error');
         $('monitor-actualizado').textContent = 'error al actualizar: ' + e.message;
       }
@@ -1137,72 +1504,114 @@
       if (!monitorData) return [];
       const { rows, vivos, usuarios } = monitorData;
       const conectados = new Set(monitorData.conectados || []);
-      const porNombre = {};
+      const porNombre = {}, incPorNombre = {};
       rows.forEach(r => { (porNombre[norm(r.userName)] ||= []).push(r); });
+      (monitorData.incidencias || []).forEach(i => { (incPorNombre[norm(i.asesor)] ||= []).push(i); });
       const lista = usuarios.filter(u => u.role !== 'ADMINISTRADOR' && u.state === 'ACTIVO');
       // Asesores con registros hoy que no están en la nómina activa
       Object.keys(porNombre).forEach(k => {
         if (!lista.some(u => norm(u.name) === k)) lista.push({ name: porNombre[k][0].userName, turno: '-', contrato: 0, externo: true });
       });
+      const limSinSenal = (Number(reglasActuales().desconexionMin) || 5) * 60000;
       return lista.map(u => {
         const regs = porNombre[norm(u.name)] || [];
         let vivo = Object.values(vivos || {}).find(v => norm(v.name) === norm(u.name)) || null;
         if (vivo && Date.now() >= corteDelDia(vivo.inicio)) vivo = null;   // pasada la hora de corte ya no cuenta
+        if (vivo) {
+          vivo = { ...vivo, tipo: vivo.tipo === 'PAUSA' ? 'PAUSA' : 'GESTION' };
+          vivo.sinSenal = !!vivo.ultimoPulso && Date.now() - vivo.ultimoPulso > limSinSenal;
+          vivo.cuenta = vivo.tipo !== 'PAUSA' || pausaCuenta(vivo.canal);
+        }
+        const pausas = {};
+        regs.filter(esPausa).forEach(r => { pausas[norm(r.channel)] = (pausas[norm(r.channel)] || 0) + r.durationSeconds; });
         return {
-          u, regs, vivo, conectado: !!(u.id && conectados.has(u.id)),
-          base: regs.reduce((s, r) => s + r.durationSeconds, 0),
-          cambios: contarCambios(regs, vivo ? vivo.canal : null),
-          gestiones: regs.filter(r => r.tipo !== 'AJUSTE').length,
+          u, regs, vivo, pausas, incidencias: incPorNombre[norm(u.name)] || [],
+          conectado: !!(u.id && conectados.has(u.id)),
+          base: regs.filter(esEfectivo).reduce((s, r) => s + r.durationSeconds, 0),
+          cambios: contarCambios(regs, vivo && vivo.tipo === 'GESTION' ? vivo.canal : null),
           contratoSecs: (Number(u.contrato) || 0) * 3600
         };
       });
     }
 
-    const segundosVivo = vivo => vivo ? Math.max(0, (Math.min(Date.now(), corteDelDia(vivo.inicio)) - Math.max(vivo.inicio, inicioDelDia())) / 1000) : 0;
+    // Segundos de hoy del reloj en marcha: hasta ahora, la hora de corte o (si se desconectó) la última señal
+    function segundosVivo(vivo) {
+      if (!vivo) return 0;
+      let fin = Math.min(Date.now(), corteDelDia(vivo.inicio));
+      if (vivo.sinSenal && vivo.ultimoPulso) fin = Math.min(fin, vivo.ultimoPulso);
+      return Math.max(0, (fin - Math.max(vivo.inicio, inicioDelDia())) / 1000);
+    }
+    const efectivoVivo = vivo => vivo && vivo.cuenta ? segundosVivo(vivo) : 0;
+
+    function celdaPausas(f) {
+      const vivoPausa = f.vivo && f.vivo.tipo === 'PAUSA' ? norm(f.vivo.canal) : '';
+      const total = f.base + efectivoVivo(f.vivo);
+      const partes = reglasActuales().pausas.map(p => {
+        const usado = (f.pausas[norm(p.nombre)] || 0) + (vivoPausa === norm(p.nombre) ? segundosVivo(f.vivo) : 0);
+        if (!p.cupo) return usado ? `<span class="text-gray-500 dark:text-gray-400">${iconoPausa(p.nombre)} ${fmtMin(usado)}</span>` : '';
+        const cupo = cupoSegundos(p, f.u.contrato, total);
+        return `<span class="${usado > cupo ? 'text-red-600 font-bold' : ''}" title="${esc(p.nombre)}: usado / cupo">${iconoPausa(p.nombre)} ${fmtNum(usado)} / ${fmtMin(cupo)}</span>`;
+      }).filter(Boolean);
+      return partes.join('<br>') || '<span class="text-gray-400">—</span>';
+    }
+
+    function celdaIncidencias(f) {
+      if (!f.incidencias.length) return '<span class="text-gray-400">—</span>';
+      const detalle = f.incidencias.map(i => `${(i.hora || '').slice(0, 5)} ${i.tipoTexto || i.tipo}${i.minutos ? ' (' + i.minutos + ' min)' : ''}: ${i.detalle}`).join('\n');
+      return `<span class="chip bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-200 cursor-help" title="${esc(detalle)}"><i class="fa-solid fa-triangle-exclamation"></i> ${f.incidencias.length}</span>`;
+    }
 
     function renderMonitor() {
       if (!monitorData) return;
       const filtro = norm($('monitor-buscar').value);
       let filas = filasMonitor();
       if (filtro) filas = filas.filter(f => norm(f.u.name).includes(filtro));
-      filas.sort((a, b) => (!!b.vivo - !!a.vivo) || ((b.contratoSecs - b.base) - (a.contratoSecs - a.base)) || a.u.name.localeCompare(b.u.name));
+      const orden = f => !f.vivo ? 0 : f.vivo.sinSenal ? 3 : f.vivo.tipo === 'PAUSA' ? 1 : 2;
+      filas.sort((a, b) => (orden(b) - orden(a)) || ((b.contratoSecs - b.base) - (a.contratoSecs - a.base)) || a.u.name.localeCompare(b.u.name));
 
       $('monitor-table-body').innerHTML = filas.length ? filas.map(f => {
-        const ahora = f.vivo
-          ? `<span class="chip bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"><i class="fa-solid fa-circle text-[6px] align-middle animate-pulse"></i> ${esc(f.vivo.canal)} desde ${horaHMS(new Date(f.vivo.inicio)).slice(0, 5)}</span>`
-          : f.regs.length ? '<span class="chip bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300">Inactivo</span>'
-          : '<span class="chip bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">Sin actividad</span>';
+        const v = f.vivo;
+        const desde = v ? horaHMS(new Date(v.inicio)).slice(0, 5) : '';
+        const ahora = !v ? (f.regs.length ? '<span class="chip bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300">Inactivo</span>'
+            : '<span class="chip bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">Sin actividad</span>')
+          : v.sinSenal ? `<span class="chip bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-200" title="La PC no da señal: si no vuelve, su reloj se corta en la última señal"><i class="fa-solid fa-plug-circle-xmark"></i> Sin señal desde ${horaHMS(new Date(v.ultimoPulso)).slice(0, 5)}</span>`
+          : v.tipo === 'PAUSA' ? `<span class="chip bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">${iconoPausa(v.canal)} ${esc(v.canal)} desde ${desde}</span>`
+          : `<span class="chip bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"><i class="fa-solid fa-circle text-[6px] align-middle animate-pulse"></i> ${esc(v.canal)} desde ${desde}</span>`;
+        const live = `data-base="${f.base}" data-inicio="${v && v.cuenta ? v.inicio : ''}" data-tope="${v && v.sinSenal ? v.ultimoPulso : ''}"`;
         return `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
           <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">${esc(f.u.name)}${f.u.externo ? ' <span class="chip bg-red-100 text-red-700">No está en la nómina</span>' : ''}</td>
           <td class="px-4 py-3">${esc(f.u.turno || '-')}</td>
           <td class="px-4 py-3">${ahora}</td>
           <td class="px-4 py-3">${f.contratoSecs ? String(f.u.contrato).replace('.', ',') + ' hs' : '-'}</td>
-          <td class="px-4 py-3 font-bold text-blue-600" data-live="total" data-base="${f.base}" data-inicio="${f.vivo ? f.vivo.inicio : ''}">${formatSeconds(f.base + segundosVivo(f.vivo))}</td>
-          <td class="px-4 py-3 font-bold" data-live="faltante" data-base="${f.base}" data-inicio="${f.vivo ? f.vivo.inicio : ''}" data-contrato="${f.contratoSecs}"></td>
+          <td class="px-4 py-3 font-bold text-blue-600" data-live="total" ${live}>${formatSeconds(f.base + efectivoVivo(v))}</td>
+          <td class="px-4 py-3 font-bold" data-live="faltante" ${live} data-contrato="${f.contratoSecs}"></td>
+          <td class="px-4 py-3 whitespace-nowrap text-[11px]" data-live="pausas" data-i="${esc(f.u.name)}">${celdaPausas(f)}</td>
           <td class="px-4 py-3">${f.cambios}</td>
-          <td class="px-4 py-3">${f.gestiones}</td>
-          <td class="px-4 py-3 whitespace-nowrap">${(f.conectado || f.vivo) && f.u.id
+          <td class="px-4 py-3">${celdaIncidencias(f)}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${(f.conectado || v) && f.u.id
             ? `<span class="chip bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">Conectado</span>
                <button onclick="desloguearAsesor(this.dataset.id, this.dataset.n)" data-id="${esc(f.u.id)}" data-n="${esc(f.u.name)}" class="ml-2 text-red-600 hover:text-red-800 font-bold" title="Cerrar la sesión de este asesor"><i class="fa-solid fa-right-from-bracket"></i> Desloguear</button>`
             : '<span class="text-gray-400">—</span>'}</td></tr>`;
-      }).join('') : '<tr><td colspan="9" class="px-6 py-6 text-center text-gray-400">No hay asesores para mostrar.</td></tr>';
+      }).join('') : '<tr><td colspan="10" class="px-6 py-6 text-center text-gray-400">No hay asesores para mostrar.</td></tr>';
 
       const regsHoy = [...monitorData.rows].sort((a, b) => (b.startTime || '').localeCompare(a.startTime || ''));
       $('admin-history-body').innerHTML = regsHoy.length ? regsHoy.map(r => `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
           <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">${esc(r.userName)}</td>
           <td class="px-4 py-3">${esc(r.description)}</td>
-          <td class="px-4 py-3">${chipCanal(r.channel)}</td>
+          <td class="px-4 py-3">${chipDe(r)}</td>
           <td class="px-4 py-3">${esc(r.startTime)}</td><td class="px-4 py-3">${esc(r.endTime)}</td>
-          <td class="px-4 py-3 font-bold ${r.durationSeconds < 0 ? 'text-red-600' : 'text-blue-600'}">${formatSeconds(r.durationSeconds)}</td>
+          <td class="px-4 py-3 font-bold ${r.durationSeconds < 0 ? 'text-red-600' : !esEfectivo(r) ? 'text-gray-400' : esPausa(r) ? 'text-amber-600' : 'text-blue-600'}">${formatSeconds(r.durationSeconds)}</td>
           <td class="px-4 py-3"><button onclick="eliminarRegistro('${esc(r.id)}')" class="text-red-500 hover:text-red-700" title="Eliminar de la planilla"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
         : '<tr><td colspan="7" class="px-6 py-6 text-center text-gray-400">Todavía no hay gestiones hoy.</td></tr>';
       tickMonitor();
     }
 
+    let ultimoRepintadoPausas = 0;
     function tickMonitor() {
       if (!monitorData) return;
-      document.querySelectorAll('[data-live]').forEach(el => {
-        const total = Number(el.dataset.base) + segundosVivo(el.dataset.inicio ? { inicio: Number(el.dataset.inicio) } : null);
+      document.querySelectorAll('[data-live="total"], [data-live="faltante"]').forEach(el => {
+        const vivo = el.dataset.inicio ? { inicio: Number(el.dataset.inicio), sinSenal: !!el.dataset.tope, ultimoPulso: Number(el.dataset.tope) || 0 } : null;
+        const total = Number(el.dataset.base) + segundosVivo(vivo);
         if (el.dataset.live === 'total') { el.textContent = formatSeconds(total); return; }
         const c = Number(el.dataset.contrato);
         if (!c) { el.textContent = '-'; el.className = 'px-4 py-3 text-gray-400'; return; }
@@ -1211,8 +1620,16 @@
         el.className = 'px-4 py-3 font-bold ' + (falt <= 0 ? 'text-emerald-600' : 'text-amber-600');
       });
       const filas = filasMonitor();
-      const totales = filas.map(f => f.base + segundosVivo(f.vivo));
-      $('mon-kpi-activos').textContent = filas.filter(f => f.vivo).length;
+      // Las pausas en curso se actualizan cada 15 s
+      if (Date.now() - ultimoRepintadoPausas > 15000) {
+        ultimoRepintadoPausas = Date.now();
+        const porNombre = Object.fromEntries(filas.map(f => [f.u.name, f]));
+        document.querySelectorAll('[data-live="pausas"]').forEach(el => { const f = porNombre[el.dataset.i]; if (f) el.innerHTML = celdaPausas(f); });
+      }
+      const totales = filas.map(f => f.base + efectivoVivo(f.vivo));
+      const trabajando = filas.filter(f => f.vivo && !f.vivo.sinSenal && f.vivo.tipo === 'GESTION').length;
+      const enPausaN = filas.filter(f => f.vivo && !f.vivo.sinSenal && f.vivo.tipo === 'PAUSA').length;
+      $('mon-kpi-activos').innerHTML = `${trabajando}${enPausaN ? ` <span class="text-xs font-semibold text-amber-600">+ ${enPausaN} en pausa</span>` : ''}`;
       $('mon-kpi-horas').textContent = formatSeconds(totales.reduce((a, b) => a + b, 0));
       $('mon-kpi-cumplidos').textContent = filas.filter((f, i) => f.contratoSecs && totales[i] >= f.contratoSecs).length;
       $('mon-kpi-sin').textContent = filas.filter(f => !f.regs.length && !f.vivo).length;
@@ -1267,14 +1684,16 @@
       if (!reportesIniciados) { reportesIniciados = true; setQuickDateFilter('month'); return; }
       const desde = $('filter-date-from').value, hasta = $('filter-date-to').value;
       if (desde && hasta && desde > hasta) return toast('La fecha "Desde" es posterior a "Hasta".', 'error');
-      reporteCanales = canalesDeReporte([]); pintarEncabezadoReportes(); filaMensaje('reports-table-body', columnasReporte(), cargando);
+      reporteCanales = canalesDeReporte([]); reportePausas = []; pintarEncabezadoReportes(); filaMensaje('reports-table-body', columnasReporte(), cargando);
       $('reports-summary').textContent = '';
       try {
-        let rows = await obtenerDatosRemotos({ desde, hasta });
+        ultimasIncidencias = [];
+        let rows = await obtenerDatosRemotos({ desde, hasta, conIncidencias: true });
+        reporteIncidencias = ultimasIncidencias;
         if (esAdmin() && !usuariosCache.length) usuariosCache = (await api('usuarios')).usuarios;
         if (!esAdmin()) {
           const ids = new Set(rows.map(r => r.id));
-          rows = rows.concat(pendientesPropios().filter(r => !ids.has(r.id) && (!desde || r.dateIso >= desde) && (!hasta || r.dateIso <= hasta)));
+          rows = rows.concat(pendientesPropios().filter(r => !esIncidencia(r) && !ids.has(r.id) && (!desde || r.dateIso >= desde) && (!hasta || r.dateIso <= hasta)));
         }
         reporteRegistros = rows;
         renderReportes();
@@ -1288,30 +1707,40 @@
       regs.forEach(r => {
         const k = norm(r.userName) + '|' + r.dateIso;
         if (!g[k]) g[k] = { userName: r.userName, dateIso: r.dateIso, date: r.date || isoADMY(r.dateIso), contrato: contratoDe(r.userName),
-          canales: Object.fromEntries(reporteCanales.map(c => [c, 0])), ajustes: 0, total: 0, gestiones: 0, regs: [] };
+          canales: Object.fromEntries(reporteCanales.map(c => [c, 0])), pausas: {}, ajustes: 0, total: 0, logueado: 0, gestiones: 0, regs: [] };
         const x = g[k];
         if (r.tipo === 'AJUSTE') x.ajustes += r.durationSeconds;
-        else { x.canales[r.channel] = (x.canales[r.channel] || 0) + r.durationSeconds; x.gestiones++; x.regs.push(r); }
-        x.total += r.durationSeconds;
+        else if (r.tipo === 'PAUSA') { x.pausas[norm(r.channel)] = (x.pausas[norm(r.channel)] || 0) + r.durationSeconds; x.logueado += r.durationSeconds; }
+        else { x.canales[r.channel] = (x.canales[r.channel] || 0) + r.durationSeconds; x.gestiones++; x.regs.push(r); x.logueado += r.durationSeconds; }
+        if (esEfectivo(r)) x.total += r.durationSeconds;   // total = horas efectivas (lo que se compara con el contrato)
       });
+      const incid = {};
+      reporteIncidencias.forEach(i => { (incid[norm(i.asesor) + '|' + i.dateIso] ||= []).push(i); });
       return Object.values(g).map(x => {
         const contratoSecs = x.contrato * 3600;
         const faltante = contratoSecs - x.total;
-        return { ...x, cambios: contarCambios(x.regs), contratoSecs, faltante,
+        const incidencias = incid[norm(x.userName) + '|' + x.dateIso] || [];
+        return { ...x, cambios: contarCambios(x.regs), contratoSecs, faltante, incidencias,
           estado: !contratoSecs ? 'Sin contrato' : faltante <= 0 ? 'Cumplido' : 'Pendiente' };
       }).sort((a, b) => b.dateIso.localeCompare(a.dateIso) || a.userName.localeCompare(b.userName));
     }
 
-    const columnasReporte = () => 8 + reporteCanales.length;
+    const columnasReporte = () => 10 + reporteCanales.length + reportePausas.length;
     function pintarEncabezadoReportes() {
-      const th = t => `<th class="px-3 py-3">${esc(t)}</th>`;
-      $('reports-head').innerHTML = ['Asesor', 'Fecha', 'Contrato', ...reporteCanales, 'Ajustes', 'Total día', 'Faltante', 'Cambios', 'Estado'].map(th).join('');
+      const th = (t, tit = '', cls = '') => `<th class="px-3 py-3 ${cls}" ${tit ? `title="${esc(tit)}"` : ''}>${esc(t)}</th>`;
+      $('reports-head').innerHTML = [th('Asesor'), th('Fecha'), th('Contrato'), ...reporteCanales.map(c => th(c)),
+        ...reportePausas.map(p => th(`${iconoPausa(p)} ${p}`, pausaCuenta(p) ? 'Pausa: cuenta como horas efectivas' : 'Pausa: no cuenta como horas efectivas', 'text-amber-600')),
+        th('Ajustes'), th('Logueado', 'Todo el tiempo con el reloj en marcha (incluye pausas que no cuentan)'), th('Efectivo', 'Gestión + pausas que cuentan + ajustes: es lo que se compara con el contrato'),
+        th('Faltante'), th('Cambios'), th('Incid.', 'Incidencias del día'), th('Estado')].join('');
     }
+
+    const textoIncidencias = l => l.map(i => `${(i.hora || '').slice(0, 5)} ${i.tipoTexto || i.tipo}${i.minutos ? ' (' + i.minutos + ' min)' : ''}: ${i.detalle}`).join('\n');
 
     function renderReportes() {
       if (!reportesIniciados) return;
       const filtro = norm($('filter-asesor').value);
       reporteCanales = canalesDeReporte(reporteRegistros);
+      reportePausas = pausasDeReporte(reporteRegistros);
       pintarEncabezadoReportes();
       reporteFilas = agruparPorAsesorYDia(reporteRegistros).filter(f => !filtro || norm(f.userName).includes(filtro));
       if (!reporteFilas.length) { filaMensaje('reports-table-body', columnasReporte(), 'No hay registros en el período seleccionado.'); $('reports-summary').textContent = ''; return; }
@@ -1319,7 +1748,8 @@
       const asesores = new Set(reporteFilas.map(f => norm(f.userName))).size;
       const totalSecs = reporteFilas.reduce((s, f) => s + f.total, 0);
       const pend = reporteFilas.filter(f => f.estado === 'Pendiente').length;
-      $('reports-summary').textContent = `${reporteFilas.length} jornadas · ${asesores} asesor${asesores > 1 ? 'es' : ''} · ${formatSeconds(totalSecs)} hs trabajadas · ${pend} jornada${pend === 1 ? '' : 's'} con horas pendientes`;
+      const nInc = reporteFilas.reduce((s, f) => s + f.incidencias.length, 0);
+      $('reports-summary').textContent = `${reporteFilas.length} jornadas · ${asesores} asesor${asesores > 1 ? 'es' : ''} · ${formatSeconds(totalSecs)} hs efectivas · ${pend} jornada${pend === 1 ? '' : 's'} con horas pendientes${nInc ? ` · ${nInc} incidencia${nInc > 1 ? 's' : ''}` : ''}`;
 
       const chipEstado = e => e === 'Cumplido' ? '<span class="chip bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200">Cumplido</span>'
         : e === 'Pendiente' ? '<span class="chip bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">Pendiente</span>'
@@ -1329,10 +1759,13 @@
           <td class="px-3 py-3">${esc(g.date)}</td>
           <td class="px-3 py-3">${g.contrato ? String(g.contrato).replace('.', ',') + ' hs' : '-'}</td>
           ${reporteCanales.map(c => `<td class="px-3 py-3">${formatSeconds(g.canales[c] || 0)}</td>`).join('')}
+          ${reportePausas.map(p => `<td class="px-3 py-3 text-amber-700 dark:text-amber-300">${g.pausas[norm(p)] ? formatSeconds(g.pausas[norm(p)]) : '-'}</td>`).join('')}
           <td class="px-3 py-3 ${g.ajustes < 0 ? 'text-red-600' : g.ajustes > 0 ? 'text-purple-600' : ''}">${g.ajustes ? formatSeconds(g.ajustes) : '-'}</td>
+          <td class="px-3 py-3 text-gray-500">${formatSeconds(g.logueado)}</td>
           <td class="px-3 py-3 font-bold text-blue-600">${formatSeconds(g.total)}</td>
           <td class="px-3 py-3">${!g.contratoSecs ? '-' : g.faltante > 0 ? formatSeconds(g.faltante) : '00:00:00'}</td>
           <td class="px-3 py-3">${g.cambios}</td>
+          <td class="px-3 py-3">${g.incidencias.length ? `<span class="chip bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-200 cursor-help" title="${esc(textoIncidencias(g.incidencias))}">${g.incidencias.length}</span>` : '-'}</td>
           <td class="px-3 py-3">${chipEstado(g.estado)}</td></tr>`).join('');
     }
 
@@ -1351,14 +1784,30 @@
       const regs = reporteRegistros.filter(r => !filtro || norm(r.userName).includes(filtro))
         .sort((a, b) => a.dateIso.localeCompare(b.dateIso) || a.userName.localeCompare(b.userName) || String(a.startTime).localeCompare(String(b.startTime)));
       const ws = XLSX.utils.json_to_sheet(regs.map(r => ({
-        'Fecha': r.date || isoADMY(r.dateIso), 'Legajo': legajoDe(r.userName), 'Asesor': r.userName, 'Tipo': r.tipo === 'AJUSTE' ? 'Ajuste' : 'Gestión',
-        'Canal': r.channel, 'Descripción': r.description, 'Hora Inicio': r.startTime, 'Hora Fin': r.endTime,
-        'Duración': formatSeconds(r.durationSeconds), 'Horas (decimal)': horasDecimal(r.durationSeconds)
+        'Fecha': r.date || isoADMY(r.dateIso), 'Legajo': legajoDe(r.userName), 'Asesor': r.userName,
+        'Tipo': r.tipo === 'AJUSTE' ? 'Ajuste' : r.tipo === 'PAUSA' ? 'Pausa' : 'Gestión',
+        'Canal / Pausa': r.channel, 'Descripción': r.description, 'Hora Inicio': r.startTime, 'Hora Fin': r.endTime,
+        'Duración': formatSeconds(r.durationSeconds), 'Horas (decimal)': horasDecimal(r.durationSeconds),
+        'Cuenta como efectivo': esEfectivo(r) ? 'Sí' : 'No'
       })));
-      ws['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 34 }, { wch: 9 }, { wch: 13 }, { wch: 40 }, { wch: 11 }, { wch: 11 }, { wch: 10 }, { wch: 14 }];
+      ws['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 34 }, { wch: 9 }, { wch: 22 }, { wch: 40 }, { wch: 11 }, { wch: 11 }, { wch: 10 }, { wch: 14 }, { wch: 12 }];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Detalle de Gestiones');
+      agregarHojaIncidencias(wb, filtro);
       XLSX.writeFile(wb, nombreArchivo('Reporte_Detallado'));
+    }
+
+    // Hoja "Incidencias" (si hay en el período), respetando el filtro de asesor
+    function agregarHojaIncidencias(wb, filtro) {
+      const lista = reporteIncidencias.filter(i => !filtro || norm(i.asesor).includes(filtro))
+        .sort((a, b) => a.dateIso.localeCompare(b.dateIso) || a.asesor.localeCompare(b.asesor) || String(a.hora).localeCompare(String(b.hora)));
+      if (!lista.length) return;
+      const ws = XLSX.utils.json_to_sheet(lista.map(i => ({
+        'Fecha': isoADMY(i.dateIso), 'Legajo': legajoDe(i.asesor), 'Asesor': i.asesor, 'Hora': i.hora, 'Tipo': i.tipoTexto || i.tipo,
+        'Minutos': i.minutos, 'Detalle': i.detalle, 'Estado': i.estado
+      })));
+      ws['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 34 }, { wch: 9 }, { wch: 18 }, { wch: 9 }, { wch: 60 }, { wch: 11 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Incidencias');
     }
 
     function exportarExcelResumido() {
@@ -1366,15 +1815,20 @@
       const rows = [...reporteFilas].sort((a, b) => a.dateIso.localeCompare(b.dateIso) || a.userName.localeCompare(b.userName)).map(g => ({
         'Fecha': g.date, 'Legajo': legajoDe(g.userName), 'Asesor': g.userName, 'Horas Contrato': g.contrato || '',
         ...Object.fromEntries(reporteCanales.map(c => [c, formatSeconds(g.canales[c] || 0)])),
+        ...Object.fromEntries(reportePausas.map(p => ['Pausa: ' + p, formatSeconds(g.pausas[norm(p)] || 0)])),
         'Ajustes': g.ajustes ? formatSeconds(g.ajustes) : '',
+        'Total Logueado': formatSeconds(g.logueado),
         'Total Trabajado': formatSeconds(g.total), 'Total (hs decimal)': horasDecimal(g.total),
         'Horas Faltantes / Compensar': !g.contratoSecs ? '' : g.faltante > 0 ? formatSeconds(g.faltante) : '00:00:00',
-        'Estado Contrato': g.estado.toUpperCase(), 'Cambios de Canal': g.cambios, 'Total Gestiones': g.gestiones
+        'Estado Contrato': g.estado.toUpperCase(), 'Cambios de Canal': g.cambios, 'Total Gestiones': g.gestiones,
+        'Incidencias': g.incidencias.length || ''
       }));
       const ws = XLSX.utils.json_to_sheet(rows);
-      ws['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 34 }, { wch: 14 }, ...reporteCanales.map(c => ({ wch: Math.max(10, c.length + 2) })), { wch: 10 }, { wch: 15 }, { wch: 16 }, { wch: 26 }, { wch: 15 }, { wch: 16 }, { wch: 15 }];
+      ws['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 34 }, { wch: 14 }, ...reporteCanales.map(c => ({ wch: Math.max(10, c.length + 2) })),
+        ...reportePausas.map(p => ({ wch: Math.max(10, p.length + 9) })), { wch: 10 }, { wch: 14 }, { wch: 15 }, { wch: 16 }, { wch: 26 }, { wch: 15 }, { wch: 16 }, { wch: 15 }, { wch: 11 }];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Resumen Consolidado');
+      agregarHojaIncidencias(wb, norm($('filter-asesor').value));
       XLSX.writeFile(wb, nombreArchivo('Reporte_Consolidado_Asesores'));
     }
 
@@ -1431,29 +1885,34 @@
       ws1['!cols'] = [{ wch: 9 }, { wch: 36 }, { wch: 10 }, ...dias.map(() => ({ wch: 9 })), { wch: 12 }];
 
       // ---------- Hoja 2: Detalle por canal ----------
-      const nC = reporteCanales.length;
-      const aoa2 = [['Fecha', 'Legajo', 'Asesor', 'Contrato (hs)', ...reporteCanales, 'Ajustes', 'Total día', 'Faltante', 'Estado', 'Cambios de canal', 'Gestiones']];
+      const nC = reporteCanales.length, nP = reportePausas.length;
+      const aoa2 = [['Fecha', 'Legajo', 'Asesor', 'Contrato (hs)', ...reporteCanales, ...reportePausas.map(p => 'Pausa: ' + p), 'Ajustes', 'Logueado', 'Total día (efectivo)', 'Faltante', 'Estado', 'Cambios de canal', 'Gestiones', 'Incidencias']];
       const celdasHora2 = [];
       [...filas].sort((a, b) => a.dateIso.localeCompare(b.dateIso) || a.userName.localeCompare(b.userName, 'es')).forEach((g, i) => {
         const r = i + 1;
         aoa2.push([
           g.date, legajoDe(g.userName), g.userName, g.contrato || '',
           ...reporteCanales.map(c => aExcel(g.canales[c] || 0)),
+          ...reportePausas.map(p => aExcel(g.pausas[norm(p)] || 0)),
           g.ajustes ? (g.ajustes > 0 ? '+' : '') + formatSeconds(g.ajustes).slice(0, -3) : '',
+          aExcel(g.logueado),
           aExcel(g.total),
           g.contratoSecs ? aExcel(g.faltante) : '',
-          g.estado, g.cambios, g.gestiones
+          g.estado, g.cambios, g.gestiones, g.incidencias.length || ''
         ]);
-        // columnas con horas: los canales (desde la 4), el total (4+nC+1) y el faltante (4+nC+2)
-        [...reporteCanales.map((_, k) => 4 + k), 5 + nC, 6 + nC].forEach(c => celdasHora2.push([r, c]));
+        // columnas con horas: canales y pausas (desde la 4), logueado, total y faltante (después de "Ajustes")
+        const k0 = 4 + nC + nP;
+        [...Array.from({ length: nC + nP }, (_, k) => 4 + k), k0 + 1, k0 + 2, k0 + 3].forEach(c => celdasHora2.push([r, c]));
       });
       const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
       darFormato(ws2, celdasHora2);
-      ws2['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 36 }, { wch: 12 }, ...reporteCanales.map(c => ({ wch: Math.max(10, c.length + 2) })), { wch: 9 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 16 }, { wch: 10 }];
+      ws2['!cols'] = [{ wch: 11 }, { wch: 9 }, { wch: 36 }, { wch: 12 }, ...reporteCanales.map(c => ({ wch: Math.max(10, c.length + 2) })),
+        ...reportePausas.map(p => ({ wch: Math.max(10, p.length + 9) })), { wch: 9 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 16 }, { wch: 10 }, { wch: 11 }];
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws1, 'Total por día');
       XLSX.utils.book_append_sheet(wb, ws2, 'Detalle por canal');
+      agregarHojaIncidencias(wb, filtro);
       XLSX.writeFile(wb, `${cuenta().corto}_F043_Horas_${desde}_a_${hasta}.xlsx`);
     }
 
@@ -1609,7 +2068,9 @@
      * AJUSTE MANUAL DE TIEMPOS
      * ============================================================== */
     async function prepararAjustes() {
-      api('canales').then(r => { actualizarCanales(r.canales); setHoraCorte(r.horaCorte); }).catch(() => {});
+      reglasEditadas = false;
+      renderReglasAdmin();
+      api('canales').then(r => { actualizarCanales(r.canales); actualizarReglas(r.reglas); setHoraCorte(r.horaCorte); if (!reglasEditadas) renderReglasAdmin(); }).catch(() => {});
       if (!$('manual-date').value) $('manual-date').value = fechaISO();
       if (!usuariosCache.length) { try { usuariosCache = (await api('usuarios')).usuarios; } catch (e) { return; } }
       const sel = $('manual-user-id'), previo = sel.value;
@@ -1618,6 +2079,69 @@
         .map(u => `<option value="${esc(u.name)}">${esc(u.name)}</option>`).join('');
       sel.value = previo;
       cargarAjustes();
+    }
+
+    /* ---------- Pausas y reglas (administrador) ---------- */
+    let reglasEditadas = false;
+    function renderReglasAdmin(r = reglasActuales()) {
+      const chk = (campo, v, i) => `<input type="checkbox" data-campo="${campo}" data-i="${i}" ${v ? 'checked' : ''} class="w-4 h-4 accent-blue-600">`;
+      $('reglas-pausas').innerHTML = r.pausas.map((p, i) => `<tr data-pausa="${i}" class="${p.activo ? '' : 'opacity-60'}">
+          <td class="px-3 py-2"><input class="inp !w-56" data-campo="nombre" data-i="${i}" value="${esc(p.nombre)}" maxlength="30" ${p._nueva ? '' : 'readonly title="El nombre de una pausa existente no se cambia (sus registros quedan con ese nombre). Desactivala y creá otra."'}></td>
+          <td class="px-3 py-2 text-center">${chk('activo', p.activo, i)}</td>
+          <td class="px-3 py-2 text-center">${chk('cuenta', p.cuenta, i)}</td>
+          <td class="px-3 py-2"><input type="number" min="0" max="30" step="0.5" class="inp !w-24" data-campo="cupo" data-i="${i}" value="${p.cupo || 0}"></td>
+          <td class="px-3 py-2 text-center">${chk('incidencia', p.incidencia, i)}</td></tr>`).join('');
+      $('regla-corte').value = r.horaCorte;
+      $('regla-desconexion').value = r.desconexionMin;
+      $('regla-inac-activa').checked = !!r.inactividad.activa;
+      $('regla-inac-min').value = r.inactividad.minutos;
+      $('regla-inac-resp').value = r.inactividad.respuestaMin;
+      const marcados = new Set((r.inactividad.canales || []).map(norm));
+      $('regla-inac-canales').innerHTML = canalesActivos().map(c => `<label class="flex items-center gap-1"><input type="checkbox" data-canal-inac="${esc(c)}" ${marcados.has(norm(c)) ? 'checked' : ''} class="accent-blue-600"> ${esc(c)}</label>`).join('');
+      const card = $('reglas-pausas').closest('.rounded-2xl');
+      if (!card.dataset.escucha) { card.dataset.escucha = '1'; card.addEventListener('input', () => { reglasEditadas = true; }); }
+    }
+    function leerFormularioReglas(conFilasVacias = false) {
+      const r = JSON.parse(JSON.stringify(reglasActuales()));
+      r.pausas = [...document.querySelectorAll('#reglas-pausas tr')].map(tr => {
+        const g = c => tr.querySelector(`[data-campo="${c}"]`);
+        return { nombre: g('nombre').value.replace(/\s+/g, ' ').trim(), cuenta: g('cuenta').checked, cupo: Number(String(g('cupo').value).replace(',', '.')) || 0,
+          incidencia: g('incidencia').checked, activo: g('activo').checked, _nueva: !g('nombre').readOnly };
+      }).filter(p => conFilasVacias || p.nombre);
+      if (!conFilasVacias) r.pausas = r.pausas.map(({ _nueva, ...p }) => p);
+      r.horaCorte = ($('regla-corte').value || '').length === 5 ? $('regla-corte').value + ':00' : $('regla-corte').value;
+      r.desconexionMin = Number($('regla-desconexion').value);
+      r.inactividad = {
+        activa: $('regla-inac-activa').checked, minutos: Number($('regla-inac-min').value), respuestaMin: Number($('regla-inac-resp').value),
+        canales: [...document.querySelectorAll('[data-canal-inac]')].filter(x => x.checked).map(x => x.dataset.canalInac)
+      };
+      return r;
+    }
+    function agregarFilaPausa() {
+      const r = leerFormularioReglas(true);
+      r.pausas.push({ nombre: '', cuenta: true, cupo: 0, incidencia: false, activo: true, _nueva: true });
+      reglasEditadas = true;
+      renderReglasAdmin(r);   // la pausa nueva queda solo en pantalla hasta guardar
+      const inputs = document.querySelectorAll('#reglas-pausas [data-campo="nombre"]');
+      inputs[inputs.length - 1].focus();
+    }
+    async function guardarReglas() {
+      const r = leerFormularioReglas();
+      if (!/^\d{2}:\d{2}:\d{2}$/.test(r.horaCorte)) return toast('Revisá la hora de corte.', 'error');
+      if (!(r.desconexionMin >= 2 && r.desconexionMin <= 60)) return toast('Desconexión: entre 2 y 60 minutos.', 'error');
+      if (!(r.inactividad.minutos >= 5 && r.inactividad.minutos <= 120)) return toast('Inactividad: preguntar entre los 5 y 120 minutos.', 'error');
+      if (!(r.inactividad.respuestaMin >= 1 && r.inactividad.respuestaMin <= 10)) return toast('Inactividad: de 1 a 10 minutos para responder.', 'error');
+      if (r.pausas.some(p => !(p.cupo >= 0 && p.cupo <= 30))) return toast('El cupo de cada pausa va de 0 a 30 minutos por hora.', 'error');
+      if (!confirm('¿Guardar las pausas y reglas? Se aplican a todos los asesores de la cuenta ' + cuenta().corto + '.')) return;
+      $('reglas-btn').disabled = true;
+      try {
+        const res = await api('guardarReglas', { reglas: r });
+        actualizarReglas(res.reglas);
+        reglasEditadas = false;
+        renderReglasAdmin();
+        toast('Pausas y reglas guardadas.', 'ok');
+      } catch (e) { toast(e.message, 'error'); }
+      finally { $('reglas-btn').disabled = false; }
     }
 
     async function cargarAjustes() {
